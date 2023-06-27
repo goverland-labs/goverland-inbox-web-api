@@ -1,11 +1,8 @@
 package proposals
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/google/uuid"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
@@ -17,7 +14,7 @@ type ListRequest struct {
 }
 
 type ListForm struct {
-	DAO      []uuid.UUID
+	DAO      string
 	Category common.Category
 	Limit    int
 	Offset   int
@@ -59,21 +56,5 @@ func (f *ListForm) validateAndSetDAOs(req *ListRequest, errors map[string]respon
 		return
 	}
 
-	daos := strings.Split(daosRAW, ",")
-	list := make([]uuid.UUID, 0, len(daos))
-	for i := range daos {
-		item := strings.TrimSpace(daos[i])
-		if item == "" {
-			continue
-		}
-
-		parsed, err := uuid.Parse(item)
-		if err != nil {
-			errors[fmt.Sprintf("dao.%d", i)] = response.WrongValueError("wrong id format")
-		}
-
-		list = append(list, parsed)
-	}
-
-	f.DAO = list
+	f.DAO = daosRAW
 }

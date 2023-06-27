@@ -1,13 +1,14 @@
 package rest
 
 import (
+	"errors"
 	"net/http"
-	"sort"
-	"strings"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	coresdk "github.com/goverland-labs/core-web-sdk"
+	coredao "github.com/goverland-labs/core-web-sdk/dao"
 	"github.com/rs/zerolog/log"
-	"github.com/samber/lo"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
@@ -15,7 +16,6 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/helpers"
 	daoform "github.com/goverland-labs/inbox-web-api/internal/rest/forms/dao"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/mock"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/request"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 )
@@ -29,16 +29,110 @@ func (s *Server) getDAO(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	item, exist := mock.GetDAO(f.ID)
-	if !exist {
+	info, err := s.coreclient.GetDao(r.Context(), f.ID.String())
+	if err != nil && errors.Is(err, coresdk.ErrNotFound) {
 		response.SendEmpty(w, http.StatusNotFound)
 		return
 	}
 
+	if err != nil {
+		log.Error().Err(err).Msgf("get dao by id: %s", f.ID.String())
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	item := convertCoreDaoToInternal(info)
 	item.SubscriptionInfo = getSubscription(session, item.ID)
 	item = helpers.WrapDAOIpfsLinks(item)
 
 	response.SendJSON(w, http.StatusOK, &item)
+}
+
+func convertCoreDaoToInternal(i *coredao.Dao) dao.DAO {
+	return dao.DAO{
+		ID:        uuid.MustParse(i.ID),
+		Alias:     "",
+		CreatedAt: *common.NewTime(i.CreatedAt),
+		UpdatedAt: *common.NewTime(i.UpdatedAt),
+		Name:      i.Name,
+		About: []common.Content{
+			{
+				Type: "", // fixme: how to resolve it?
+				Body: i.About,
+			},
+		},
+		Avatar:         helpers.Ptr(i.Avatar),
+		Terms:          helpers.Ptr(i.Terms),
+		Location:       helpers.Ptr(i.Location),
+		Website:        helpers.Ptr(i.Website),
+		Twitter:        helpers.Ptr(i.Twitter),
+		Github:         helpers.Ptr(i.Github),
+		Coingecko:      helpers.Ptr(i.Coingecko),
+		Email:          helpers.Ptr(i.Email),
+		Symbol:         i.Symbol,
+		Domain:         helpers.Ptr(i.Domain),
+		Network:        common.Network(i.Network),
+		Strategies:     convertCoreStrategiesToInternal(i.Strategies),
+		Voting:         convertCoreVotingToInternal(i.Voting),
+		Categories:     convertCoreCategoriesToInternal(i.Categories),
+		Treasures:      convertCoreTreasuresToInternal(i.Treasures),
+		FollowersCount: int(i.FollowersCount),
+		ProposalsCount: int(i.ProposalsCount),
+		Guidelines:     helpers.Ptr(i.Guidelines),
+		Template:       helpers.Ptr(i.Template),
+		ParentID:       helpers.Ptr(i.ParentID),
+	}
+}
+
+func convertCoreStrategiesToInternal(list coredao.Strategies) []common.Strategy {
+	res := make([]common.Strategy, len(list))
+
+	for i, info := range list {
+		res[i] = common.Strategy{
+			Name:    info.Name,
+			Network: common.Network(info.Network),
+		}
+	}
+
+	return res
+}
+
+func convertCoreTreasuresToInternal(list coredao.Treasuries) []common.Treasury {
+	res := make([]common.Treasury, len(list))
+
+	for i, info := range list {
+		res[i] = common.Treasury{
+			Name:    info.Name,
+			Address: info.Address,
+			Network: common.Network(info.Network),
+		}
+	}
+
+	return res
+}
+
+func convertCoreCategoriesToInternal(list coredao.Categories) []common.Category {
+	res := make([]common.Category, len(list))
+
+	for i, info := range list {
+		res[i] = common.Category(info)
+	}
+
+	return res
+}
+
+func convertCoreVotingToInternal(v coredao.Voting) dao.Voting {
+	return dao.Voting{
+		Delay:       helpers.Ptr(int(v.Delay)),
+		Period:      helpers.Ptr(int(v.Period)),
+		Type:        helpers.Ptr(v.Type),
+		Quorum:      helpers.Ptr(v.Quorum),
+		Blind:       v.Blind,
+		HideAbstain: v.HideAbstain,
+		Privacy:     v.Privacy,
+		Aliased:     v.Aliased,
+	}
 }
 
 func (s *Server) listDAOs(w http.ResponseWriter, r *http.Request) {
@@ -50,44 +144,34 @@ func (s *Server) listDAOs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list := lo.Filter(mock.DAOs, func(item dao.DAO, index int) bool {
-		if f.Query == "" {
-			return true
-		}
-
-		return strings.Contains(strings.ToLower(item.Name), f.Query)
+	resp, err := s.coreclient.GetDaoList(r.Context(), coresdk.GetDaoListRequest{
+		Offset:   f.Offset,
+		Limit:    f.Limit,
+		Query:    f.Query,
+		Category: string(f.Category),
 	})
 
-	list = lo.Filter(list, func(item dao.DAO, index int) bool {
-		if f.Category == "" {
-			return true
-		}
-
-		for _, cat := range item.Categories {
-			if strings.EqualFold(string(cat), string(f.Category)) {
-				return true
-			}
-		}
-
-		return false
-	})
-
-	list = helpers.WrapDAOsIpfsLinks(list)
-
-	offset, limit, err := request.ExtractPagination(r)
 	if err != nil {
-		response.SendError(w, http.StatusBadRequest, err.Error())
+		log.Error().Err(err).Msg("get dao list")
+
+		response.SendEmpty(w, http.StatusInternalServerError)
 		return
 	}
 
-	list = enrichSubscriptionInfo(session, lo.Slice(list, offset, offset+limit))
+	list := make([]dao.DAO, len(resp.Items))
+	for i, info := range resp.Items {
+		list[i] = convertCoreDaoToInternal(&info)
+	}
+
+	list = helpers.WrapDAOsIpfsLinks(list)
+	list = enrichSubscriptionInfo(session, list)
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
 		Int("count", len(list)).
 		Msg("route execution")
 
-	response.AddPaginationHeaders(w, r, offset, limit, len(list))
+	response.AddPaginationHeaders(w, r, resp.Offset, resp.Limit, resp.TotalCnt)
 	response.SendJSON(w, http.StatusOK, &list)
 }
 
@@ -105,28 +189,32 @@ func (s *Server) listTopDAOs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resp, err := s.coreclient.GetDaoTop(r.Context(), coresdk.GetDaoTopRequest{
+		Limit: limit,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get top dao")
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	totalCnt := 0
 	grouped := make(map[common.Category]Top)
-	for _, category := range mock.Categories {
-		list := lo.Filter(mock.DAOs, func(item dao.DAO, index int) bool {
-			for _, cat := range item.Categories {
-				if strings.EqualFold(string(cat), string(category)) {
-					return true
-				}
-			}
-
-			return false
-		})
-
-		sort.Slice(list, func(i, j int) bool {
-			return list[i].FollowersCount > list[j].FollowersCount
-		})
-
-		list = helpers.WrapDAOsIpfsLinks(list)
-
-		grouped[category] = Top{
-			List:  enrichSubscriptionInfo(session, lo.Slice(list, 0, limit)),
-			Count: len(list),
+	for category, list := range *resp {
+		daos := make([]dao.DAO, len(list.List))
+		for i, info := range list.List {
+			daos[i] = convertCoreDaoToInternal(&info)
 		}
+
+		grouped[common.Category(category)] = Top{
+			List:  enrichSubscriptionInfo(session, daos),
+			Count: int(list.TotalCount),
+		}
+
+		// todo: think about duplicates in the categories
+		// possible better to remove this from the response
+		totalCnt += int(list.TotalCount)
 	}
 
 	log.Info().
@@ -134,7 +222,7 @@ func (s *Server) listTopDAOs(w http.ResponseWriter, r *http.Request) {
 		Int("groups", len(grouped)).
 		Msg("route execution")
 
-	response.AddTotalCounterHeaders(w, len(mock.DAOs))
+	response.AddTotalCounterHeaders(w, totalCnt)
 	response.SendJSON(w, http.StatusOK, &grouped)
 }
 

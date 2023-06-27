@@ -8,6 +8,7 @@ import (
 
 	"github.com/goverland-labs/inbox-web-api/internal"
 	"github.com/goverland-labs/inbox-web-api/internal/config"
+	"github.com/goverland-labs/inbox-web-api/internal/logger"
 )
 
 const decimalDivisionPrecision = 32
@@ -28,7 +29,7 @@ func init() {
 		panic(err)
 	}
 	zerolog.SetGlobalLevel(level)
-	process.SetLogger(&ProcessManagerLogger{})
+	process.SetLogger(&logger.ProcessManagerLogger{})
 }
 
 func main() {

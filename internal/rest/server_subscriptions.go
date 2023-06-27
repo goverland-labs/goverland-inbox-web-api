@@ -187,6 +187,7 @@ func (s *Server) unsubscribe(w http.ResponseWriter, r *http.Request) {
 	response.SendEmpty(w, http.StatusOK)
 }
 
+// fixme: get it from inbox-storage
 func getSubscription(session auth.Session, daoID uuid.UUID) *dao.SubscriptionInfo {
 	if session == auth.EmptySession {
 		return nil

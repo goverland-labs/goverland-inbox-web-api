@@ -5,6 +5,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	coresdk "github.com/goverland-labs/core-web-sdk"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	"github.com/goverland-labs/inbox-web-api/internal/config"
@@ -21,9 +22,10 @@ type AuthStorage interface {
 type Server struct {
 	httpServer  *http.Server
 	authStorage AuthStorage
+	coreclient  *coresdk.Client
 }
 
-func NewServer(cfg config.REST, authStorage AuthStorage) *Server {
+func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client) *Server {
 	handler := mux.NewRouter()
 	handler.Use(
 		middleware.Panic,
@@ -44,6 +46,7 @@ func NewServer(cfg config.REST, authStorage AuthStorage) *Server {
 			ReadTimeout:       cfg.Timeout,
 			ReadHeaderTimeout: cfg.Timeout,
 		},
+		coreclient: cl,
 	}
 
 	handler.HandleFunc("/auth/guest", srv.authByDevice).Methods(http.MethodPost).Name("auth_guest")

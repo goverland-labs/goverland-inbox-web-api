@@ -5,15 +5,18 @@ import (
 	"strings"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
+	helpers "github.com/goverland-labs/inbox-web-api/internal/rest/forms/common"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 )
 
 type ListRequest struct {
-	Quuery   string
+	Query    string
 	Category string
 }
 
 type ListForm struct {
+	helpers.Pagination
+
 	Query    string
 	Category common.Category
 }
@@ -24,13 +27,14 @@ func NewListForm() *ListForm {
 
 func (f *ListForm) ParseAndValidate(r *http.Request) (*ListForm, response.Error) {
 	req := &ListRequest{
-		Quuery:   r.URL.Query().Get("query"),
+		Query:    r.URL.Query().Get("query"),
 		Category: r.URL.Query().Get("category"),
 	}
 
 	errors := make(map[string]response.ErrorMessage)
 	f.validateAndSetCategory(req, errors)
 	f.validateAndSetQuery(req, errors)
+	f.ValidateAndSetPagination(r, errors)
 
 	if len(errors) > 0 {
 		return nil, response.NewValidationError(errors)
@@ -49,7 +53,7 @@ func (f *ListForm) validateAndSetCategory(req *ListRequest, _ map[string]respons
 }
 
 func (f *ListForm) validateAndSetQuery(req *ListRequest, _ map[string]response.ErrorMessage) {
-	query := strings.TrimSpace(req.Quuery)
+	query := strings.TrimSpace(req.Query)
 	if query == "" {
 		return
 	}

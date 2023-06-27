@@ -5,4 +5,5 @@ type App struct {
 	Prometheus Prometheus
 	Health     Health
 	REST       REST
+	Core       Core
 }

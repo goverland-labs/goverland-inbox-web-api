@@ -5,6 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	coresdk "github.com/goverland-labs/core-web-sdk"
 	"github.com/s-larionov/process-manager"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
@@ -72,7 +73,8 @@ func (a *Application) initServices() error {
 }
 
 func (a *Application) initRESTWorker() error {
-	srv := rest.NewServer(a.cfg.REST, auth.NewInMemoryStorage())
+	cs := coresdk.NewClient(a.cfg.Core.CoreURL)
+	srv := rest.NewServer(a.cfg.REST, auth.NewInMemoryStorage(), cs)
 	a.manager.AddWorker(process.NewServerWorker("rest", srv.GetHTTPServer()))
 
 	return nil

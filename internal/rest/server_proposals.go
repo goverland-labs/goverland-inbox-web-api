@@ -2,11 +2,14 @@ package rest
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/core-web-sdk"
+	coredao "github.com/goverland-labs/core-web-sdk/dao"
 	coreproposal "github.com/goverland-labs/core-web-sdk/proposal"
 	"github.com/rs/zerolog/log"
 
@@ -39,7 +42,16 @@ func (s *Server) getProposal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	item := convertProposalToInternal(pr)
+	// todo: use caching instead of direct requests
+	di, err := s.coreclient.GetDao(r.Context(), pr.DaoID)
+	if err != nil {
+		log.Error().Err(err).Msgf("get dao by id: %s", pr.DaoID)
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	item := convertProposalToInternal(pr, di)
 
 	item = enrichProposalSubscriptionInfo(session, item)
 	item = helpers.WrapProposalIpfsLinks(item)
@@ -47,45 +59,56 @@ func (s *Server) getProposal(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &item)
 }
 
-func convertProposalToInternal(pr *coreproposal.Proposal) proposal.Proposal {
+func convertProposalToInternal(pr *coreproposal.Proposal, di *coredao.Dao) proposal.Proposal {
 	return proposal.Proposal{
-		ID:         pr.ID,
-		Ipfs:       helpers.Ptr(pr.Ipfs),
-		Author:     common.User{}, // todo: not implemented from core
+		ID:   pr.ID,
+		Ipfs: helpers.Ptr(pr.Ipfs),
+		Author: common.User{
+			Address: common.UserAddress(pr.Author),
+		},
 		Created:    *common.NewTime(time.Unix(int64(pr.Created), 0)),
 		Network:    common.Network(pr.Network),
 		Symbol:     pr.Symbol,
 		Type:       helpers.Ptr(pr.Type),
 		Strategies: convertCoreProposalStrategiesToInternal(pr.Strategies),
-		Validation: nil, // todo: not implemented from core
 		Title:      pr.Title,
 		Body: []common.Content{
 			{
-				Type: "", // todo: resolve it
+				Type: common.Markdown,
 				Body: pr.Body,
 			},
 		},
-		Discussion:  pr.Discussion,
-		Choices:     pr.Choices,
-		VotingStart: *common.NewTime(time.Now()), // todo: not implemented from core
-		VotingEnd:   *common.NewTime(time.Now()), // todo: not implemented from core
-		Quorum:      float64(pr.Quorum),
-		Privacy:     helpers.Ptr(pr.Privacy),
-		Snapshot:    helpers.Ptr(pr.Snapshot),
-		State:       helpers.Ptr(proposal.State(pr.State)),
-		Link:        helpers.Ptr(pr.Link),
-		App:         helpers.Ptr(pr.App),
-		Scores:      convertScoresToInternal(pr.Scores),
-		//ScoresByStrategy: nil, // todo: not implemented from core
+		Discussion:    pr.Discussion,
+		Choices:       pr.Choices,
+		VotingStart:   *common.NewTime(time.Unix(int64(pr.Start), 0)),
+		VotingEnd:     *common.NewTime(time.Unix(int64(pr.End), 0)),
+		Quorum:        float64(pr.Quorum),
+		Privacy:       helpers.Ptr(pr.Privacy),
+		Snapshot:      helpers.Ptr(pr.Snapshot),
+		State:         helpers.Ptr(proposal.State(pr.State)),
+		Link:          helpers.Ptr(pr.Link),
+		App:           helpers.Ptr(pr.App),
+		Scores:        convertScoresToInternal(pr.Scores),
 		ScoresState:   helpers.Ptr(pr.ScoresState),
 		ScoresTotal:   helpers.Ptr(float64(pr.ScoresTotal)),
 		ScoresUpdated: helpers.Ptr(int(pr.ScoresUpdated)),
 		Votes:         int(pr.Votes),
-		Flagged:       false, // todo: not implemented from core
-		DAO: dao.ShortDAO{
-			CreatedAt: *common.NewTime(time.Now()),
-			UpdatedAt: *common.NewTime(time.Now()),
-		}, // fixme: get it from cache?
+		DAO:           convertDaoToShortInternal(di),
+	}
+}
+
+func convertDaoToShortInternal(di *coredao.Dao) dao.ShortDAO {
+	return dao.ShortDAO{
+		ID:             uuid.MustParse(di.ID),
+		CreatedAt:      *common.NewTime(di.CreatedAt),
+		UpdatedAt:      *common.NewTime(di.UpdatedAt),
+		Name:           di.Name,
+		Avatar:         helpers.Ptr(di.Avatar),
+		Symbol:         di.Symbol,
+		Network:        common.Network(di.Network),
+		Categories:     convertCoreCategoriesToInternal(di.Categories),
+		FollowersCount: int(di.FollowersCount),
+		ProposalsCount: int(di.FollowersCount),
 	}
 }
 
@@ -152,9 +175,11 @@ func convertVoteToInternal(list []coreproposal.Vote) []proposal.Vote {
 			ID:         info.ID,
 			Ipfs:       ipfs.WrapLink(info.Ipfs),
 			ProposalID: info.ProposalID,
-			Voter:      info.Voter,   // todo: discuss about user structure
-			Created:    info.Created, // todo: convert to time
-			Reason:     info.Reason,
+			Voter: common.User{
+				Address: common.UserAddress(info.Voter),
+			},
+			Created: *common.NewTime(time.Unix(int64(info.Created), 0)),
+			Reason:  info.Reason,
 		}
 	}
 
@@ -189,9 +214,31 @@ func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// todo: use caching for getting dao
+	daoIds := make([]string, 0)
+	for _, info := range resp.Items {
+		daoIds = append(daoIds, info.DaoID)
+	}
+	daolist, err := s.coreclient.GetDaoList(r.Context(), coresdk.GetDaoListRequest{
+		DaoIDS: daoIds,
+		Limit:  len(daoIds),
+	})
+
+	daos := make(map[string]coredao.Dao)
+	for _, info := range daolist.Items {
+		daos[info.ID] = info
+	}
+
 	list := make([]proposal.Proposal, len(resp.Items))
 	for i, info := range resp.Items {
-		list[i] = convertProposalToInternal(&info)
+		di, ok := daos[info.DaoID]
+		if !ok {
+			log.Error().Msg("dao not found")
+
+			response.SendError(w, http.StatusBadRequest, fmt.Sprintf("dao not found: %s", info.DaoID))
+			return
+		}
+		list[i] = convertProposalToInternal(&info, &di)
 	}
 
 	list = enrichProposalsSubscriptionInfo(session, list)

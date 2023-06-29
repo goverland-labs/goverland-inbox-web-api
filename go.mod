@@ -24,7 +24,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
-	github.com/goverland-labs/core-web-sdk v0.0.1 // indirect
+	github.com/goverland-labs/core-web-sdk v0.0.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect

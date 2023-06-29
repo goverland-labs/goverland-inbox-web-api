@@ -58,7 +58,7 @@ func convertCoreDaoToInternal(i *coredao.Dao) dao.DAO {
 		Name:      i.Name,
 		About: []common.Content{
 			{
-				Type: "", // fixme: how to resolve it?
+				Type: common.Markdown,
 				Body: i.About,
 			},
 		},

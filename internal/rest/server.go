@@ -15,7 +15,7 @@ import (
 )
 
 type AuthStorage interface {
-	Guest(deviceID string) auth.Session
+	Guest(deviceID string) (auth.Session, error)
 	GetSessionByRAW(sessionID string) (auth.Session, error)
 }
 

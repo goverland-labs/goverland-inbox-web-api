@@ -1,12 +1,16 @@
 package internal
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
 	coresdk "github.com/goverland-labs/core-web-sdk"
+	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/s-larionov/process-manager"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	"github.com/goverland-labs/inbox-web-api/internal/config"
@@ -73,8 +77,18 @@ func (a *Application) initServices() error {
 }
 
 func (a *Application) initRESTWorker() error {
+	conn, err := grpc.Dial(
+		a.cfg.Inbox.StorageAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return fmt.Errorf("create connection with storage server: %v", err)
+	}
+
+	ic := inboxapi.NewUserClient(conn)
 	cs := coresdk.NewClient(a.cfg.Core.CoreURL)
-	srv := rest.NewServer(a.cfg.REST, auth.NewInMemoryStorage(), cs)
+
+	srv := rest.NewServer(a.cfg.REST, auth.NewInMemoryStorage(ic), cs)
 	a.manager.AddWorker(process.NewServerWorker("rest", srv.GetHTTPServer()))
 
 	return nil

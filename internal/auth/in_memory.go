@@ -1,10 +1,13 @@
 package auth
 
 import (
+	"context"
 	"errors"
-	"time"
+	"fmt"
+	"sync"
 
 	"github.com/google/uuid"
+	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/helpers"
@@ -13,37 +16,51 @@ import (
 var ErrWrongSessionID = errors.New("wrong session id")
 
 type InMemoryStorage struct {
+	mu     sync.RWMutex
 	guests map[string]Session
+
+	client inboxapi.UserClient
 }
 
-func NewInMemoryStorage() *InMemoryStorage {
-	sessions := make(map[string]Session)
-	sessions["test"] = Session{
-		ID:        uuid.MustParse("1a551a46-625a-4c80-9d0c-8116756422e5"),
-		CreatedAt: *common.NewTime(time.Now()),
-		DeviceID:  helpers.Ptr("test"),
-	}
-
+func NewInMemoryStorage(cl inboxapi.UserClient) *InMemoryStorage {
 	return &InMemoryStorage{
-		guests: sessions,
+		guests: make(map[string]Session),
+		client: cl,
 	}
 }
 
-func (s *InMemoryStorage) Guest(deviceID string) Session {
+func (s *InMemoryStorage) Guest(deviceID string) (Session, error) {
+	s.mu.RLock()
 	session, ok := s.guests[deviceID]
+	s.mu.RUnlock()
+
 	if !ok {
+		resp, err := s.client.Create(context.TODO(), &inboxapi.UserCreateRequest{
+			DeviceUuid: deviceID,
+		})
+		if err != nil {
+			return Session{}, fmt.Errorf("create session by device uuid: %s: %w", deviceID, err)
+		}
+
+		s.mu.Lock()
+		defer s.mu.Unlock()
+
+		// todo: check created_at -> not filled from gorm
 		session = Session{
-			ID:        uuid.New(),
-			CreatedAt: *common.NewTime(time.Now()),
-			DeviceID:  helpers.Ptr(deviceID),
+			ID:        uuid.MustParse(resp.GetUser().GetId()),
+			CreatedAt: *common.NewTime(resp.GetUser().GetCreatedAt().AsTime()),
+			DeviceID:  helpers.Ptr(resp.GetUser().GetDeviceUuid()),
 		}
 		s.guests[deviceID] = session
 	}
 
-	return session
+	return session, nil
 }
 
 func (s *InMemoryStorage) GetSession(sessionID uuid.UUID) (session Session, exist bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
 	for _, s := range s.guests {
 		if s.ID == sessionID {
 			return s, true

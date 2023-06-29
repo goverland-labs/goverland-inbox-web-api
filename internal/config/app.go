@@ -6,4 +6,5 @@ type App struct {
 	Health     Health
 	REST       REST
 	Core       Core
+	Inbox      Inbox
 }

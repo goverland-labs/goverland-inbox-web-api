@@ -17,7 +17,13 @@ func (s *Server) authByDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session := s.authStorage.Guest(f.DeviceID)
+	session, err := s.authStorage.Guest(f.DeviceID)
+	if err != nil {
+		log.Error().Err(err).Msg("guest session")
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).

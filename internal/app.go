@@ -86,9 +86,10 @@ func (a *Application) initRESTWorker() error {
 	}
 
 	ic := inboxapi.NewUserClient(conn)
+	sc := inboxapi.NewSubscriptionClient(conn)
 	cs := coresdk.NewClient(a.cfg.Core.CoreURL)
 
-	srv := rest.NewServer(a.cfg.REST, auth.NewInMemoryStorage(ic), cs)
+	srv := rest.NewServer(a.cfg.REST, auth.NewInMemoryStorage(ic), cs, sc)
 	a.manager.AddWorker(process.NewServerWorker("rest", srv.GetHTTPServer()))
 
 	return nil

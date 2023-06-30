@@ -1,11 +1,13 @@
 package rest
 
 import (
+	"context"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	coresdk "github.com/goverland-labs/core-web-sdk"
+	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 
@@ -15,7 +17,6 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/helpers"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/subscriptions"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/mock"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/request"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 )
@@ -26,6 +27,7 @@ type Subscription struct {
 	DAO       *dao.ShortDAO `json:"dao,omitempty"`
 }
 
+// todo: wrap to the sync.Map or use mutex
 var subscriptionsStorage = make(map[uuid.UUID][]Subscription)
 
 func (s *Server) listSubscriptions(w http.ResponseWriter, r *http.Request) {
@@ -97,8 +99,8 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, exist := mock.GetDAO(f.DAO)
-	if !exist {
+	d, err := s.coreclient.GetDao(r.Context(), f.DAO.String())
+	if err != nil {
 		response.HandleError(response.NewNotFoundError(), w)
 		return
 	}
@@ -110,12 +112,13 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 	initialCount := len(list)
 
 	var sub *Subscription
+	daoID := uuid.MustParse(d.ID)
 	for _, item := range list {
 		if item.DAO == nil {
 			continue
 		}
 
-		if item.DAO.ID == d.ID {
+		if item.DAO.ID == daoID {
 			sub = helpers.Ptr(item)
 			break
 		}
@@ -133,10 +136,20 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	res, err := s.subclient.Subscribe(r.Context(), &inboxapi.SubscribeRequest{
+		SubscriberId: session.ID.String(),
+		DaoId:        f.DAO.String(),
+	})
+	if err != nil {
+		log.Error().Err(err).Msgf("subscribe on dao: %s", f.DAO.String())
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+	}
+
 	sub = &Subscription{
-		ID:        uuid.New(),
-		CreatedAt: *common.NewTime(time.Now()),
-		DAO:       helpers.Ptr(dao.NewShortDAO(d)),
+		ID:        uuid.MustParse(res.SubscriptionId),
+		CreatedAt: *common.NewTime(res.CreatedAt.AsTime()),
+		DAO:       helpers.Ptr(dao.NewShortDAO(convertCoreDaoToInternal(d))),
 	}
 
 	list = append(list, *sub)
@@ -165,6 +178,15 @@ func (s *Server) unsubscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, err := s.subclient.Unsubscribe(r.Context(), &inboxapi.UnsubscribeRequest{
+		SubscriptionId: f.ID.String(),
+	})
+	if err != nil {
+		log.Error().Err(err).Msgf("unsubscribe: %s", f.ID.String())
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+	}
+
 	initialCount := len(subscriptionsStorage[session.ID])
 	list := make([]Subscription, 0, initialCount)
 
@@ -187,7 +209,6 @@ func (s *Server) unsubscribe(w http.ResponseWriter, r *http.Request) {
 	response.SendEmpty(w, http.StatusOK)
 }
 
-// fixme: get it from inbox-storage
 func getSubscription(session auth.Session, daoID uuid.UUID) *dao.SubscriptionInfo {
 	if session == auth.EmptySession {
 		return nil
@@ -223,4 +244,57 @@ func wrapSubscriptionsIpfsLinks(subs []Subscription) []Subscription {
 	}
 
 	return subs
+}
+
+// todo: simplify me!
+// todo: collect all dao into storage or cache
+func (s *Server) getSubscriptions(sessionID uuid.UUID) {
+	limit, offset := 100, 0
+	subs := make(map[string]Subscription)
+	daoIds := make([]string, 0)
+	for {
+		res, err := s.subclient.ListSubscriptions(context.TODO(), &inboxapi.ListSubscriptionRequest{
+			SubscriberId: sessionID.String(),
+			Limit:        helpers.Ptr(uint64(limit)),
+			Offset:       helpers.Ptr(uint64(offset)),
+		})
+
+		if err != nil {
+			log.Error().Err(err).Msgf("get subscriptions: %s", sessionID)
+			return
+		}
+
+		for _, info := range res.Items {
+			subs[info.DaoId] = Subscription{
+				ID:        uuid.MustParse(info.SubscriptionId),
+				CreatedAt: *common.NewTime(info.CreatedAt.AsTime()),
+			}
+			daoIds = append(daoIds, info.DaoId)
+		}
+
+		if offset+limit >= int(res.TotalCount) {
+			break
+		}
+
+		offset += limit
+	}
+
+	res, err := s.coreclient.GetDaoList(context.TODO(), coresdk.GetDaoListRequest{
+		Limit:  len(daoIds),
+		DaoIDS: daoIds,
+	})
+
+	if err != nil {
+		log.Error().Err(err).Msg("get dao by ids")
+		return
+	}
+
+	list := make([]Subscription, 0, len(subs))
+	for _, di := range res.Items {
+		sub := subs[di.ID]
+		sub.DAO = helpers.Ptr(dao.NewShortDAO(convertCoreDaoToInternal(&di)))
+		list = append(list, sub)
+	}
+
+	subscriptionsStorage[sessionID] = list
 }

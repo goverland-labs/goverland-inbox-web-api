@@ -2,10 +2,12 @@ package rest
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/core-web-sdk"
+	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	"github.com/goverland-labs/inbox-web-api/internal/config"
@@ -23,9 +25,12 @@ type Server struct {
 	httpServer  *http.Server
 	authStorage AuthStorage
 	coreclient  *coresdk.Client
+	subclient   inboxapi.SubscriptionClient
+
+	mu sync.RWMutex
 }
 
-func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client) *Server {
+func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc inboxapi.SubscriptionClient) *Server {
 	handler := mux.NewRouter()
 	handler.Use(
 		middleware.Panic,
@@ -47,6 +52,7 @@ func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client) *Se
 			ReadHeaderTimeout: cfg.Timeout,
 		},
 		coreclient: cl,
+		subclient:  sc,
 	}
 
 	handler.HandleFunc("/auth/guest", srv.authByDevice).Methods(http.MethodPost).Name("auth_guest")

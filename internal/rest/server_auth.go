@@ -25,6 +25,8 @@ func (s *Server) authByDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.getSubscriptions(session.ID)
+
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
 		Str("session_id", session.ID.String()).

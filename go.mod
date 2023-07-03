@@ -9,7 +9,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/core-web-sdk v0.0.2
-	github.com/goverland-labs/inbox-api v0.0.5-0.20230630152425-49e915260dc4
+	github.com/goverland-labs/inbox-api v0.0.5
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.29.1
 	github.com/s-larionov/process-manager v0.0.1

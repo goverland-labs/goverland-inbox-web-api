@@ -11,10 +11,12 @@ import (
 type ListRequest struct {
 	DAO      string
 	Category string
+	Title    string
 }
 
 type ListForm struct {
 	DAO      string
+	Title    string
 	Category common.Category
 	Limit    int
 	Offset   int
@@ -28,6 +30,7 @@ func (f *ListForm) ParseAndValidate(r *http.Request) (*ListForm, response.Error)
 	req := &ListRequest{
 		DAO:      r.URL.Query().Get("dao"),
 		Category: r.URL.Query().Get("category"),
+		Title:    r.URL.Query().Get("title"),
 	}
 
 	errors := make(map[string]response.ErrorMessage)

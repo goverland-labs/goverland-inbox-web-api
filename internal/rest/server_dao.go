@@ -237,3 +237,49 @@ func enrichSubscriptionInfo(session auth.Session, list []dao.DAO) []dao.DAO {
 
 	return list
 }
+
+func (s *Server) getDAOFeed(w http.ResponseWriter, r *http.Request) {
+	f, verr := daoform.NewFeedForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	resp, err := s.coreclient.GetDaoFeed(r.Context(), f.ID.String(), coresdk.GetDaoFeedRequest{
+		Offset: f.Offset,
+		Limit:  f.Limit,
+	})
+	if err != nil {
+		log.Error().Err(err).Msgf("get dao feed by id: %s", f.ID.String())
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	list := make([]dao.FeedItem, len(resp.Items))
+	for i, info := range resp.Items {
+		list[i] = convertFeedToInternal(&info)
+	}
+
+	log.Info().
+		Str("route", mux.CurrentRoute(r).GetName()).
+		Int("count", len(list)).
+		Msg("route execution")
+
+	response.AddPaginationHeaders(w, r, resp.Offset, resp.Limit, resp.TotalCnt)
+	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func convertFeedToInternal(fi *coredao.FeedItem) dao.FeedItem {
+	return dao.FeedItem{
+		ID:           fi.ID,
+		CreatedAt:    *common.NewTime(fi.CreatedAt),
+		UpdatedAt:    *common.NewTime(fi.UpdatedAt),
+		DaoID:        uuid.MustParse(fi.DaoID),
+		ProposalID:   fi.ProposalID,
+		DiscussionID: fi.DiscussionID,
+		Type:         fi.Type,
+		Action:       fi.Action,
+		Snapshot:     fi.Snapshot,
+	}
+}

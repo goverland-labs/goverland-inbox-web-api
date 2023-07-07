@@ -206,6 +206,7 @@ func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
 		Limit:    limit,
 		Dao:      f.DAO,
 		Category: string(f.Category),
+		Title:    f.Title,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("get proposal list")

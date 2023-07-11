@@ -261,6 +261,72 @@ func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &list)
 }
 
+func (s *Server) proposalsTop(w http.ResponseWriter, r *http.Request) {
+	session, _ := appctx.ExtractUserSession(r.Context())
+
+	offset, limit, err := request.ExtractPagination(r)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	resp, err := s.coreclient.GetProposalTop(r.Context(), coresdk.GetProposalTopRequest{
+		Offset: offset,
+		Limit:  limit,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get proposal top")
+
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// todo: use caching for getting dao
+	daoIds := make([]string, 0)
+	for _, info := range resp.Items {
+		daoIds = append(daoIds, info.DaoID)
+	}
+	daolist, err := s.coreclient.GetDaoList(r.Context(), coresdk.GetDaoListRequest{
+		DaoIDS: daoIds,
+		Limit:  len(daoIds),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get dao list by IDs")
+
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	daos := make(map[string]coredao.Dao)
+	for _, info := range daolist.Items {
+		daos[info.ID] = info
+	}
+
+	list := make([]proposal.Proposal, len(resp.Items))
+	for i, info := range resp.Items {
+		di, ok := daos[info.DaoID]
+		if !ok {
+			log.Error().Msg("dao not found")
+
+			response.SendError(w, http.StatusBadRequest, fmt.Sprintf("dao not found: %s", info.DaoID))
+			return
+		}
+		list[i] = convertProposalToInternal(&info, &di)
+	}
+
+	list = enrichProposalsSubscriptionInfo(session, list)
+	list = helpers.WrapProposalsIpfsLinks(list)
+
+	log.Info().
+		Str("route", mux.CurrentRoute(r).GetName()).
+		Int("count", len(list)).
+		Int("total", resp.TotalCnt).
+		Msg("route execution")
+
+	response.AddPaginationHeaders(w, r, offset, limit, resp.TotalCnt)
+	response.SendJSON(w, http.StatusOK, &list)
+}
+
 func enrichProposalsSubscriptionInfo(session auth.Session, list []proposal.Proposal) []proposal.Proposal {
 	if session == auth.EmptySession {
 		return list

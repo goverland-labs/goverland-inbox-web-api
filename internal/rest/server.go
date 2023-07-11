@@ -62,6 +62,7 @@ func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc 
 	handler.HandleFunc("/dao/{id}", srv.getDAO).Methods(http.MethodGet).Name("get_dao_item")
 
 	handler.HandleFunc("/proposals", srv.listProposals).Methods(http.MethodGet).Name("get_proposal_list")
+	handler.HandleFunc("/proposals/top", srv.proposalsTop).Methods(http.MethodGet).Name("get_proposal_top")
 	handler.HandleFunc("/proposals/{id}", srv.getProposal).Methods(http.MethodGet).Name("get_proposal_item")
 	handler.HandleFunc("/proposals/{id}/votes", srv.getProposalVotes).Methods(http.MethodGet).Name("get_proposal_votes")
 

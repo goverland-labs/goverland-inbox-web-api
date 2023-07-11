@@ -52,7 +52,7 @@ func (s *Server) getDAO(w http.ResponseWriter, r *http.Request) {
 func convertCoreDaoToInternal(i *coredao.Dao) dao.DAO {
 	return dao.DAO{
 		ID:        uuid.MustParse(i.ID),
-		Alias:     "",
+		Alias:     i.Alias,
 		CreatedAt: *common.NewTime(i.CreatedAt),
 		UpdatedAt: *common.NewTime(i.UpdatedAt),
 		Name:      i.Name,
@@ -92,6 +92,7 @@ func convertCoreStrategiesToInternal(list coredao.Strategies) []common.Strategy 
 		res[i] = common.Strategy{
 			Name:    info.Name,
 			Network: common.Network(info.Network),
+			Params:  info.Params,
 		}
 	}
 

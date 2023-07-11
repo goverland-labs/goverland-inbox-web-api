@@ -100,6 +100,7 @@ func convertProposalToInternal(pr *coreproposal.Proposal, di *coredao.Dao) propo
 func convertDaoToShortInternal(di *coredao.Dao) dao.ShortDAO {
 	return dao.ShortDAO{
 		ID:             uuid.MustParse(di.ID),
+		Alias:          di.Alias,
 		CreatedAt:      *common.NewTime(di.CreatedAt),
 		UpdatedAt:      *common.NewTime(di.UpdatedAt),
 		Name:           di.Name,
@@ -129,6 +130,7 @@ func convertCoreProposalStrategiesToInternal(list coreproposal.Strategies) []com
 		res[i] = common.Strategy{
 			Name:    info.Name,
 			Network: common.Network(info.Network),
+			Params:  info.Params,
 		}
 	}
 

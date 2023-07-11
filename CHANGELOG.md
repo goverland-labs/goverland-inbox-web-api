@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed missed fields
+- Updated core-web-sdk dependency to v0.0.5
+
 ## [0.0.4] - 2023-07-11
 
 ### Added

@@ -2,7 +2,6 @@ package rest
 
 import (
 	"net/http"
-	"sync"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -26,11 +25,10 @@ type Server struct {
 	authStorage AuthStorage
 	coreclient  *coresdk.Client
 	subclient   inboxapi.SubscriptionClient
-
-	mu sync.RWMutex
+	settings    inboxapi.SettingsClient
 }
 
-func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc inboxapi.SubscriptionClient) *Server {
+func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc inboxapi.SubscriptionClient, settings inboxapi.SettingsClient) *Server {
 	handler := mux.NewRouter()
 	handler.Use(
 		middleware.Panic,
@@ -53,6 +51,7 @@ func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc 
 		},
 		coreclient: cl,
 		subclient:  sc,
+		settings:   settings,
 	}
 
 	handler.HandleFunc("/auth/guest", srv.authByDevice).Methods(http.MethodPost).Name("auth_guest")
@@ -74,6 +73,10 @@ func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc 
 	handler.HandleFunc("/feed", srv.getFeed).Methods(http.MethodGet).Name("get_feed")
 	handler.HandleFunc("/feed/mark-as-read", srv.markAsReadBatch).Methods(http.MethodPost).Name("mark_as_read_batch")
 	handler.HandleFunc("/feed/{id}/mark-as-read", srv.markFeedItemAsRead).Methods(http.MethodPost).Name("mark_feed_item_as_read")
+
+	handler.HandleFunc("/settings/notifications", srv.storePushToken).Methods(http.MethodPost).Name("store_push_token")
+	handler.HandleFunc("/settings/notifications", srv.tokenExists).Methods(http.MethodGet).Name("push_token_exists")
+	handler.HandleFunc("/settings/notifications", srv.removePushToken).Methods(http.MethodDelete).Name("remove_push_token")
 
 	return srv
 }

@@ -224,6 +224,12 @@ func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
 		DaoIDS: daoIds,
 		Limit:  len(daoIds),
 	})
+	if err != nil {
+		log.Error().Err(err).Msg("get dao list by IDs")
+
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	daos := make(map[string]coredao.Dao)
 	for _, info := range daolist.Items {

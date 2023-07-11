@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed Dockerfile
+
+### Added
+- Add settings routes
+
 ## [0.0.3] - 2023-07-07
 
 ### Added

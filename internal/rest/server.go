@@ -2,7 +2,6 @@ package rest
 
 import (
 	"net/http"
-	"sync"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -27,8 +26,6 @@ type Server struct {
 	coreclient  *coresdk.Client
 	subclient   inboxapi.SubscriptionClient
 	settings    inboxapi.SettingsClient
-
-	mu sync.RWMutex
 }
 
 func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc inboxapi.SubscriptionClient, settings inboxapi.SettingsClient) *Server {

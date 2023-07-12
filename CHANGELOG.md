@@ -9,6 +9,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 - Fixed getting subscriptions list
+- Fixed marshaling common.Time if real time element is nil
 
 ## [0.0.5] - 2023-07-11
 

@@ -50,6 +50,10 @@ func (t *Time) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 
+	if t.Time == nil {
+		return []byte("null"), nil
+	}
+
 	return []byte(fmt.Sprintf(`"%s"`, t.Time.UTC().Format(layout))), nil
 }
 

@@ -279,6 +279,10 @@ func (s *Server) getSubscriptions(sessionID uuid.UUID) {
 		offset += limit
 	}
 
+	if len(daoIds) == 0 {
+		return
+	}
+
 	res, err := s.coreclient.GetDaoList(context.TODO(), coresdk.GetDaoListRequest{
 		Limit:  len(daoIds),
 		DaoIDS: daoIds,

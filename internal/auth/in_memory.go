@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/helpers"
@@ -57,7 +58,7 @@ func (s *InMemoryStorage) Guest(deviceID string) (Session, error) {
 	return session, nil
 }
 
-func (s *InMemoryStorage) GetSession(sessionID uuid.UUID) (session Session, exist bool) {
+func (s *InMemoryStorage) GetSession(sessionID uuid.UUID, cb func(uuid.UUID)) (session Session, exist bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -67,16 +68,35 @@ func (s *InMemoryStorage) GetSession(sessionID uuid.UUID) (session Session, exis
 		}
 	}
 
-	return EmptySession, false
+	resp, err := s.client.GetByID(context.TODO(), &inboxapi.UserByIDRequest{
+		UserId: sessionID.String(),
+	})
+
+	if err != nil {
+		log.Error().Err(err).Msgf("get session by id: %s", sessionID.String())
+
+		return EmptySession, false
+	}
+
+	session = Session{
+		ID:        uuid.MustParse(resp.GetUser().GetId()),
+		CreatedAt: *common.NewTime(resp.GetUser().GetCreatedAt().AsTime()),
+		DeviceID:  helpers.Ptr(resp.GetUser().GetDeviceUuid()),
+	}
+	s.guests[resp.GetUser().GetDeviceUuid()] = session
+
+	cb(session.ID)
+
+	return session, true
 }
 
-func (s *InMemoryStorage) GetSessionByRAW(sessionID string) (Session, error) {
+func (s *InMemoryStorage) GetSessionByRAW(sessionID string, cb func(uuid.UUID)) (Session, error) {
 	id, err := uuid.Parse(sessionID)
 	if err != nil {
 		return EmptySession, err
 	}
 
-	session, exist := s.GetSession(id)
+	session, exist := s.GetSession(id, cb)
 	if !exist {
 		return EmptySession, ErrWrongSessionID
 	}

@@ -11,12 +11,12 @@ import (
 type ListRequest struct {
 	DAO      string
 	Category string
-	Title    string
+	Query    string
 }
 
 type ListForm struct {
 	DAO      string
-	Title    string
+	Query    string
 	Category common.Category
 	Limit    int
 	Offset   int
@@ -30,10 +30,11 @@ func (f *ListForm) ParseAndValidate(r *http.Request) (*ListForm, response.Error)
 	req := &ListRequest{
 		DAO:      r.URL.Query().Get("dao"),
 		Category: r.URL.Query().Get("category"),
-		Title:    r.URL.Query().Get("title"),
+		Query:    r.URL.Query().Get("query"),
 	}
 
 	errors := make(map[string]response.ErrorMessage)
+	f.validateAndSetQuery(req, errors)
 	f.validateAndSetCategory(req, errors)
 	f.validateAndSetDAOs(req, errors)
 
@@ -42,6 +43,15 @@ func (f *ListForm) ParseAndValidate(r *http.Request) (*ListForm, response.Error)
 	}
 
 	return f, nil
+}
+
+func (f *ListForm) validateAndSetQuery(req *ListRequest, _ map[string]response.ErrorMessage) {
+	query := strings.TrimSpace(req.Query)
+	if query == "" {
+		return
+	}
+
+	f.Query = query
 }
 
 func (f *ListForm) validateAndSetCategory(req *ListRequest, _ map[string]response.ErrorMessage) {

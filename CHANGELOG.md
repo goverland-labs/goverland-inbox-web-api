@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Changed title parameter for filtering proposals to query
+
 ### Fixed
 - Fixed getting subscriptions list
 - Fixed marshaling common.Time if real time element is nil

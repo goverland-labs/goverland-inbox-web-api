@@ -3,6 +3,7 @@ package rest
 import (
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/core-web-sdk"
@@ -17,7 +18,7 @@ import (
 
 type AuthStorage interface {
 	Guest(deviceID string) (auth.Session, error)
-	GetSessionByRAW(sessionID string) (auth.Session, error)
+	GetSessionByRAW(sessionID string, cb func(uuid.UUID)) (auth.Session, error)
 }
 
 type Server struct {
@@ -29,6 +30,13 @@ type Server struct {
 }
 
 func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc inboxapi.SubscriptionClient, settings inboxapi.SettingsClient) *Server {
+	srv := &Server{
+		authStorage: authStorage,
+		coreclient:  cl,
+		subclient:   sc,
+		settings:    settings,
+	}
+
 	handler := mux.NewRouter()
 	handler.Use(
 		middleware.Panic,
@@ -37,21 +45,15 @@ func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc 
 		middleware.Prometheus,
 		middleware.Timeout(cfg.Timeout),
 		middlewares.Log,
-		middlewares.Auth(authStorage),
+		middlewares.Auth(authStorage, srv.getSubscriptions),
 	)
 
-	srv := &Server{
-		authStorage: authStorage,
-		httpServer: &http.Server{
-			Addr:              cfg.Listen,
-			Handler:           configureCorsHandler(handler),
-			WriteTimeout:      cfg.Timeout,
-			ReadTimeout:       cfg.Timeout,
-			ReadHeaderTimeout: cfg.Timeout,
-		},
-		coreclient: cl,
-		subclient:  sc,
-		settings:   settings,
+	srv.httpServer = &http.Server{
+		Addr:              cfg.Listen,
+		Handler:           configureCorsHandler(handler),
+		WriteTimeout:      cfg.Timeout,
+		ReadTimeout:       cfg.Timeout,
+		ReadHeaderTimeout: cfg.Timeout,
 	}
 
 	handler.HandleFunc("/auth/guest", srv.authByDevice).Methods(http.MethodPost).Name("auth_guest")

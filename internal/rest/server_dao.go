@@ -223,6 +223,10 @@ func (s *Server) listTopDAOs(w http.ResponseWriter, r *http.Request) {
 		Int("groups", len(grouped)).
 		Msg("route execution")
 
+	if session != auth.EmptySession {
+		response.AddSubscriptionsCountHeaders(w, len(subscriptionsStorage[session.ID]))
+	}
+
 	response.AddTotalCounterHeaders(w, totalCnt)
 	response.SendJSON(w, http.StatusOK, &grouped)
 }

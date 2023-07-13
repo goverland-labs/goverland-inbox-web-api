@@ -209,7 +209,7 @@ func (s *Server) listTopDAOs(w http.ResponseWriter, r *http.Request) {
 		}
 
 		grouped[common.Category(category)] = Top{
-			List:  enrichSubscriptionInfo(session, daos),
+			List:  helpers.WrapDAOsIpfsLinks(enrichSubscriptionInfo(session, daos)),
 			Count: int(list.TotalCount),
 		}
 

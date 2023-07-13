@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Subscriptions count for authenticated dao top request
+
 ## [0.0.7] - 2023-07-12
 
 ### Added

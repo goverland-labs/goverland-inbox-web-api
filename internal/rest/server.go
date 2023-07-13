@@ -97,6 +97,7 @@ func configureCorsHandler(router *mux.Router) http.Handler {
 	})
 	handlerExposedHeaders := handlers.ExposedHeaders([]string{
 		response.HeaderTotalCount,
+		response.HeaderSubscriptionsCount,
 		response.HeaderOffset,
 		response.HeaderLimit,
 		response.HeaderPrevPageLink,

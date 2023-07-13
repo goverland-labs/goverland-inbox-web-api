@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed notifications settings endpoint as in mock version
+
 ## [0.0.8] - 2023-07-13
 
 ### Added

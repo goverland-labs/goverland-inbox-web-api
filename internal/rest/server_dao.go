@@ -292,5 +292,6 @@ func convertFeedToInternal(fi *coredao.FeedItem) dao.FeedItem {
 		Type:         fi.Type,
 		Action:       fi.Action,
 		Snapshot:     fi.Snapshot,
+		Timeline:     fi.Timeline,
 	}
 }

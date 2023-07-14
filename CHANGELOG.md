@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Supported feed.timeline field
+
 ## [0.0.12] - 2023-07-14
 
 ### Fixed

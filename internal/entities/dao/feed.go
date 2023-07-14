@@ -18,4 +18,5 @@ type FeedItem struct {
 	Type         string          `json:"type"`
 	Action       string          `json:"action"`
 	Snapshot     json.RawMessage `json:"snapshot"`
+	Timeline     json.RawMessage `json:"timeline"`
 }

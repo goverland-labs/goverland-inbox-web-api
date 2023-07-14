@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
-	github.com/goverland-labs/core-web-sdk v0.0.9
+	github.com/goverland-labs/core-web-sdk v0.0.10
 	github.com/goverland-labs/inbox-api v0.0.6
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.29.1

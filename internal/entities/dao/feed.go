@@ -9,7 +9,7 @@ import (
 )
 
 type FeedItem struct {
-	ID           uint64          `json:"id"`
+	ID           uuid.UUID       `json:"id"`
 	CreatedAt    common.Time     `json:"created_at"`
 	UpdatedAt    common.Time     `json:"updated_at"`
 	DaoID        uuid.UUID       `json:"dao_id"`

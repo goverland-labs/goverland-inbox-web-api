@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/core-web-sdk"
 	coredao "github.com/goverland-labs/core-web-sdk/dao"
@@ -99,7 +98,7 @@ func convertProposalToInternal(pr *coreproposal.Proposal, di *coredao.Dao) propo
 
 func convertDaoToShortInternal(di *coredao.Dao) dao.ShortDAO {
 	return dao.ShortDAO{
-		ID:             uuid.MustParse(di.ID),
+		ID:             di.ID,
 		Alias:          di.Alias,
 		CreatedAt:      *common.NewTime(di.CreatedAt),
 		UpdatedAt:      *common.NewTime(di.UpdatedAt),
@@ -220,7 +219,7 @@ func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
 	// todo: use caching for getting dao
 	daoIds := make([]string, 0)
 	for _, info := range resp.Items {
-		daoIds = append(daoIds, info.DaoID)
+		daoIds = append(daoIds, info.DaoID.String())
 	}
 	daolist, err := s.coreclient.GetDaoList(r.Context(), coresdk.GetDaoListRequest{
 		DaoIDS: daoIds,
@@ -235,12 +234,12 @@ func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
 
 	daos := make(map[string]coredao.Dao)
 	for _, info := range daolist.Items {
-		daos[info.ID] = info
+		daos[info.ID.String()] = info
 	}
 
 	list := make([]proposal.Proposal, len(resp.Items))
 	for i, info := range resp.Items {
-		di, ok := daos[info.DaoID]
+		di, ok := daos[info.DaoID.String()]
 		if !ok {
 			log.Error().Msg("dao not found")
 
@@ -286,7 +285,7 @@ func (s *Server) proposalsTop(w http.ResponseWriter, r *http.Request) {
 	// todo: use caching for getting dao
 	daoIds := make([]string, 0)
 	for _, info := range resp.Items {
-		daoIds = append(daoIds, info.DaoID)
+		daoIds = append(daoIds, info.DaoID.String())
 	}
 	daolist, err := s.coreclient.GetDaoList(r.Context(), coresdk.GetDaoListRequest{
 		DaoIDS: daoIds,
@@ -301,12 +300,12 @@ func (s *Server) proposalsTop(w http.ResponseWriter, r *http.Request) {
 
 	daos := make(map[string]coredao.Dao)
 	for _, info := range daolist.Items {
-		daos[info.ID] = info
+		daos[info.ID.String()] = info
 	}
 
 	list := make([]proposal.Proposal, len(resp.Items))
 	for i, info := range resp.Items {
-		di, ok := daos[info.DaoID]
+		di, ok := daos[info.DaoID.String()]
 		if !ok {
 			log.Error().Msg("dao not found")
 

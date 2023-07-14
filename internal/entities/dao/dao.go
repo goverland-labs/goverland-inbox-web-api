@@ -34,6 +34,7 @@ type DAO struct {
 	Guidelines       *string           `json:"-"`
 	Template         *string           `json:"-"`
 	ParentID         *string           `json:"parent_id,omitempty"`
+	ActivitySince    *int              `json:"activity_since,omitempty"`
 	SubscriptionInfo *SubscriptionInfo `json:"subscription_info"`
 }
 

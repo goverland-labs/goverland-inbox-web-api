@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed structure for dao flat feed (the same as mocks)
+
 ## [0.0.13] - 2023-07-14
 
 ### Fixed

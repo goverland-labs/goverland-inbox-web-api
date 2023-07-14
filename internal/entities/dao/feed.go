@@ -17,6 +17,7 @@ type FeedItem struct {
 	DiscussionID string          `json:"discussion_id"`
 	Type         string          `json:"type"`
 	Action       string          `json:"action"`
-	Snapshot     json.RawMessage `json:"snapshot"`
+	DAO          json.RawMessage `json:"dao,omitempty"`
+	Proposal     json.RawMessage `json:"proposal,omitempty"`
 	Timeline     json.RawMessage `json:"timeline"`
 }

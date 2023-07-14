@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
@@ -282,6 +283,15 @@ func (s *Server) getDAOFeed(w http.ResponseWriter, r *http.Request) {
 }
 
 func convertFeedToInternal(fi *coredao.FeedItem) dao.FeedItem {
+	var daoSnapshot json.RawMessage
+	var proposalSnapshot json.RawMessage
+	switch fi.Type {
+	case "dao":
+		daoSnapshot = fi.Snapshot
+	case "proposal":
+		proposalSnapshot = fi.Snapshot
+	}
+
 	return dao.FeedItem{
 		ID:           fi.ID,
 		CreatedAt:    *common.NewTime(fi.CreatedAt),
@@ -291,7 +301,8 @@ func convertFeedToInternal(fi *coredao.FeedItem) dao.FeedItem {
 		DiscussionID: fi.DiscussionID,
 		Type:         fi.Type,
 		Action:       fi.Action,
-		Snapshot:     fi.Snapshot,
+		DAO:          daoSnapshot,
+		Proposal:     proposalSnapshot,
 		Timeline:     fi.Timeline,
 	}
 }

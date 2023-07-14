@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- DAO activity since field
+
 ## [0.0.9] - 2023-07-13
 
 ### Fixed

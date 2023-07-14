@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/core-web-sdk"
 	coredao "github.com/goverland-labs/core-web-sdk/dao"
@@ -29,7 +28,7 @@ func (s *Server) getDAO(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := s.coreclient.GetDao(r.Context(), f.ID.String())
+	info, err := s.coreclient.GetDao(r.Context(), f.ID)
 	if err != nil && errors.Is(err, coresdk.ErrNotFound) {
 		response.SendEmpty(w, http.StatusNotFound)
 		return
@@ -51,7 +50,7 @@ func (s *Server) getDAO(w http.ResponseWriter, r *http.Request) {
 
 func convertCoreDaoToInternal(i *coredao.Dao) dao.DAO {
 	return dao.DAO{
-		ID:        uuid.MustParse(i.ID),
+		ID:        i.ID,
 		Alias:     i.Alias,
 		CreatedAt: *common.NewTime(i.CreatedAt),
 		UpdatedAt: *common.NewTime(i.UpdatedAt),
@@ -81,7 +80,8 @@ func convertCoreDaoToInternal(i *coredao.Dao) dao.DAO {
 		ProposalsCount: int(i.ProposalsCount),
 		Guidelines:     helpers.Ptr(i.Guidelines),
 		Template:       helpers.Ptr(i.Template),
-		ParentID:       helpers.Ptr(i.ParentID),
+		ActivitySince:  helpers.Ptr(int(i.ActivitySince)),
+		// todo: ParentID
 	}
 }
 
@@ -250,7 +250,7 @@ func (s *Server) getDAOFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := s.coreclient.GetDaoFeed(r.Context(), f.ID.String(), coresdk.GetDaoFeedRequest{
+	resp, err := s.coreclient.GetDaoFeed(r.Context(), f.ID, coresdk.GetDaoFeedRequest{
 		Offset: f.Offset,
 		Limit:  f.Limit,
 	})
@@ -280,7 +280,7 @@ func convertFeedToInternal(fi *coredao.FeedItem) dao.FeedItem {
 		ID:           fi.ID,
 		CreatedAt:    *common.NewTime(fi.CreatedAt),
 		UpdatedAt:    *common.NewTime(fi.UpdatedAt),
-		DaoID:        uuid.MustParse(fi.DaoID),
+		DaoID:        fi.DaoID,
 		ProposalID:   fi.ProposalID,
 		DiscussionID: fi.DiscussionID,
 		Type:         fi.Type,

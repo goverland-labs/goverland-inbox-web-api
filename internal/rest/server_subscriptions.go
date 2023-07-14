@@ -99,7 +99,7 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, err := s.coreclient.GetDao(r.Context(), f.DAO.String())
+	d, err := s.coreclient.GetDao(r.Context(), f.DAO)
 	if err != nil {
 		response.HandleError(response.NewNotFoundError(), w)
 		return
@@ -112,7 +112,7 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 	initialCount := len(list)
 
 	var sub *Subscription
-	daoID := uuid.MustParse(d.ID)
+	daoID := d.ID
 	for _, item := range list {
 		if item.DAO == nil {
 			continue
@@ -295,7 +295,7 @@ func (s *Server) getSubscriptions(sessionID uuid.UUID) {
 
 	list := make([]Subscription, 0, len(subs))
 	for _, di := range res.Items {
-		sub := subs[di.ID]
+		sub := subs[di.ID.String()]
 		sub.DAO = helpers.Ptr(dao.NewShortDAO(convertCoreDaoToInternal(&di)))
 		list = append(list, sub)
 	}

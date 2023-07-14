@@ -3,6 +3,7 @@ package rest
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/core-web-sdk"
@@ -49,6 +50,11 @@ func (s *Server) getDAO(w http.ResponseWriter, r *http.Request) {
 }
 
 func convertCoreDaoToInternal(i *coredao.Dao) dao.DAO {
+	var activitySince *common.Time
+	if i.ActivitySince > 0 {
+		activitySince = common.NewTime(time.Unix(int64(i.ActivitySince), 0))
+	}
+
 	return dao.DAO{
 		ID:        i.ID,
 		Alias:     i.Alias,
@@ -80,7 +86,7 @@ func convertCoreDaoToInternal(i *coredao.Dao) dao.DAO {
 		ProposalsCount: int(i.ProposalsCount),
 		Guidelines:     helpers.Ptr(i.Guidelines),
 		Template:       helpers.Ptr(i.Template),
-		ActivitySince:  helpers.Ptr(int(i.ActivitySince)),
+		ActivitySince:  activitySince,
 		// todo: ParentID
 	}
 }

@@ -75,33 +75,6 @@ func init() {
 	}
 
 	Feed = make([]feed.Item, 0, 20)
-	Feed = append(
-		Feed,
-		daoFeed(feed.DaoCreated, "safe.eth"),
-		daoFeed(feed.DaoCreated, "aavegotchi.eth"),
-		daoFeed(feed.DaoCreated, "wenvote.eth"),
-		daoFeed(feed.DaoCreated, "halofi.eth"),
-		daoFeed(feed.DaoCreated, "jbdao.eth"),
-		daoFeed(feed.DaoCreated, "gnars.eth"),
-		proposalFeed(feed.ProposalCreated, "0x17b63fde4c0045768a12dc14c8a09b2a2bc6a5a7df7ef392e82e291904784e02"),
-		proposalFeed(feed.ProposalVoteStarted, "0x17b63fde4c0045768a12dc14c8a09b2a2bc6a5a7df7ef392e82e291904784e02"),
-		proposalFeed(feed.ProposalVoteEnded, "0x17b63fde4c0045768a12dc14c8a09b2a2bc6a5a7df7ef392e82e291904784e02"),
-		proposalFeed(feed.ProposalCreated, "0x0a5b7e0c7fb2137cfcb5a546c27f5ddcef066631e79b9d77d1b16e3a501f9e2f"),
-		proposalFeed(feed.ProposalVoteStarted, "0x0a5b7e0c7fb2137cfcb5a546c27f5ddcef066631e79b9d77d1b16e3a501f9e2f"),
-		proposalFeed(feed.ProposalVoteEnded, "0x0a5b7e0c7fb2137cfcb5a546c27f5ddcef066631e79b9d77d1b16e3a501f9e2f"),
-		proposalFeed(feed.ProposalCreated, "0xeeabc37213dda44d59c48aa4e1e969b446c3d7146b216066f677e2a9a9618e7f"),
-		proposalFeed(feed.ProposalVoteStarted, "0xeeabc37213dda44d59c48aa4e1e969b446c3d7146b216066f677e2a9a9618e7f"),
-		proposalFeed(feed.ProposalVoteEnded, "0xeeabc37213dda44d59c48aa4e1e969b446c3d7146b216066f677e2a9a9618e7f"),
-		proposalFeed(feed.ProposalCreated, "0x2620cd1735527778ef8b3ecfc3cfb9231536fa07e496afb1061339f4d64d84e6"),
-		proposalFeed(feed.ProposalVoteStarted, "0x2620cd1735527778ef8b3ecfc3cfb9231536fa07e496afb1061339f4d64d84e6"),
-		proposalFeed(feed.ProposalVoteEnded, "0x2620cd1735527778ef8b3ecfc3cfb9231536fa07e496afb1061339f4d64d84e6"),
-		proposalFeed(feed.ProposalCreated, "0x872bfadf89dee5dcea47992b94ebff05bd24dcf9a02d3e5daac50b2ff48eb90b"),
-		proposalFeed(feed.ProposalVoteStarted, "0x872bfadf89dee5dcea47992b94ebff05bd24dcf9a02d3e5daac50b2ff48eb90b"),
-		proposalFeed(feed.ProposalVoteEnded, "0x872bfadf89dee5dcea47992b94ebff05bd24dcf9a02d3e5daac50b2ff48eb90b"),
-		proposalFeed(feed.ProposalCreated, "0x912cf4df1d5c68d54aaebf2e8caaec512a963c66d5dd4f1c522c8b59714343cb"),
-		proposalFeed(feed.ProposalVoteStarted, "0x912cf4df1d5c68d54aaebf2e8caaec512a963c66d5dd4f1c522c8b59714343cb"),
-		proposalFeed(feed.ProposalVoteEnded, "0x912cf4df1d5c68d54aaebf2e8caaec512a963c66d5dd4f1c522c8b59714343cb"),
-	)
 }
 
 func GetDAO(id uuid.UUID) (item dao.DAO, exist bool) {
@@ -174,7 +147,7 @@ func MustGetProposal(id string) proposal.Proposal {
 	return d
 }
 
-func proposalFeed(event feed.Event, id string) feed.Item {
+func proposalFeed(id string) feed.Item {
 	p := MustGetProposal(id)
 
 	return feed.Item{
@@ -182,12 +155,11 @@ func proposalFeed(event feed.Event, id string) feed.Item {
 		CreatedAt: p.Created,
 		UpdatedAt: p.Created,
 		ReadAt:    nil,
-		Event:     event,
 		Proposal:  helpers.Ptr(p),
 	}
 }
 
-func daoFeed(event feed.Event, id string) feed.Item {
+func daoFeed(id string) feed.Item {
 	d := MustGetDaoByAlias(id)
 
 	return feed.Item{
@@ -195,7 +167,6 @@ func daoFeed(event feed.Event, id string) feed.Item {
 		CreatedAt: d.CreatedAt,
 		UpdatedAt: d.UpdatedAt,
 		ReadAt:    nil,
-		Event:     event,
 		DAO:       helpers.Ptr(d),
 	}
 }

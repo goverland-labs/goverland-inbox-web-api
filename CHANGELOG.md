@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed feed timeline structure
+
 ## [0.0.16] - 2023-07-15
 
 ### Fixed

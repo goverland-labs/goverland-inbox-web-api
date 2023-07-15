@@ -345,6 +345,29 @@ func convertFeedToInternal(fi *coredao.FeedItem, d coredao.Dao) feed.Item {
 		Action:       fi.Action,
 		DAO:          daoItem,
 		Proposal:     proposalItem,
-		Timeline:     fi.Timeline,
+		Timeline:     convertFeedTimelineToInternal(fi.Timeline),
 	}
+}
+
+func convertFeedTimelineToInternal(src json.RawMessage) []feed.Timeline {
+	var timelineSource []feed.TimelineSource
+	if err := json.Unmarshal(src, &timelineSource); err != nil {
+		return make([]feed.Timeline, 0)
+	}
+
+	timeline := make([]feed.Timeline, 0, len(timelineSource))
+	for _, t := range timelineSource {
+		e, ok := feed.ActionSourceMap[t.Action]
+		if !ok {
+			// TODO: TBD
+			continue
+		}
+
+		timeline = append(timeline, feed.Timeline{
+			CreatedAt: *common.NewTime(t.CreatedAt),
+			Event:     e,
+		})
+	}
+
+	return timeline
 }

@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed ipfs links in dao feed
+
 ## [0.0.15] - 2023-07-15
 
 ### Fixed

@@ -324,14 +324,14 @@ func convertFeedToInternal(fi *coredao.FeedItem, d coredao.Dao) feed.Item {
 			log.Error().Err(err).Str("feed_id", fi.ID.String()).Msg("unable to unmarshal dao snapshot")
 		}
 
-		daoItem = helpers.Ptr(convertCoreDaoToInternal(daoSnapshot))
+		daoItem = helpers.Ptr(helpers.WrapDAOIpfsLinks(convertCoreDaoToInternal(daoSnapshot)))
 	case "proposal":
 		var proposalSnapshot *coreproposal.Proposal
 		if err := json.Unmarshal(fi.Snapshot, &proposalSnapshot); err != nil {
 			log.Error().Err(err).Str("feed_id", fi.ID.String()).Msg("unable to unmarshal proposal snapshot")
 		}
 
-		proposalItem = helpers.Ptr(convertProposalToInternal(proposalSnapshot, &d))
+		proposalItem = helpers.Ptr(helpers.WrapProposalIpfsLinks(convertProposalToInternal(proposalSnapshot, &d)))
 	}
 
 	return feed.Item{

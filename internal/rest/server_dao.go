@@ -6,15 +6,20 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/core-web-sdk"
 	coredao "github.com/goverland-labs/core-web-sdk/dao"
+	coreproposal "github.com/goverland-labs/core-web-sdk/proposal"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/slices"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/feed"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
 	"github.com/goverland-labs/inbox-web-api/internal/helpers"
 	daoform "github.com/goverland-labs/inbox-web-api/internal/rest/forms/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/request"
@@ -48,99 +53,6 @@ func (s *Server) getDAO(w http.ResponseWriter, r *http.Request) {
 	item = helpers.WrapDAOIpfsLinks(item)
 
 	response.SendJSON(w, http.StatusOK, &item)
-}
-
-func convertCoreDaoToInternal(i *coredao.Dao) dao.DAO {
-	var activitySince *common.Time
-	if i.ActivitySince > 0 {
-		activitySince = common.NewTime(time.Unix(int64(i.ActivitySince), 0))
-	}
-
-	return dao.DAO{
-		ID:        i.ID,
-		Alias:     i.Alias,
-		CreatedAt: *common.NewTime(i.CreatedAt),
-		UpdatedAt: *common.NewTime(i.UpdatedAt),
-		Name:      i.Name,
-		About: []common.Content{
-			{
-				Type: common.Markdown,
-				Body: i.About,
-			},
-		},
-		Avatar:         helpers.Ptr(i.Avatar),
-		Terms:          helpers.Ptr(i.Terms),
-		Location:       helpers.Ptr(i.Location),
-		Website:        helpers.Ptr(i.Website),
-		Twitter:        helpers.Ptr(i.Twitter),
-		Github:         helpers.Ptr(i.Github),
-		Coingecko:      helpers.Ptr(i.Coingecko),
-		Email:          helpers.Ptr(i.Email),
-		Symbol:         i.Symbol,
-		Domain:         helpers.Ptr(i.Domain),
-		Network:        common.Network(i.Network),
-		Strategies:     convertCoreStrategiesToInternal(i.Strategies),
-		Voting:         convertCoreVotingToInternal(i.Voting),
-		Categories:     convertCoreCategoriesToInternal(i.Categories),
-		Treasures:      convertCoreTreasuresToInternal(i.Treasures),
-		FollowersCount: int(i.FollowersCount),
-		ProposalsCount: int(i.ProposalsCount),
-		Guidelines:     helpers.Ptr(i.Guidelines),
-		Template:       helpers.Ptr(i.Template),
-		ActivitySince:  activitySince,
-		// todo: ParentID
-	}
-}
-
-func convertCoreStrategiesToInternal(list coredao.Strategies) []common.Strategy {
-	res := make([]common.Strategy, len(list))
-
-	for i, info := range list {
-		res[i] = common.Strategy{
-			Name:    info.Name,
-			Network: common.Network(info.Network),
-			Params:  info.Params,
-		}
-	}
-
-	return res
-}
-
-func convertCoreTreasuresToInternal(list coredao.Treasuries) []common.Treasury {
-	res := make([]common.Treasury, len(list))
-
-	for i, info := range list {
-		res[i] = common.Treasury{
-			Name:    info.Name,
-			Address: info.Address,
-			Network: common.Network(info.Network),
-		}
-	}
-
-	return res
-}
-
-func convertCoreCategoriesToInternal(list coredao.Categories) []common.Category {
-	res := make([]common.Category, len(list))
-
-	for i, info := range list {
-		res[i] = common.Category(info)
-	}
-
-	return res
-}
-
-func convertCoreVotingToInternal(v coredao.Voting) dao.Voting {
-	return dao.Voting{
-		Delay:       helpers.Ptr(int(v.Delay)),
-		Period:      helpers.Ptr(int(v.Period)),
-		Type:        helpers.Ptr(v.Type),
-		Quorum:      helpers.Ptr(v.Quorum),
-		Blind:       v.Blind,
-		HideAbstain: v.HideAbstain,
-		Privacy:     v.Privacy,
-		Aliased:     v.Aliased,
-	}
 }
 
 func (s *Server) listDAOs(w http.ResponseWriter, r *http.Request) {
@@ -238,18 +150,6 @@ func (s *Server) listTopDAOs(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &grouped)
 }
 
-func enrichSubscriptionInfo(session auth.Session, list []dao.DAO) []dao.DAO {
-	if session == auth.EmptySession {
-		return list
-	}
-
-	for i := range list {
-		list[i].SubscriptionInfo = getSubscription(session, list[i].ID)
-	}
-
-	return list
-}
-
 func (s *Server) getDAOFeed(w http.ResponseWriter, r *http.Request) {
 	f, verr := daoform.NewFeedForm().ParseAndValidate(r)
 	if verr != nil {
@@ -268,9 +168,35 @@ func (s *Server) getDAOFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list := make([]dao.FeedItem, len(resp.Items))
+	daoIDs := make([]string, 0, len(resp.Items))
+	for _, info := range resp.Items {
+		id := info.DaoID.String()
+		if slices.Contains(daoIDs, id) {
+			continue
+		}
+
+		daoIDs = append(daoIDs, id)
+	}
+
+	daoList, err := s.coreclient.GetDaoList(r.Context(), coresdk.GetDaoListRequest{
+		DaoIDS: daoIDs,
+		Limit:  len(daoIDs),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get dao list by IDs")
+
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	daos := make(map[uuid.UUID]coredao.Dao)
+	for _, info := range daoList.Items {
+		daos[info.ID] = info
+	}
+
+	list := make([]feed.Item, len(resp.Items))
 	for i, info := range resp.Items {
-		list[i] = convertFeedToInternal(&info)
+		list[i] = convertFeedToInternal(&info, daos[info.DaoID])
 	}
 
 	log.Info().
@@ -282,17 +208,133 @@ func (s *Server) getDAOFeed(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &list)
 }
 
-func convertFeedToInternal(fi *coredao.FeedItem) dao.FeedItem {
-	var daoSnapshot json.RawMessage
-	var proposalSnapshot json.RawMessage
-	switch fi.Type {
-	case "dao":
-		daoSnapshot = fi.Snapshot
-	case "proposal":
-		proposalSnapshot = fi.Snapshot
+func convertCoreDaoToInternal(i *coredao.Dao) dao.DAO {
+	var activitySince *common.Time
+	if i.ActivitySince > 0 {
+		activitySince = common.NewTime(time.Unix(int64(i.ActivitySince), 0))
 	}
 
-	return dao.FeedItem{
+	return dao.DAO{
+		ID:        i.ID,
+		Alias:     i.Alias,
+		CreatedAt: *common.NewTime(i.CreatedAt),
+		UpdatedAt: *common.NewTime(i.UpdatedAt),
+		Name:      i.Name,
+		About: []common.Content{
+			{
+				Type: common.Markdown,
+				Body: i.About,
+			},
+		},
+		Avatar:         helpers.Ptr(i.Avatar),
+		Terms:          helpers.Ptr(i.Terms),
+		Location:       helpers.Ptr(i.Location),
+		Website:        helpers.Ptr(i.Website),
+		Twitter:        helpers.Ptr(i.Twitter),
+		Github:         helpers.Ptr(i.Github),
+		Coingecko:      helpers.Ptr(i.Coingecko),
+		Email:          helpers.Ptr(i.Email),
+		Symbol:         i.Symbol,
+		Domain:         helpers.Ptr(i.Domain),
+		Network:        common.Network(i.Network),
+		Strategies:     convertCoreStrategiesToInternal(i.Strategies),
+		Voting:         convertCoreVotingToInternal(i.Voting),
+		Categories:     convertCoreCategoriesToInternal(i.Categories),
+		Treasures:      convertCoreTreasuresToInternal(i.Treasures),
+		FollowersCount: int(i.FollowersCount),
+		ProposalsCount: int(i.ProposalsCount),
+		Guidelines:     helpers.Ptr(i.Guidelines),
+		Template:       helpers.Ptr(i.Template),
+		ActivitySince:  activitySince,
+		// todo: ParentID
+	}
+}
+
+func convertCoreStrategiesToInternal(list coredao.Strategies) []common.Strategy {
+	res := make([]common.Strategy, len(list))
+
+	for i, info := range list {
+		res[i] = common.Strategy{
+			Name:    info.Name,
+			Network: common.Network(info.Network),
+			Params:  info.Params,
+		}
+	}
+
+	return res
+}
+
+func convertCoreTreasuresToInternal(list coredao.Treasuries) []common.Treasury {
+	res := make([]common.Treasury, len(list))
+
+	for i, info := range list {
+		res[i] = common.Treasury{
+			Name:    info.Name,
+			Address: info.Address,
+			Network: common.Network(info.Network),
+		}
+	}
+
+	return res
+}
+
+func convertCoreCategoriesToInternal(list coredao.Categories) []common.Category {
+	res := make([]common.Category, len(list))
+
+	for i, info := range list {
+		res[i] = common.Category(info)
+	}
+
+	return res
+}
+
+func convertCoreVotingToInternal(v coredao.Voting) dao.Voting {
+	return dao.Voting{
+		Delay:       helpers.Ptr(int(v.Delay)),
+		Period:      helpers.Ptr(int(v.Period)),
+		Type:        helpers.Ptr(v.Type),
+		Quorum:      helpers.Ptr(v.Quorum),
+		Blind:       v.Blind,
+		HideAbstain: v.HideAbstain,
+		Privacy:     v.Privacy,
+		Aliased:     v.Aliased,
+	}
+}
+
+func enrichSubscriptionInfo(session auth.Session, list []dao.DAO) []dao.DAO {
+	if session == auth.EmptySession {
+		return list
+	}
+
+	for i := range list {
+		list[i].SubscriptionInfo = getSubscription(session, list[i].ID)
+	}
+
+	return list
+}
+
+func convertFeedToInternal(fi *coredao.FeedItem, d coredao.Dao) feed.Item {
+	var daoItem *dao.DAO
+	var proposalItem *proposal.Proposal
+
+	switch fi.Type {
+	case "dao":
+		var daoSnapshot *coredao.Dao
+		if err := json.Unmarshal(fi.Snapshot, &daoSnapshot); err != nil {
+			log.Error().Err(err).Str("feed_id", fi.ID.String()).Msg("unable to unmarshal dao snapshot")
+		}
+
+		daoItem = helpers.Ptr(convertCoreDaoToInternal(daoSnapshot))
+	case "proposal":
+		var proposalSnapshot *coreproposal.Proposal
+		if err := json.Unmarshal(fi.Snapshot, &proposalSnapshot); err != nil {
+			log.Error().Err(err).Str("feed_id", fi.ID.String()).Msg("unable to unmarshal proposal snapshot")
+		}
+
+		proposalItem = helpers.Ptr(convertProposalToInternal(proposalSnapshot, &d))
+	}
+
+	return feed.Item{
 		ID:           fi.ID,
 		CreatedAt:    *common.NewTime(fi.CreatedAt),
 		UpdatedAt:    *common.NewTime(fi.UpdatedAt),
@@ -301,8 +343,8 @@ func convertFeedToInternal(fi *coredao.FeedItem) dao.FeedItem {
 		DiscussionID: fi.DiscussionID,
 		Type:         fi.Type,
 		Action:       fi.Action,
-		DAO:          daoSnapshot,
-		Proposal:     proposalSnapshot,
+		DAO:          daoItem,
+		Proposal:     proposalItem,
 		Timeline:     fi.Timeline,
 	}
 }

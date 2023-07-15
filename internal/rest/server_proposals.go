@@ -58,84 +58,6 @@ func (s *Server) getProposal(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &item)
 }
 
-func convertProposalToInternal(pr *coreproposal.Proposal, di *coredao.Dao) proposal.Proposal {
-	return proposal.Proposal{
-		ID:   pr.ID,
-		Ipfs: helpers.Ptr(pr.Ipfs),
-		Author: common.User{
-			Address: common.UserAddress(pr.Author),
-		},
-		Created:    *common.NewTime(time.Unix(int64(pr.Created), 0)),
-		Network:    common.Network(pr.Network),
-		Symbol:     pr.Symbol,
-		Type:       helpers.Ptr(pr.Type),
-		Strategies: convertCoreProposalStrategiesToInternal(pr.Strategies),
-		Title:      pr.Title,
-		Body: []common.Content{
-			{
-				Type: common.Markdown,
-				Body: pr.Body,
-			},
-		},
-		Discussion:    pr.Discussion,
-		Choices:       pr.Choices,
-		VotingStart:   *common.NewTime(time.Unix(int64(pr.Start), 0)),
-		VotingEnd:     *common.NewTime(time.Unix(int64(pr.End), 0)),
-		Quorum:        float64(pr.Quorum),
-		Privacy:       helpers.Ptr(pr.Privacy),
-		Snapshot:      helpers.Ptr(pr.Snapshot),
-		State:         helpers.Ptr(proposal.State(pr.State)),
-		Link:          helpers.Ptr(pr.Link),
-		App:           helpers.Ptr(pr.App),
-		Scores:        convertScoresToInternal(pr.Scores),
-		ScoresState:   helpers.Ptr(pr.ScoresState),
-		ScoresTotal:   helpers.Ptr(float64(pr.ScoresTotal)),
-		ScoresUpdated: helpers.Ptr(int(pr.ScoresUpdated)),
-		Votes:         int(pr.Votes),
-		DAO:           convertDaoToShortInternal(di),
-	}
-}
-
-func convertDaoToShortInternal(di *coredao.Dao) dao.ShortDAO {
-	return dao.ShortDAO{
-		ID:             di.ID,
-		Alias:          di.Alias,
-		CreatedAt:      *common.NewTime(di.CreatedAt),
-		UpdatedAt:      *common.NewTime(di.UpdatedAt),
-		Name:           di.Name,
-		Avatar:         helpers.Ptr(di.Avatar),
-		Symbol:         di.Symbol,
-		Network:        common.Network(di.Network),
-		Categories:     convertCoreCategoriesToInternal(di.Categories),
-		FollowersCount: int(di.FollowersCount),
-		ProposalsCount: int(di.FollowersCount),
-	}
-}
-
-func convertScoresToInternal(scores []float32) []float64 {
-	res := make([]float64, len(scores))
-
-	for i, score := range scores {
-		res[i] = float64(score)
-	}
-
-	return res
-}
-
-func convertCoreProposalStrategiesToInternal(list coreproposal.Strategies) []common.Strategy {
-	res := make([]common.Strategy, len(list))
-
-	for i, info := range list {
-		res[i] = common.Strategy{
-			Name:    info.Name,
-			Network: common.Network(info.Network),
-			Params:  info.Params,
-		}
-	}
-
-	return res
-}
-
 func (s *Server) getProposalVotes(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
@@ -166,25 +88,6 @@ func (s *Server) getProposalVotes(w http.ResponseWriter, r *http.Request) {
 
 	response.AddPaginationHeaders(w, r, offset, limit, resp.TotalCnt)
 	response.SendJSON(w, http.StatusOK, &list)
-}
-
-func convertVoteToInternal(list []coreproposal.Vote) []proposal.Vote {
-	res := make([]proposal.Vote, len(list))
-
-	for i, info := range list {
-		res[i] = proposal.Vote{
-			ID:         info.ID,
-			Ipfs:       ipfs.WrapLink(info.Ipfs),
-			ProposalID: info.ProposalID,
-			Voter: common.User{
-				Address: common.UserAddress(info.Voter),
-			},
-			Created: *common.NewTime(time.Unix(int64(info.Created), 0)),
-			Reason:  info.Reason,
-		}
-	}
-
-	return res
 }
 
 func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
@@ -326,6 +229,103 @@ func (s *Server) proposalsTop(w http.ResponseWriter, r *http.Request) {
 
 	response.AddPaginationHeaders(w, r, offset, limit, resp.TotalCnt)
 	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func convertProposalToInternal(pr *coreproposal.Proposal, di *coredao.Dao) proposal.Proposal {
+	return proposal.Proposal{
+		ID:   pr.ID,
+		Ipfs: helpers.Ptr(pr.Ipfs),
+		Author: common.User{
+			Address: common.UserAddress(pr.Author),
+		},
+		Created:    *common.NewTime(time.Unix(int64(pr.Created), 0)),
+		Network:    common.Network(pr.Network),
+		Symbol:     pr.Symbol,
+		Type:       helpers.Ptr(pr.Type),
+		Strategies: convertCoreProposalStrategiesToInternal(pr.Strategies),
+		Title:      pr.Title,
+		Body: []common.Content{
+			{
+				Type: common.Markdown,
+				Body: pr.Body,
+			},
+		},
+		Discussion:    pr.Discussion,
+		Choices:       pr.Choices,
+		VotingStart:   *common.NewTime(time.Unix(int64(pr.Start), 0)),
+		VotingEnd:     *common.NewTime(time.Unix(int64(pr.End), 0)),
+		Quorum:        float64(pr.Quorum),
+		Privacy:       helpers.Ptr(pr.Privacy),
+		Snapshot:      helpers.Ptr(pr.Snapshot),
+		State:         helpers.Ptr(proposal.State(pr.State)),
+		Link:          helpers.Ptr(pr.Link),
+		App:           helpers.Ptr(pr.App),
+		Scores:        convertScoresToInternal(pr.Scores),
+		ScoresState:   helpers.Ptr(pr.ScoresState),
+		ScoresTotal:   helpers.Ptr(float64(pr.ScoresTotal)),
+		ScoresUpdated: helpers.Ptr(int(pr.ScoresUpdated)),
+		Votes:         int(pr.Votes),
+		DAO:           convertDaoToShortInternal(di),
+	}
+}
+
+func convertDaoToShortInternal(di *coredao.Dao) dao.ShortDAO {
+	return dao.ShortDAO{
+		ID:             di.ID,
+		Alias:          di.Alias,
+		CreatedAt:      *common.NewTime(di.CreatedAt),
+		UpdatedAt:      *common.NewTime(di.UpdatedAt),
+		Name:           di.Name,
+		Avatar:         helpers.Ptr(di.Avatar),
+		Symbol:         di.Symbol,
+		Network:        common.Network(di.Network),
+		Categories:     convertCoreCategoriesToInternal(di.Categories),
+		FollowersCount: int(di.FollowersCount),
+		ProposalsCount: int(di.FollowersCount),
+	}
+}
+
+func convertScoresToInternal(scores []float32) []float64 {
+	res := make([]float64, len(scores))
+
+	for i, score := range scores {
+		res[i] = float64(score)
+	}
+
+	return res
+}
+
+func convertCoreProposalStrategiesToInternal(list coreproposal.Strategies) []common.Strategy {
+	res := make([]common.Strategy, len(list))
+
+	for i, info := range list {
+		res[i] = common.Strategy{
+			Name:    info.Name,
+			Network: common.Network(info.Network),
+			Params:  info.Params,
+		}
+	}
+
+	return res
+}
+
+func convertVoteToInternal(list []coreproposal.Vote) []proposal.Vote {
+	res := make([]proposal.Vote, len(list))
+
+	for i, info := range list {
+		res[i] = proposal.Vote{
+			ID:         info.ID,
+			Ipfs:       ipfs.WrapLink(info.Ipfs),
+			ProposalID: info.ProposalID,
+			Voter: common.User{
+				Address: common.UserAddress(info.Voter),
+			},
+			Created: *common.NewTime(time.Unix(int64(info.Created), 0)),
+			Reason:  info.Reason,
+		}
+	}
+
+	return res
 }
 
 func enrichProposalsSubscriptionInfo(session auth.Session, list []proposal.Proposal) []proposal.Proposal {

@@ -56,8 +56,8 @@ func WrapShortDAOsIpfsLinks(list []dao.ShortDAO) []dao.ShortDAO {
 }
 
 func WrapFeedItemIpfsLinks(f feed.Item) feed.Item {
-	if f.Dao != nil {
-		*f.Dao = WrapDAOIpfsLinks(*f.Dao)
+	if f.DAO != nil {
+		*f.DAO = WrapDAOIpfsLinks(*f.DAO)
 	}
 
 	if f.Proposal != nil {

@@ -196,6 +196,6 @@ func daoFeed(event feed.Event, id string) feed.Item {
 		UpdatedAt: d.UpdatedAt,
 		ReadAt:    nil,
 		Event:     event,
-		Dao:       helpers.Ptr(d),
+		DAO:       helpers.Ptr(d),
 	}
 }

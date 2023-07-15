@@ -11,6 +11,7 @@ import (
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/feed"
 	"github.com/goverland-labs/inbox-web-api/internal/helpers"
 	feedform "github.com/goverland-labs/inbox-web-api/internal/rest/forms/feed"
@@ -142,8 +143,8 @@ func getSessionFeed(session auth.Session) []feed.Item {
 	subs := subscriptionsStorage[session.ID]
 	list := lo.Filter(mock.Feed, func(item feed.Item, _ int) bool {
 		var daoID uuid.UUID
-		if item.Dao != nil {
-			daoID = item.Dao.ID
+		if item.DAO != nil {
+			daoID = item.DAO.ID
 		} else if item.Proposal != nil {
 			daoID = item.Proposal.DAO.ID
 		}
@@ -183,7 +184,7 @@ func enrichReadMarks(session auth.Session, list []feed.Item) []feed.Item {
 	lo.ForEach(list, func(item feed.Item, index int) {
 		mark := readAt(session, item)
 		if mark != nil {
-			list[index].ReadAt = mark
+			list[index].ReadAt = common.NewTime(*mark)
 		}
 	})
 

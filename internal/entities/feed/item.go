@@ -1,7 +1,7 @@
 package feed
 
 import (
-	"time"
+	"encoding/json"
 
 	"github.com/google/uuid"
 
@@ -20,11 +20,18 @@ const (
 type Event string
 
 type Item struct {
-	ID        uuid.UUID          `json:"id"`
-	CreatedAt common.Time        `json:"created_at"`
-	UpdatedAt common.Time        `json:"updated_at"`
-	ReadAt    *time.Time         `json:"read_at"`
-	Event     Event              `json:"event"`
-	Proposal  *proposal.Proposal `json:"proposal,omitempty"`
-	Dao       *dao.DAO           `json:"dao,omitempty"`
+	ID           uuid.UUID          `json:"id"`
+	CreatedAt    common.Time        `json:"created_at"`
+	UpdatedAt    common.Time        `json:"updated_at"`
+	ReadAt       *common.Time       `json:"read_at"`
+	ArchivedAt   *common.Time       `json:"archived_at"`
+	Event        Event              `json:"event"`
+	DaoID        uuid.UUID          `json:"dao_id"`
+	ProposalID   string             `json:"proposal_id"`
+	DiscussionID string             `json:"discussion_id"`
+	Type         string             `json:"type"`
+	Action       string             `json:"action"`
+	DAO          *dao.DAO           `json:"dao,omitempty"`
+	Proposal     *proposal.Proposal `json:"proposal,omitempty"`
+	Timeline     json.RawMessage    `json:"timeline"`
 }

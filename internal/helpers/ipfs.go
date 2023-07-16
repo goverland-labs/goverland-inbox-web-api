@@ -67,7 +67,7 @@ func WrapFeedItemIpfsLinks(f feed.Item) feed.Item {
 	return f
 }
 
-func WrapDAFeedItemsIpfsLinks(list []feed.Item) []feed.Item {
+func WrapFeedItemsIpfsLinks(list []feed.Item) []feed.Item {
 	for i := range list {
 		list[i] = WrapFeedItemIpfsLinks(list[i])
 	}

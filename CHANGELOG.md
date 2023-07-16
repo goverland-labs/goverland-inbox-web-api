@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added inbox feed endpoints (getting feed, mark as read, mark as archived etc)
+
 ### Fixed
 - Fixed feed timeline structure
 

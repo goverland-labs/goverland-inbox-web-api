@@ -23,6 +23,8 @@ type Application struct {
 	sigChan <-chan os.Signal
 	manager *process.Manager
 	cfg     config.App
+
+	feedClient inboxapi.FeedClient
 }
 
 func NewApplication(cfg config.App) (*Application, error) {
@@ -77,20 +79,24 @@ func (a *Application) initServices() error {
 }
 
 func (a *Application) initRESTWorker() error {
-	conn, err := grpc.Dial(
-		a.cfg.Inbox.StorageAddress,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	strageConn, err := grpc.Dial(a.cfg.Inbox.StorageAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("create connection with storage server: %v", err)
 	}
 
-	ic := inboxapi.NewUserClient(conn)
-	sc := inboxapi.NewSubscriptionClient(conn)
-	settings := inboxapi.NewSettingsClient(conn)
+	feedConn, err := grpc.Dial(a.cfg.Inbox.FeedAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return fmt.Errorf("create connection with storage server: %v", err)
+	}
+
+	ic := inboxapi.NewUserClient(strageConn)
+	sc := inboxapi.NewSubscriptionClient(strageConn)
+	settings := inboxapi.NewSettingsClient(strageConn)
 	cs := coresdk.NewClient(a.cfg.Core.CoreURL)
 
-	srv := rest.NewServer(a.cfg.REST, auth.NewInMemoryStorage(ic), cs, sc, settings)
+	a.feedClient = inboxapi.NewFeedClient(feedConn)
+
+	srv := rest.NewServer(a.cfg.REST, auth.NewInMemoryStorage(ic), cs, sc, settings, a.feedClient)
 	a.manager.AddWorker(process.NewServerWorker("rest", srv.GetHTTPServer()))
 
 	return nil

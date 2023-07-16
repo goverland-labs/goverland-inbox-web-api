@@ -7,7 +7,8 @@ import (
 )
 
 type GetFeedForm struct {
-	Unread bool
+	Unread  bool
+	Arhived bool
 }
 
 func NewGetFeedForm() *GetFeedForm {
@@ -16,6 +17,7 @@ func NewGetFeedForm() *GetFeedForm {
 
 func (f *GetFeedForm) ParseAndValidate(r *http.Request) (*GetFeedForm, response.Error) {
 	f.Unread = r.URL.Query().Has("unread")
+	f.Arhived = r.URL.Query().Has("archived")
 
 	return f, nil
 }

@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.18] - 2023-07-17
+
 ### Fixed
 - Fixed proposal.quorum field calculation (temporary solution)
 - Fixed getting dao info in the dao feed

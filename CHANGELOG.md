@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.20] - 2023-07-17
+
 ### Fixed
 - Fixed fetching feed for unread elements by default
 

@@ -41,7 +41,7 @@ func (s *Server) getFeed(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := s.feedClient.GetUserFeed(context.TODO(), &inboxapi.GetUserFeedRequest{
 		SubscriberId:    session.ID.String(),
-		IncludeRead:     f.Unread,
+		IncludeRead:     !f.Unread,
 		IncludeArchived: f.Arhived,
 		Limit:           uint32(limit),
 		Offset:          uint32(offset),

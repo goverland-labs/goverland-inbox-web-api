@@ -1,13 +1,16 @@
 package rest
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/core-web-sdk"
+	"github.com/goverland-labs/core-web-sdk/dao"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	"github.com/goverland-labs/inbox-web-api/internal/config"
@@ -78,7 +81,7 @@ func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc 
 	handler.HandleFunc("/feed", srv.getFeed).Methods(http.MethodGet).Name("get_feed")
 	handler.HandleFunc("/feed/mark-as-read", srv.markAsReadBatch).Methods(http.MethodPost).Name("mark_as_read_batch")
 	handler.HandleFunc("/feed/{id}/mark-as-read", srv.markFeedItemAsRead).Methods(http.MethodPost).Name("mark_feed_item_as_read")
-	handler.HandleFunc("/feed/{id}/archive", srv.markFeedItemAsAcrhived).Methods(http.MethodPost).Name("mark_feed_item_as_archived")
+	handler.HandleFunc("/feed/{id}/archive", srv.markFeedItemAsArchived).Methods(http.MethodPost).Name("mark_feed_item_as_archived")
 
 	handler.HandleFunc("/notifications/settings", srv.storePushToken).Methods(http.MethodPost).Name("store_push_token")
 	handler.HandleFunc("/notifications/settings", srv.tokenExists).Methods(http.MethodGet).Name("push_token_exists")
@@ -89,6 +92,31 @@ func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc 
 
 func (s *Server) GetHTTPServer() *http.Server {
 	return s.httpServer
+}
+
+func (s *Server) fetchDAOsForFeed(ctx context.Context, list []*inboxapi.FeedItem) (map[string]dao.Dao, error) {
+	// todo: use caching for getting dao
+
+	daoIds := make([]string, 0, len(list))
+	for _, info := range list {
+		daoIds = append(daoIds, info.DaoId)
+	}
+
+	daolist, err := s.coreclient.GetDaoList(ctx, coresdk.GetDaoListRequest{
+		DaoIDS: daoIds,
+		Limit:  len(daoIds),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get dao list by IDs")
+		return nil, err
+	}
+
+	daos := make(map[string]dao.Dao)
+	for _, info := range daolist.Items {
+		daos[info.ID.String()] = info
+	}
+
+	return daos, nil
 }
 
 func configureCorsHandler(router *mux.Router) http.Handler {

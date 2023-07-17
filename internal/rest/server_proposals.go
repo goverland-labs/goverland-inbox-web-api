@@ -3,6 +3,7 @@ package rest
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"time"
 
@@ -232,6 +233,15 @@ func (s *Server) proposalsTop(w http.ResponseWriter, r *http.Request) {
 }
 
 func convertProposalToInternal(pr *coreproposal.Proposal, di *coredao.Dao) proposal.Proposal {
+	// TODO: TBD
+	var quorumPercent float64
+	score := maxScore(pr.Scores)
+	if pr.Quorum > 0 {
+		quorumPercent = math.Round(score / float64(pr.Quorum) * 100)
+	} else if pr.Quorum <= 0 {
+		quorumPercent = 100
+	}
+
 	return proposal.Proposal{
 		ID:   pr.ID,
 		Ipfs: helpers.Ptr(pr.Ipfs),
@@ -254,7 +264,7 @@ func convertProposalToInternal(pr *coreproposal.Proposal, di *coredao.Dao) propo
 		Choices:       pr.Choices,
 		VotingStart:   *common.NewTime(time.Unix(int64(pr.Start), 0)),
 		VotingEnd:     *common.NewTime(time.Unix(int64(pr.End), 0)),
-		Quorum:        float64(pr.Quorum),
+		Quorum:        quorumPercent,
 		Privacy:       helpers.Ptr(pr.Privacy),
 		Snapshot:      helpers.Ptr(pr.Snapshot),
 		State:         helpers.Ptr(proposal.State(pr.State)),
@@ -348,4 +358,21 @@ func enrichProposalSubscriptionInfo(session auth.Session, item proposal.Proposal
 	item.DAO.SubscriptionInfo = getSubscription(session, item.DAO.ID)
 
 	return item
+}
+
+func maxScore(scores coreproposal.Scores) float64 {
+	if len(scores) == 0 {
+		return 0
+	}
+
+	found := scores[0]
+	for i := range scores {
+		if found > scores[i] {
+			continue
+		}
+
+		found = scores[i]
+	}
+
+	return float64(found)
 }

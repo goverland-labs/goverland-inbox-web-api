@@ -51,7 +51,15 @@ func (s *Server) getFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list := helpers.WrapFeedItemsIpfsLinks(convertInboxFeedListToInternal(resp.GetList()))
+	feedList := resp.GetList()
+
+	daos, err := s.fetchDAOsForFeed(r.Context(), feedList)
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	list := helpers.WrapFeedItemsIpfsLinks(convertInboxFeedListToInternal(feedList, daos))
 	totalCount := int(resp.GetTotalCount())
 
 	log.Info().
@@ -91,7 +99,7 @@ func (s *Server) markFeedItemAsRead(w http.ResponseWriter, r *http.Request) {
 	response.SendEmpty(w, http.StatusOK)
 }
 
-func (s *Server) markFeedItemAsAcrhived(w http.ResponseWriter, r *http.Request) {
+func (s *Server) markFeedItemAsArchived(w http.ResponseWriter, r *http.Request) {
 	session, ok := appctx.ExtractUserSession(r.Context())
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -154,17 +162,17 @@ func (s *Server) markAsReadBatch(w http.ResponseWriter, r *http.Request) {
 	response.SendEmpty(w, http.StatusOK)
 }
 
-func convertInboxFeedListToInternal(list []*inboxapi.FeedItem) []feed.Item {
+func convertInboxFeedListToInternal(list []*inboxapi.FeedItem, daos map[string]coredao.Dao) []feed.Item {
 	converted := make([]feed.Item, 0, len(list))
 
 	for _, item := range list {
-		converted = append(converted, convertInboxFeedItemToInternal(item))
+		converted = append(converted, convertInboxFeedItemToInternal(item, daos[item.DaoId]))
 	}
 
 	return converted
 }
 
-func convertInboxFeedItemToInternal(item *inboxapi.FeedItem) feed.Item {
+func convertInboxFeedItemToInternal(item *inboxapi.FeedItem, d coredao.Dao) feed.Item {
 	var daoItem *dao.DAO
 	var proposalItem *proposal.Proposal
 
@@ -182,7 +190,6 @@ func convertInboxFeedItemToInternal(item *inboxapi.FeedItem) feed.Item {
 			log.Error().Err(err).Str("feed_id", item.GetId()).Msg("unable to unmarshal proposal snapshot")
 		}
 
-		d := coredao.Dao{} // FIXME
 		proposalItem = helpers.Ptr(helpers.WrapProposalIpfsLinks(convertProposalToInternal(proposalSnapshot, &d)))
 	}
 

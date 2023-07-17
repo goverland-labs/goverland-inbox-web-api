@@ -238,8 +238,6 @@ func convertProposalToInternal(pr *coreproposal.Proposal, di *coredao.Dao) propo
 	score := maxScore(pr.Scores)
 	if pr.Quorum > 0 {
 		quorumPercent = math.Round(score / float64(pr.Quorum) * 100)
-	} else if pr.Quorum <= 0 {
-		quorumPercent = 100
 	}
 
 	return proposal.Proposal{

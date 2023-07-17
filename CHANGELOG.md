@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed proposal.quorum field for proposals without defined quorum
+
 ## [0.0.18] - 2023-07-17
 
 ### Fixed

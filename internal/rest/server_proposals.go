@@ -322,14 +322,20 @@ func convertVoteToInternal(list []coreproposal.Vote) []proposal.Vote {
 
 	for i, info := range list {
 		res[i] = proposal.Vote{
-			ID:         info.ID,
-			Ipfs:       ipfs.WrapLink(info.Ipfs),
-			ProposalID: info.ProposalID,
+			ID:   info.ID,
+			Ipfs: ipfs.WrapLink(info.Ipfs),
 			Voter: common.User{
 				Address: common.UserAddress(info.Voter),
 			},
-			Created: *common.NewTime(time.Unix(int64(info.Created), 0)),
-			Reason:  info.Reason,
+			CreatedAt:    *common.NewTime(time.Unix(int64(info.Created), 0)),
+			DaoID:        info.DaoID,
+			ProposalID:   info.ProposalID,
+			Choice:       info.Choice,
+			Reason:       info.Reason,
+			App:          info.App,
+			Vp:           info.VotingPower,
+			VpByStrategy: info.VotingPowerByStrategy,
+			VpState:      info.VotingPowerState,
 		}
 	}
 

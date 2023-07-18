@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
-	github.com/goverland-labs/core-web-sdk v0.0.10
+	github.com/goverland-labs/core-web-sdk v0.0.11
 	github.com/goverland-labs/inbox-api v0.0.10
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.29.1
@@ -16,8 +16,10 @@ require (
 	github.com/samber/lo v1.38.1
 	github.com/shopspring/decimal v1.3.1
 	github.com/smartystreets/goconvey v1.6.4
+	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17
 	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4
 	google.golang.org/grpc v1.55.0
+	google.golang.org/protobuf v1.30.0
 )
 
 require (
@@ -34,9 +36,7 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
-	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
 )

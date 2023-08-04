@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
+	internaldao "github.com/goverland-labs/inbox-web-api/internal/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/feed"
@@ -162,7 +163,7 @@ func (s *Server) markAsReadBatch(w http.ResponseWriter, r *http.Request) {
 	response.SendEmpty(w, http.StatusOK)
 }
 
-func convertInboxFeedListToInternal(list []*inboxapi.FeedItem, daos map[string]coredao.Dao) []feed.Item {
+func convertInboxFeedListToInternal(list []*inboxapi.FeedItem, daos map[string]*dao.DAO) []feed.Item {
 	converted := make([]feed.Item, 0, len(list))
 
 	for _, item := range list {
@@ -172,7 +173,7 @@ func convertInboxFeedListToInternal(list []*inboxapi.FeedItem, daos map[string]c
 	return converted
 }
 
-func convertInboxFeedItemToInternal(item *inboxapi.FeedItem, d coredao.Dao) feed.Item {
+func convertInboxFeedItemToInternal(item *inboxapi.FeedItem, d *dao.DAO) feed.Item {
 	var daoItem *dao.DAO
 	var proposalItem *proposal.Proposal
 
@@ -183,14 +184,14 @@ func convertInboxFeedItemToInternal(item *inboxapi.FeedItem, d coredao.Dao) feed
 			log.Error().Err(err).Str("feed_id", item.GetId()).Msg("unable to unmarshal dao snapshot")
 		}
 
-		daoItem = helpers.Ptr(helpers.WrapDAOIpfsLinks(convertCoreDaoToInternal(daoSnapshot)))
+		daoItem = helpers.WrapDAOIpfsLinks(internaldao.ConvertCoreDaoToInternal(daoSnapshot))
 	case "proposal":
 		var proposalSnapshot *coreproposal.Proposal
 		if err := json.Unmarshal(item.GetSnapshot(), &proposalSnapshot); err != nil {
 			log.Error().Err(err).Str("feed_id", item.GetId()).Msg("unable to unmarshal proposal snapshot")
 		}
 
-		proposalItem = helpers.Ptr(helpers.WrapProposalIpfsLinks(convertProposalToInternal(proposalSnapshot, &d)))
+		proposalItem = helpers.Ptr(helpers.WrapProposalIpfsLinks(convertProposalToInternal(proposalSnapshot, d)))
 	}
 
 	feedID, err := uuid.Parse(item.GetId())

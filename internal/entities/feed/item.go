@@ -33,19 +33,6 @@ const (
 	ActionProposalVotingEnded         ActionSource = "proposal.voting.ended"
 )
 
-var AallowedEvents = []Event{
-	DaoCreated,
-	ProposalCreated,
-	ProposalUpdated,
-	ProposalUpdatedState,
-	ProposalVotingStartsSoon,
-	ProposalVotingStarted,
-	ProposalVotingReachedQuorum,
-	ProposalVotingFinishesSoon,
-	ProposalVotingEndsSoon,
-	ProposalVotingEnded,
-}
-
 type Event string
 
 type Item struct {

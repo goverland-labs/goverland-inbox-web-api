@@ -53,8 +53,8 @@ type ShortDAO struct {
 	SubscriptionInfo *SubscriptionInfo `json:"subscription_info"`
 }
 
-func NewShortDAO(d DAO) ShortDAO {
-	return ShortDAO{
+func NewShortDAO(d *DAO) *ShortDAO {
+	return &ShortDAO{
 		ID:               d.ID,
 		Alias:            d.Alias,
 		CreatedAt:        d.CreatedAt,
@@ -73,4 +73,27 @@ func NewShortDAO(d DAO) ShortDAO {
 type SubscriptionInfo struct {
 	ID        uuid.UUID   `json:"id"`
 	CreatedAt common.Time `json:"created_at"`
+}
+
+type DaoListRequest struct {
+	Offset   int
+	Limit    int
+	Query    string
+	Category string
+	IDs      []string
+}
+
+type DaoList struct {
+	Items    []*DAO
+	TotalCnt int
+}
+
+type Top struct {
+	Count int    `json:"count"`
+	List  []*DAO `json:"list"`
+}
+
+type ListTop struct {
+	Categories map[common.Category]Top
+	TotalCnt   int
 }

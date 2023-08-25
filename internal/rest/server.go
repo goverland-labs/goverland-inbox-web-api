@@ -8,12 +8,13 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/core-web-sdk"
-	"github.com/goverland-labs/core-web-sdk/dao"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	"github.com/goverland-labs/inbox-web-api/internal/config"
+	internaldao "github.com/goverland-labs/inbox-web-api/internal/dao"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/middlewares"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 	"github.com/goverland-labs/inbox-web-api/pkg/middleware"
@@ -31,6 +32,8 @@ type Server struct {
 	subclient   inboxapi.SubscriptionClient
 	settings    inboxapi.SettingsClient
 	feedClient  inboxapi.FeedClient
+
+	daoService *internaldao.Service
 }
 
 func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc inboxapi.SubscriptionClient, settings inboxapi.SettingsClient, feedClient inboxapi.FeedClient) *Server {
@@ -40,6 +43,7 @@ func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc 
 		subclient:   sc,
 		settings:    settings,
 		feedClient:  feedClient,
+		daoService:  internaldao.NewService(internaldao.NewCache(), cl),
 	}
 
 	handler := mux.NewRouter()
@@ -94,24 +98,22 @@ func (s *Server) GetHTTPServer() *http.Server {
 	return s.httpServer
 }
 
-func (s *Server) fetchDAOsForFeed(ctx context.Context, list []*inboxapi.FeedItem) (map[string]dao.Dao, error) {
-	// todo: use caching for getting dao
-
+func (s *Server) fetchDAOsForFeed(ctx context.Context, list []*inboxapi.FeedItem) (map[string]*dao.DAO, error) {
 	daoIds := make([]string, 0, len(list))
 	for _, info := range list {
 		daoIds = append(daoIds, info.DaoId)
 	}
 
-	daolist, err := s.coreclient.GetDaoList(ctx, coresdk.GetDaoListRequest{
-		DaoIDS: daoIds,
-		Limit:  len(daoIds),
+	daolist, err := s.daoService.GetDaoList(ctx, dao.DaoListRequest{
+		IDs:   daoIds,
+		Limit: len(daoIds),
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("get dao list by IDs")
 		return nil, err
 	}
 
-	daos := make(map[string]dao.Dao)
+	daos := make(map[string]*dao.DAO)
 	for _, info := range daolist.Items {
 		daos[info.ID.String()] = info
 	}

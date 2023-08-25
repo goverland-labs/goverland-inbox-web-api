@@ -9,14 +9,14 @@ import (
 
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/core-web-sdk"
-	coredao "github.com/goverland-labs/core-web-sdk/dao"
 	coreproposal "github.com/goverland-labs/core-web-sdk/proposal"
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
+	"github.com/goverland-labs/inbox-web-api/internal/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
+	internaldao "github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
 	"github.com/goverland-labs/inbox-web-api/internal/helpers"
 	"github.com/goverland-labs/inbox-web-api/internal/ipfs"
@@ -42,8 +42,7 @@ func (s *Server) getProposal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// todo: use caching instead of direct requests
-	di, err := s.coreclient.GetDao(r.Context(), pr.DaoID)
+	di, err := s.daoService.GetDao(r.Context(), pr.DaoID)
 	if err != nil {
 		log.Error().Err(err).Msgf("get dao by id: %s", pr.DaoID)
 
@@ -125,9 +124,9 @@ func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
 	for _, info := range resp.Items {
 		daoIds = append(daoIds, info.DaoID.String())
 	}
-	daolist, err := s.coreclient.GetDaoList(r.Context(), coresdk.GetDaoListRequest{
-		DaoIDS: daoIds,
-		Limit:  len(daoIds),
+	daolist, err := s.daoService.GetDaoList(r.Context(), internaldao.DaoListRequest{
+		IDs:   daoIds,
+		Limit: len(daoIds),
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("get dao list by IDs")
@@ -136,7 +135,7 @@ func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	daos := make(map[string]coredao.Dao)
+	daos := make(map[string]*internaldao.DAO)
 	for _, info := range daolist.Items {
 		daos[info.ID.String()] = info
 	}
@@ -150,7 +149,7 @@ func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
 			response.SendError(w, http.StatusBadRequest, fmt.Sprintf("dao not found: %s", info.DaoID))
 			return
 		}
-		list[i] = convertProposalToInternal(&info, &di)
+		list[i] = convertProposalToInternal(&info, di)
 	}
 
 	list = enrichProposalsSubscriptionInfo(session, list)
@@ -191,9 +190,9 @@ func (s *Server) proposalsTop(w http.ResponseWriter, r *http.Request) {
 	for _, info := range resp.Items {
 		daoIds = append(daoIds, info.DaoID.String())
 	}
-	daolist, err := s.coreclient.GetDaoList(r.Context(), coresdk.GetDaoListRequest{
-		DaoIDS: daoIds,
-		Limit:  len(daoIds),
+	daolist, err := s.daoService.GetDaoList(r.Context(), internaldao.DaoListRequest{
+		IDs:   daoIds,
+		Limit: len(daoIds),
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("get dao list by IDs")
@@ -202,7 +201,7 @@ func (s *Server) proposalsTop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	daos := make(map[string]coredao.Dao)
+	daos := make(map[string]*internaldao.DAO)
 	for _, info := range daolist.Items {
 		daos[info.ID.String()] = info
 	}
@@ -216,7 +215,7 @@ func (s *Server) proposalsTop(w http.ResponseWriter, r *http.Request) {
 			response.SendError(w, http.StatusBadRequest, fmt.Sprintf("dao not found: %s", info.DaoID))
 			return
 		}
-		list[i] = convertProposalToInternal(&info, &di)
+		list[i] = convertProposalToInternal(&info, di)
 	}
 
 	list = enrichProposalsSubscriptionInfo(session, list)
@@ -232,7 +231,7 @@ func (s *Server) proposalsTop(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &list)
 }
 
-func convertProposalToInternal(pr *coreproposal.Proposal, di *coredao.Dao) proposal.Proposal {
+func convertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) proposal.Proposal {
 	// TODO: TBD
 	var quorumPercent float64
 	score := maxScore(pr.Scores)
@@ -273,23 +272,7 @@ func convertProposalToInternal(pr *coreproposal.Proposal, di *coredao.Dao) propo
 		ScoresTotal:   helpers.Ptr(float64(pr.ScoresTotal)),
 		ScoresUpdated: helpers.Ptr(int(pr.ScoresUpdated)),
 		Votes:         int(pr.Votes),
-		DAO:           convertDaoToShortInternal(di),
-	}
-}
-
-func convertDaoToShortInternal(di *coredao.Dao) dao.ShortDAO {
-	return dao.ShortDAO{
-		ID:             di.ID,
-		Alias:          di.Alias,
-		CreatedAt:      *common.NewTime(di.CreatedAt),
-		UpdatedAt:      *common.NewTime(di.UpdatedAt),
-		Name:           di.Name,
-		Avatar:         helpers.Ptr(di.Avatar),
-		Symbol:         di.Symbol,
-		Network:        common.Network(di.Network),
-		Categories:     convertCoreCategoriesToInternal(di.Categories),
-		FollowersCount: int(di.FollowersCount),
-		ProposalsCount: int(di.FollowersCount),
+		DAO:           dao.ConvertDaoToShort(di),
 	}
 }
 

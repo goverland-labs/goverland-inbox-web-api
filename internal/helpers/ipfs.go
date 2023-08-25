@@ -23,7 +23,7 @@ func WrapProposalsIpfsLinks(list []proposal.Proposal) []proposal.Proposal {
 	return list
 }
 
-func WrapDAOIpfsLinks(d dao.DAO) dao.DAO {
+func WrapDAOIpfsLinks(d *dao.DAO) *dao.DAO {
 	if d.Avatar != nil {
 		d.Avatar = Ptr(ipfs.WrapLink(*d.Avatar))
 	}
@@ -31,7 +31,7 @@ func WrapDAOIpfsLinks(d dao.DAO) dao.DAO {
 	return d
 }
 
-func WrapDAOsIpfsLinks(list []dao.DAO) []dao.DAO {
+func WrapDAOsIpfsLinks(list []*dao.DAO) []*dao.DAO {
 	for i := range list {
 		list[i] = WrapDAOIpfsLinks(list[i])
 	}
@@ -47,17 +47,9 @@ func WrapShortDAOIpfsLinks(d dao.ShortDAO) dao.ShortDAO {
 	return d
 }
 
-func WrapShortDAOsIpfsLinks(list []dao.ShortDAO) []dao.ShortDAO {
-	for i := range list {
-		list[i] = WrapShortDAOIpfsLinks(list[i])
-	}
-
-	return list
-}
-
 func WrapFeedItemIpfsLinks(f feed.Item) feed.Item {
 	if f.DAO != nil {
-		*f.DAO = WrapDAOIpfsLinks(*f.DAO)
+		f.DAO = WrapDAOIpfsLinks(f.DAO)
 	}
 
 	if f.Proposal != nil {

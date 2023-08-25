@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	coresdk "github.com/goverland-labs/core-web-sdk"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
@@ -99,7 +98,7 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, err := s.coreclient.GetDao(r.Context(), f.DAO)
+	d, err := s.daoService.GetDao(r.Context(), f.DAO)
 	if err != nil {
 		response.HandleError(response.NewNotFoundError(), w)
 		return
@@ -149,7 +148,7 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 	sub = &Subscription{
 		ID:        uuid.MustParse(res.SubscriptionId),
 		CreatedAt: *common.NewTime(res.CreatedAt.AsTime()),
-		DAO:       helpers.Ptr(dao.NewShortDAO(convertCoreDaoToInternal(d))),
+		DAO:       dao.NewShortDAO(d),
 	}
 
 	list = append(list, *sub)
@@ -283,9 +282,9 @@ func (s *Server) getSubscriptions(sessionID uuid.UUID) {
 		return
 	}
 
-	res, err := s.coreclient.GetDaoList(context.TODO(), coresdk.GetDaoListRequest{
-		Limit:  len(daoIds),
-		DaoIDS: daoIds,
+	res, err := s.daoService.GetDaoList(context.TODO(), dao.DaoListRequest{
+		IDs:   daoIds,
+		Limit: len(daoIds),
 	})
 
 	if err != nil {
@@ -296,7 +295,7 @@ func (s *Server) getSubscriptions(sessionID uuid.UUID) {
 	list := make([]Subscription, 0, len(subs))
 	for _, di := range res.Items {
 		sub := subs[di.ID.String()]
-		sub.DAO = helpers.Ptr(dao.NewShortDAO(convertCoreDaoToInternal(&di)))
+		sub.DAO = dao.NewShortDAO(di)
 		list = append(list, sub)
 	}
 

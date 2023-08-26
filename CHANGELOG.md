@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.22] - 2023-08-26
+
 ### Changed
 - Add basic cache implementation for dao objects
 

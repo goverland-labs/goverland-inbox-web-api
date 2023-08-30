@@ -48,7 +48,7 @@ type Item struct {
 	Action       string             `json:"action"`
 	DAO          *dao.DAO           `json:"dao,omitempty"`
 	Proposal     *proposal.Proposal `json:"proposal,omitempty"`
-	Timeline     []Timeline         `json:"timeline"`
+	Timeline     []Timeline         `json:"timeline,omitempty"`
 }
 
 type Timeline struct {

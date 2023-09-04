@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
 	entity "github.com/goverland-labs/inbox-web-api/internal/entities/analytics"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/analytics"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 	"net/http"
@@ -35,7 +36,7 @@ func (s *Server) getMonthlyActiveUsers(w http.ResponseWriter, r *http.Request) {
 
 func convertMonthlyActiveUsersToInternal(mu *internalapi.MonthlyActiveUsers) entity.MonthlyActiveUsers {
 	return entity.MonthlyActiveUsers{
-		PeriodStarted:  mu.PeriodStarted.AsTime(),
+		PeriodStarted:  *common.NewTime(mu.PeriodStarted.AsTime()),
 		ActiveUsers:    mu.ActiveUsers,
 		NewActiveUsers: mu.NewActiveUsers,
 	}

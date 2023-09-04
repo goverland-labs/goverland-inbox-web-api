@@ -1,9 +1,11 @@
 package analytics
 
-import "time"
+import (
+	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
+)
 
 type MonthlyActiveUsers struct {
-	PeriodStarted  time.Time
-	ActiveUsers    uint64
-	NewActiveUsers uint64
+	PeriodStarted  common.Time `json:"period_started"`
+	ActiveUsers    uint64      `json:"active_users"`
+	NewActiveUsers uint64      `json:"new_active_users"`
 }

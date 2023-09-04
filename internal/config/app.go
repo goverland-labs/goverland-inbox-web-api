@@ -7,5 +7,4 @@ type App struct {
 	REST       REST
 	Core       Core
 	Inbox      Inbox
-	Analytics  Analytics
 }

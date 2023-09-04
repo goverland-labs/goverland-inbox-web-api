@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
 	coresdk "github.com/goverland-labs/core-web-sdk"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
@@ -27,26 +26,24 @@ type AuthStorage interface {
 }
 
 type Server struct {
-	httpServer      *http.Server
-	authStorage     AuthStorage
-	coreclient      *coresdk.Client
-	subclient       inboxapi.SubscriptionClient
-	settings        inboxapi.SettingsClient
-	feedClient      inboxapi.FeedClient
-	analyticsClient internalapi.AnalyticsClient
+	httpServer  *http.Server
+	authStorage AuthStorage
+	coreclient  *coresdk.Client
+	subclient   inboxapi.SubscriptionClient
+	settings    inboxapi.SettingsClient
+	feedClient  inboxapi.FeedClient
 
 	daoService *internaldao.Service
 }
 
-func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc inboxapi.SubscriptionClient, settings inboxapi.SettingsClient, feedClient inboxapi.FeedClient, analyticsClient internalapi.AnalyticsClient) *Server {
+func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc inboxapi.SubscriptionClient, settings inboxapi.SettingsClient, feedClient inboxapi.FeedClient) *Server {
 	srv := &Server{
-		authStorage:     authStorage,
-		coreclient:      cl,
-		subclient:       sc,
-		settings:        settings,
-		feedClient:      feedClient,
-		analyticsClient: analyticsClient,
-		daoService:      internaldao.NewService(internaldao.NewCache(), cl),
+		authStorage: authStorage,
+		coreclient:  cl,
+		subclient:   sc,
+		settings:    settings,
+		feedClient:  feedClient,
+		daoService:  internaldao.NewService(internaldao.NewCache(), cl),
 	}
 
 	handler := mux.NewRouter()
@@ -93,8 +90,6 @@ func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc 
 	handler.HandleFunc("/notifications/settings", srv.storePushToken).Methods(http.MethodPost).Name("store_push_token")
 	handler.HandleFunc("/notifications/settings", srv.tokenExists).Methods(http.MethodGet).Name("push_token_exists")
 	handler.HandleFunc("/notifications/settings", srv.removePushToken).Methods(http.MethodDelete).Name("remove_push_token")
-
-	handler.HandleFunc("/analytics/monthly-active-users/{id}", srv.getMonthlyActiveUsers).Methods(http.MethodGet).Name("monthly_active_user")
 
 	return srv
 }

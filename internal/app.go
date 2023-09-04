@@ -6,7 +6,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
 	coresdk "github.com/goverland-labs/core-web-sdk"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/s-larionov/process-manager"
@@ -90,20 +89,14 @@ func (a *Application) initRESTWorker() error {
 		return fmt.Errorf("create connection with storage server: %v", err)
 	}
 
-	anConn, err := grpc.Dial(a.cfg.Analytics.AnalyticsAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return fmt.Errorf("create connection with analytics server: %v", err)
-	}
-
 	ic := inboxapi.NewUserClient(strageConn)
 	sc := inboxapi.NewSubscriptionClient(strageConn)
 	settings := inboxapi.NewSettingsClient(strageConn)
 	cs := coresdk.NewClient(a.cfg.Core.CoreURL)
-	ac := internalapi.NewAnalyticsClient(anConn)
 
 	a.feedClient = inboxapi.NewFeedClient(feedConn)
 
-	srv := rest.NewServer(a.cfg.REST, auth.NewInMemoryStorage(ic), cs, sc, settings, a.feedClient, ac)
+	srv := rest.NewServer(a.cfg.REST, auth.NewInMemoryStorage(ic), cs, sc, settings, a.feedClient)
 	a.manager.AddWorker(process.NewServerWorker("rest", srv.GetHTTPServer()))
 
 	return nil

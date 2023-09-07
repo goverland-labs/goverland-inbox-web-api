@@ -11,6 +11,6 @@ type MonthlyActiveUsers struct {
 }
 
 type VoterBucket struct {
-	MinVotes uint64 `json:"min_votes"`
-	Voters   uint64 `json:"voters"`
+	Votes  string `json:"votes"`
+	Voters uint64 `json:"voters"`
 }

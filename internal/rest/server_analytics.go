@@ -68,7 +68,7 @@ func convertMonthlyActiveUsersToInternal(mu *internalapi.MonthlyActiveUsers) ent
 
 func convertVoterBucketToInternal(vg *internalapi.VoterGroup) entity.VoterBucket {
 	return entity.VoterBucket{
-		MinVotes: vg.MinVotes,
-		Voters:   vg.Voters,
+		Votes:  vg.Votes,
+		Voters: vg.Voters,
 	}
 }

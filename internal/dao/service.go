@@ -135,6 +135,7 @@ func (s *Service) GetTop(ctx context.Context, limit int) (*dao.ListTop, error) {
 		return nil, fmt.Errorf("get dao top: %w", err)
 	}
 
+	list.Categories = grouped
 	list.TotalCnt = total.TotalCnt
 
 	return list, nil

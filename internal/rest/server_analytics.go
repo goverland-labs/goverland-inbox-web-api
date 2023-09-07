@@ -34,10 +34,41 @@ func (s *Server) getMonthlyActiveUsers(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (s *Server) getVoterBuckets(w http.ResponseWriter, r *http.Request) {
+	f, verr := analytics.NewGetForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	resp, err := s.analyticsClient.GetVoterBuckets(context.TODO(), &internalapi.VoterBucketsRequest{
+		DaoId: f.ID.String(),
+	})
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	list := make([]entity.VoterBucket, len(resp.Groups))
+	for i, group := range resp.Groups {
+		list[i] = convertVoterBucketToInternal(group)
+	}
+
+	response.SendJSON(w, http.StatusOK, &list)
+
+}
+
 func convertMonthlyActiveUsersToInternal(mu *internalapi.MonthlyActiveUsers) entity.MonthlyActiveUsers {
 	return entity.MonthlyActiveUsers{
 		PeriodStarted:  *common.NewTime(mu.PeriodStarted.AsTime()),
 		ActiveUsers:    mu.ActiveUsers,
 		NewActiveUsers: mu.NewActiveUsers,
+	}
+}
+
+func convertVoterBucketToInternal(vg *internalapi.VoterGroup) entity.VoterBucket {
+	return entity.VoterBucket{
+		MinVotes: vg.MinVotes,
+		Voters:   vg.Voters,
 	}
 }

@@ -95,6 +95,7 @@ func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc 
 	handler.HandleFunc("/notifications/settings", srv.removePushToken).Methods(http.MethodDelete).Name("remove_push_token")
 
 	handler.HandleFunc("/analytics/monthly-active-users/{id}", srv.getMonthlyActiveUsers).Methods(http.MethodGet).Name("monthly_active_user")
+	handler.HandleFunc("/analytics/voter-buckets/{id}", srv.getVoterBuckets).Methods(http.MethodGet).Name("voter_buckets")
 
 	return srv
 }

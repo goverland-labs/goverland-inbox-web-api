@@ -273,7 +273,24 @@ func convertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) p
 		ScoresUpdated: helpers.Ptr(int(pr.ScoresUpdated)),
 		Votes:         int(pr.Votes),
 		DAO:           dao.ConvertDaoToShort(di),
+		Timeline:      convertProposalTimelineToInternal(pr.Timeline),
 	}
+}
+
+func convertProposalTimelineToInternal(tl []coreproposal.TimelineItem) []proposal.Timeline {
+	if len(tl) == 0 {
+		return nil
+	}
+
+	res := make([]proposal.Timeline, len(tl))
+	for i := range tl {
+		res[i] = proposal.Timeline{
+			CreatedAt: *common.NewTime(tl[i].CreatedAt),
+			Event:     proposal.ActionSourceMap[tl[i].Event],
+		}
+	}
+
+	return res
 }
 
 func convertScoresToInternal(scores []float32) []float64 {

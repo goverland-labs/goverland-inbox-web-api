@@ -215,6 +215,10 @@ func convertFeedToInternal(fi *coredao.FeedItem, d *dao.DAO) feed.Item {
 		proposalItem = helpers.Ptr(helpers.WrapProposalIpfsLinks(convertProposalToInternal(proposalSnapshot, d)))
 	}
 
+	if proposalItem != nil {
+		proposalItem.Timeline = convertFeedTimelineToProposal(fi.Timeline)
+	}
+
 	return feed.Item{
 		ID:           fi.ID,
 		CreatedAt:    *common.NewTime(fi.CreatedAt),
@@ -226,29 +230,5 @@ func convertFeedToInternal(fi *coredao.FeedItem, d *dao.DAO) feed.Item {
 		Action:       fi.Action,
 		DAO:          daoItem,
 		Proposal:     proposalItem,
-		Timeline:     convertFeedTimelineToInternal(fi.Timeline),
 	}
-}
-
-func convertFeedTimelineToInternal(src json.RawMessage) []feed.Timeline {
-	var timelineSource []feed.TimelineSource
-	if err := json.Unmarshal(src, &timelineSource); err != nil {
-		return make([]feed.Timeline, 0)
-	}
-
-	timeline := make([]feed.Timeline, 0, len(timelineSource))
-	for _, t := range timelineSource {
-		e, ok := feed.ActionSourceMap[t.Action]
-		if !ok {
-			// TODO: TBD
-			continue
-		}
-
-		timeline = append(timeline, feed.Timeline{
-			CreatedAt: *common.NewTime(t.CreatedAt),
-			Event:     e,
-		})
-	}
-
-	return timeline
 }

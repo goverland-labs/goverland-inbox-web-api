@@ -214,6 +214,10 @@ func convertInboxFeedItemToInternal(item *inboxapi.FeedItem, d *dao.DAO) feed.It
 		archivedAt = common.NewTime(item.ArchivedAt.AsTime())
 	}
 
+	if proposalItem != nil {
+		proposalItem.Timeline = convertFeedTimelineToProposal(item.Timeline)
+	}
+
 	return feed.Item{
 		ID:           feedID,
 		CreatedAt:    *common.NewTime(item.CreatedAt.AsTime()),
@@ -227,6 +231,22 @@ func convertInboxFeedItemToInternal(item *inboxapi.FeedItem, d *dao.DAO) feed.It
 		Action:       item.GetAction(),
 		DAO:          daoItem,
 		Proposal:     proposalItem,
-		Timeline:     convertFeedTimelineToInternal(item.Timeline),
 	}
+}
+
+func convertFeedTimelineToProposal(src json.RawMessage) []proposal.Timeline {
+	var tl []feed.TimelineSource
+	if err := json.Unmarshal(src, &tl); err != nil {
+		return make([]proposal.Timeline, 0)
+	}
+
+	res := make([]proposal.Timeline, len(tl))
+	for i := range tl {
+		res[i] = proposal.Timeline{
+			CreatedAt: *common.NewTime(tl[i].CreatedAt),
+			Event:     proposal.ActionSourceMap[coreproposal.TimelineAction(tl[i].Action)],
+		}
+	}
+
+	return res
 }

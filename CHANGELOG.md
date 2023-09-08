@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Add analytics endpoint
+
 ## [0.0.23] - 2023-09-04
 
 ### Added

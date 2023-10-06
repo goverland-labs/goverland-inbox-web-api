@@ -28,6 +28,7 @@ const (
 	ActionProposalCreated             ActionSource = "proposal.created"
 	ActionProposalUpdated             ActionSource = "proposal.updated"
 	ActionProposalVotingStartsSoon    ActionSource = "proposal.voting.starts_soon"
+	ActionProposalVotingEndsSoon      ActionSource = "proposal.voting.ends_soon"
 	ActionProposalVotingStarted       ActionSource = "proposal.voting.started"
 	ActionProposalVotingQuorumReached ActionSource = "proposal.voting.quorum_reached"
 	ActionProposalVotingEnded         ActionSource = "proposal.voting.ended"
@@ -62,6 +63,7 @@ var ActionSourceMap = map[ActionSource]Event{
 	ActionProposalCreated:             ProposalCreated,
 	ActionProposalUpdated:             ProposalUpdated,
 	ActionProposalVotingStartsSoon:    ProposalVotingStartsSoon,
+	ActionProposalVotingEndsSoon:      ProposalVotingEndsSoon,
 	ActionProposalVotingStarted:       ProposalVotingStarted,
 	ActionProposalVotingQuorumReached: ProposalVotingReachedQuorum,
 	ActionProposalVotingEnded:         ProposalVotingEnded,

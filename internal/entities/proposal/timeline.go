@@ -10,6 +10,7 @@ const (
 	Created             Event = "proposal.created"
 	Updated             Event = "proposal.updated"
 	VotingStartsSoon    Event = "proposal.voting.starts_soon"
+	VotingEndsSoon      Event = "proposal.voting.ends_soon"
 	VotingStarted       Event = "proposal.voting.started"
 	VotingReachedQuorum Event = "proposal.voting.quorum_reached"
 	VotingEnded         Event = "proposal.voting.ended"
@@ -26,6 +27,7 @@ var ActionSourceMap = map[coreproposal.TimelineAction]Event{
 	coreproposal.Created:             Created,
 	coreproposal.Updated:             Updated,
 	coreproposal.VotingStartsSoon:    VotingStartsSoon,
+	coreproposal.VotingEndsSoon:      VotingEndsSoon,
 	coreproposal.VotingStarted:       VotingStarted,
 	coreproposal.VotingQuorumReached: VotingReachedQuorum,
 	coreproposal.VotingEnded:         VotingEnded,

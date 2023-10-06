@@ -7,7 +7,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.0.26] - 2023-10-06
+## [0.0.27] - 2023-10-06
 
 ### Changed
 - Add proposal ends soon mapping

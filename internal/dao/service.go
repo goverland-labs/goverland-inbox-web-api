@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	coresdk "github.com/goverland-labs/core-web-sdk"
 	coredao "github.com/goverland-labs/core-web-sdk/dao"
+	corefeed "github.com/goverland-labs/core-web-sdk/feed"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
@@ -16,7 +17,7 @@ type DaoProvider interface {
 	GetDao(ctx context.Context, id uuid.UUID) (*coredao.Dao, error)
 	GetDaoList(ctx context.Context, params coresdk.GetDaoListRequest) (*coredao.List, error)
 	GetDaoTop(ctx context.Context, params coresdk.GetDaoTopRequest) (*coredao.TopCategories, error)
-	GetDaoFeed(ctx context.Context, id uuid.UUID, params coresdk.GetDaoFeedRequest) (*coredao.Feed, error)
+	GetDaoFeed(ctx context.Context, id uuid.UUID, params coresdk.GetDaoFeedRequest) (*corefeed.Feed, error)
 }
 
 type Service struct {

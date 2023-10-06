@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/core-web-sdk"
 	coredao "github.com/goverland-labs/core-web-sdk/dao"
+	corefeed "github.com/goverland-labs/core-web-sdk/feed"
 	coreproposal "github.com/goverland-labs/core-web-sdk/proposal"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
@@ -194,7 +195,7 @@ func enrichSubscriptionInfo(session auth.Session, list []*dao.DAO) []*dao.DAO {
 	return list
 }
 
-func convertFeedToInternal(fi *coredao.FeedItem, d *dao.DAO) feed.Item {
+func convertFeedToInternal(fi *corefeed.Item, d *dao.DAO) feed.Item {
 	var daoItem *dao.DAO
 	var proposalItem *proposal.Proposal
 

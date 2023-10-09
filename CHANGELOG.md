@@ -7,6 +7,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.29] - 2023-10-09
+
+### Fixed
+- Filling proposals count from dao info
+
+### Added
+- Voters count field for dao models
+
 ## [0.0.27] - 2023-10-06
 
 ### Changed

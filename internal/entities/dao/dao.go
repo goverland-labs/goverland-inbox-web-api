@@ -30,6 +30,7 @@ type DAO struct {
 	Treasures        []common.Treasury `json:"treasures"`
 	Admins           []common.User     `json:"admins"`
 	FollowersCount   int               `json:"followers_count"`
+	VotersCount      int               `json:"voters_count"`
 	ProposalsCount   int               `json:"proposals_count"`
 	Guidelines       *string           `json:"-"`
 	Template         *string           `json:"-"`
@@ -49,6 +50,7 @@ type ShortDAO struct {
 	Network          common.Network    `json:"network"`
 	Categories       []common.Category `json:"categories"`
 	FollowersCount   int               `json:"followers_count"`
+	VotersCount      int               `json:"voters_count"`
 	ProposalsCount   int               `json:"proposals_count"`
 	SubscriptionInfo *SubscriptionInfo `json:"subscription_info"`
 }
@@ -65,6 +67,7 @@ func NewShortDAO(d *DAO) *ShortDAO {
 		Network:          d.Network,
 		Categories:       d.Categories,
 		FollowersCount:   d.FollowersCount,
+		VotersCount:      d.VotersCount,
 		ProposalsCount:   d.ProposalsCount,
 		SubscriptionInfo: d.SubscriptionInfo,
 	}

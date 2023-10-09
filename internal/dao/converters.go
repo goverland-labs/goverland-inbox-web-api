@@ -44,6 +44,7 @@ func ConvertCoreDaoToInternal(i *coredao.Dao) *dao.DAO {
 		Categories:     convertCoreCategoriesToInternal(i.Categories),
 		Treasures:      convertCoreTreasuresToInternal(i.Treasures),
 		FollowersCount: int(i.FollowersCount),
+		VotersCount:    int(i.VotersCount),
 		ProposalsCount: int(i.ProposalsCount),
 		Guidelines:     helpers.Ptr(i.Guidelines),
 		Template:       helpers.Ptr(i.Template),
@@ -115,6 +116,7 @@ func ConvertDaoToShort(di *dao.DAO) dao.ShortDAO {
 		Network:        di.Network,
 		Categories:     di.Categories,
 		FollowersCount: di.FollowersCount,
-		ProposalsCount: di.FollowersCount,
+		VotersCount:    di.VotersCount,
+		ProposalsCount: di.ProposalsCount,
 	}
 }

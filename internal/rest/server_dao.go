@@ -118,7 +118,7 @@ func (s *Server) listTopDAOs(w http.ResponseWriter, r *http.Request) {
 		Msg("route execution")
 
 	if session != auth.EmptySession {
-		response.AddSubscriptionsCountHeaders(w, len(subscriptionsStorage[session.ID]))
+		response.AddSubscriptionsCountHeaders(w, len(subscriptionsStorage.get(session.ID)))
 	}
 
 	response.AddTotalCounterHeaders(w, resp.TotalCnt)

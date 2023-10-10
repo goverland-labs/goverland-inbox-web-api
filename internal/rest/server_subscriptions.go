@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"net/http"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -26,8 +27,64 @@ type Subscription struct {
 	DAO       *dao.ShortDAO `json:"dao,omitempty"`
 }
 
-// todo: wrap to the sync.Map or use mutex
-var subscriptionsStorage = make(map[uuid.UUID][]Subscription)
+type subStorage struct {
+	mu   sync.RWMutex
+	subs map[uuid.UUID][]Subscription
+}
+
+func (s *subStorage) add(id uuid.UUID, subs ...Subscription) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	data, ok := s.subs[id]
+	if !ok {
+		data = []Subscription{}
+	}
+
+	data = append(data, subs...)
+
+	s.subs[id] = data
+}
+
+func (s *subStorage) set(id uuid.UUID, subs ...Subscription) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.subs[id] = subs
+}
+
+func (s *subStorage) get(id uuid.UUID) []Subscription {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.subs[id]
+}
+
+func (s *subStorage) delete(sessionID, subID uuid.UUID) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	data, ok := s.subs[sessionID]
+	if !ok {
+		return
+	}
+
+	list := make([]Subscription, 0, len(data))
+	for i := range data {
+		if data[i].ID == subID {
+			continue
+		}
+
+		list = append(list, data[i])
+	}
+
+	s.subs[sessionID] = list
+}
+
+var subscriptionsStorage = &subStorage{
+	mu:   sync.RWMutex{},
+	subs: make(map[uuid.UUID][]Subscription),
+}
 
 func (s *Server) listSubscriptions(w http.ResponseWriter, r *http.Request) {
 	session, ok := appctx.ExtractUserSession(r.Context())
@@ -36,10 +93,7 @@ func (s *Server) listSubscriptions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list, ok := subscriptionsStorage[session.ID]
-	if !ok {
-		list = make([]Subscription, 0)
-	}
+	list := subscriptionsStorage.get(session.ID)
 
 	offset, limit, err := request.ExtractPagination(r)
 	if err != nil {
@@ -73,7 +127,7 @@ func (s *Server) getSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list := lo.Filter(subscriptionsStorage[session.ID], func(item Subscription, _ int) bool {
+	list := lo.Filter(subscriptionsStorage.get(session.ID), func(item Subscription, _ int) bool {
 		return item.ID == f.ID
 	})
 
@@ -104,10 +158,7 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list, ok := subscriptionsStorage[session.ID]
-	if !ok {
-		list = make([]Subscription, 0)
-	}
+	list := subscriptionsStorage.get(session.ID)
 	initialCount := len(list)
 
 	var sub *Subscription
@@ -152,7 +203,7 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	list = append(list, *sub)
-	subscriptionsStorage[session.ID] = list
+	subscriptionsStorage.set(session.ID, list...)
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
@@ -186,23 +237,13 @@ func (s *Server) unsubscribe(w http.ResponseWriter, r *http.Request) {
 		response.SendEmpty(w, http.StatusInternalServerError)
 	}
 
-	initialCount := len(subscriptionsStorage[session.ID])
-	list := make([]Subscription, 0, initialCount)
-
-	for _, sub := range subscriptionsStorage[session.ID] {
-		if sub.ID == f.ID {
-			continue
-		}
-
-		list = append(list, sub)
-	}
-
-	subscriptionsStorage[session.ID] = list
+	initialCount := len(subscriptionsStorage.get(session.ID))
+	subscriptionsStorage.delete(session.ID, f.ID)
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
 		Int("initial_count", initialCount).
-		Int("new_count", len(list)).
+		Int("new_count", len(subscriptionsStorage.get(session.ID))).
 		Msg("route execution")
 
 	response.SendEmpty(w, http.StatusOK)
@@ -213,7 +254,7 @@ func getSubscription(session auth.Session, daoID uuid.UUID) *dao.SubscriptionInf
 		return nil
 	}
 
-	for _, subscription := range subscriptionsStorage[session.ID] {
+	for _, subscription := range subscriptionsStorage.get(session.ID) {
 		if subscription.DAO == nil {
 			continue
 		}
@@ -299,5 +340,5 @@ func (s *Server) getSubscriptions(sessionID uuid.UUID) {
 		list = append(list, sub)
 	}
 
-	subscriptionsStorage[sessionID] = list
+	subscriptionsStorage.set(sessionID, list...)
 }

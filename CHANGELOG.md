@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Protect user subscriptions storage
+
 ## [0.0.30] - 2023-10-12
 
 ### Added

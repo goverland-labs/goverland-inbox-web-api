@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.30] - 2023-10-12
+
 ### Added
 - Added option for fetching archived items only
 - Added endpoint for unarchive item

@@ -10,20 +10,20 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 )
 
-type markItemAsReadRequest struct {
+type markUnmarkItemRequest struct {
 	ID string
 }
 
-type MarkItemAsReadForm struct {
+type MarkUnmarkItemForm struct {
 	ID uuid.UUID
 }
 
-func NewMarkItemAsReadForm() *MarkItemAsReadForm {
-	return &MarkItemAsReadForm{}
+func NewMarkUnmarkItemForm() *MarkUnmarkItemForm {
+	return &MarkUnmarkItemForm{}
 }
 
-func (f *MarkItemAsReadForm) ParseAndValidate(r *http.Request) (*MarkItemAsReadForm, response.Error) {
-	request := &markItemAsReadRequest{
+func (f *MarkUnmarkItemForm) ParseAndValidate(r *http.Request) (*MarkUnmarkItemForm, response.Error) {
+	request := &markUnmarkItemRequest{
 		ID: mux.Vars(r)["id"],
 	}
 
@@ -37,7 +37,7 @@ func (f *MarkItemAsReadForm) ParseAndValidate(r *http.Request) (*MarkItemAsReadF
 	return f, nil
 }
 
-func (f *MarkItemAsReadForm) validateAndSetID(req *markItemAsReadRequest, errors map[string]response.ErrorMessage) {
+func (f *MarkUnmarkItemForm) validateAndSetID(req *markUnmarkItemRequest, errors map[string]response.ErrorMessage) {
 	id := strings.TrimSpace(req.ID)
 	if id == "" {
 		errors["id"] = response.MissedValueError("missed value")

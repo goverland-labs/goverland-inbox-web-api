@@ -41,11 +41,11 @@ func (s *Server) getFeed(w http.ResponseWriter, r *http.Request) {
 	f, _ := feedform.NewGetFeedForm().ParseAndValidate(r)
 
 	resp, err := s.feedClient.GetUserFeed(context.TODO(), &inboxapi.GetUserFeedRequest{
-		SubscriberId:    session.ID.String(),
-		IncludeRead:     !f.Unread,
-		IncludeArchived: f.Arhived,
-		Limit:           uint32(limit),
-		Offset:          uint32(offset),
+		SubscriberId:  session.ID.String(),
+		ReadState:     f.Unread.AsProto(),
+		ArchivedState: f.Archived.AsProto(),
+		Limit:         uint32(limit),
+		Offset:        uint32(offset),
 	})
 	if err != nil {
 		response.SendError(w, http.StatusInternalServerError, err.Error())
@@ -81,7 +81,7 @@ func (s *Server) markFeedItemAsRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	f, verr := feedform.NewMarkItemAsReadForm().ParseAndValidate(r)
+	f, verr := feedform.NewMarkUnmarkItemForm().ParseAndValidate(r)
 	if verr != nil {
 		response.HandleError(verr, w)
 		return
@@ -107,13 +107,39 @@ func (s *Server) markFeedItemAsArchived(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	f, verr := feedform.NewMarkItemAsReadForm().ParseAndValidate(r)
+	f, verr := feedform.NewMarkUnmarkItemForm().ParseAndValidate(r)
 	if verr != nil {
 		response.HandleError(verr, w)
 		return
 	}
 
 	_, err := s.feedClient.MarkAsArchived(context.TODO(), &inboxapi.MarkAsArchivedRequest{
+		SubscriberId: session.ID.String(),
+		Ids:          []string{f.ID.String()},
+	})
+
+	if err != nil {
+		response.HandleError(response.ResolveError(err), w)
+		return
+	}
+
+	response.SendEmpty(w, http.StatusOK)
+}
+
+func (s *Server) markFeedItemAsUnarchived(w http.ResponseWriter, r *http.Request) {
+	session, ok := appctx.ExtractUserSession(r.Context())
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	f, verr := feedform.NewMarkUnmarkItemForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	_, err := s.feedClient.MarkAsUnarchived(context.TODO(), &inboxapi.MarkAsUnarchivedRequest{
 		SubscriberId: session.ID.String(),
 		Ids:          []string{f.ID.String()},
 	})

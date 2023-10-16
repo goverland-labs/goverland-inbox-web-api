@@ -9,7 +9,7 @@ import (
 
 func WrapProposalIpfsLinks(p proposal.Proposal) proposal.Proposal {
 	if p.DAO.Avatar != nil {
-		p.DAO.Avatar = Ptr(ipfs.WrapLink(*p.DAO.Avatar))
+		p.DAO.Avatar = Ptr(ipfs.WrapDAOImageLink(p.DAO.Alias))
 	}
 
 	return p
@@ -25,7 +25,7 @@ func WrapProposalsIpfsLinks(list []proposal.Proposal) []proposal.Proposal {
 
 func WrapDAOIpfsLinks(d *dao.DAO) *dao.DAO {
 	if d.Avatar != nil {
-		d.Avatar = Ptr(ipfs.WrapLink(*d.Avatar))
+		d.Avatar = Ptr(ipfs.WrapDAOImageLink(d.Alias))
 	}
 
 	return d
@@ -41,7 +41,7 @@ func WrapDAOsIpfsLinks(list []*dao.DAO) []*dao.DAO {
 
 func WrapShortDAOIpfsLinks(d dao.ShortDAO) dao.ShortDAO {
 	if d.Avatar != nil {
-		d.Avatar = Ptr(ipfs.WrapLink(*d.Avatar))
+		d.Avatar = Ptr(ipfs.WrapDAOImageLink(d.Alias))
 	}
 
 	return d

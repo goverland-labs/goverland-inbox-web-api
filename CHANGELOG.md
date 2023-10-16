@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.32] - 2023-10-16
+
+### Fixed
+- Fixed ipfs wrapper for DAO avatars
+
 ## [0.0.31] - 2023-10-12
 
 ### Changed

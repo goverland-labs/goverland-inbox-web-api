@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Exclusive voters, proposals by month analytics endpoints
+
 ## [0.0.32] - 2023-10-16
 
 ### Fixed

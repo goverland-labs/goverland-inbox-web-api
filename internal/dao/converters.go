@@ -8,6 +8,7 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/helpers"
+	"github.com/goverland-labs/inbox-web-api/internal/ipfs"
 )
 
 func ConvertCoreDaoToInternal(i *coredao.Dao) *dao.DAO {
@@ -25,7 +26,7 @@ func ConvertCoreDaoToInternal(i *coredao.Dao) *dao.DAO {
 		About: []common.Content{
 			{
 				Type: common.Markdown,
-				Body: i.About,
+				Body: ipfs.ReplaceLinksInText(i.About),
 			},
 		},
 		Avatar:         helpers.Ptr(i.Avatar),

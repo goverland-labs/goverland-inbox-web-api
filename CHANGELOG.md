@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.34] - 2023-10-20
+
 ### Added
 - Added replace ipfs links in proposal body
 

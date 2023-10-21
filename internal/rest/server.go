@@ -99,6 +99,7 @@ func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc 
 	handler.HandleFunc("/analytics/voter-buckets/{id}", srv.getVoterBuckets).Methods(http.MethodGet).Name("voter_buckets")
 	handler.HandleFunc("/analytics/exclusive-voters/{id}", srv.getExclusiveVoters).Methods(http.MethodGet).Name("exclusive_voters")
 	handler.HandleFunc("/analytics/monthly-new-proposals/{id}", srv.getMonthlyNewProposals).Methods(http.MethodGet).Name("monthly_new_proposals")
+	handler.HandleFunc("/analytics/percent-succeeded-proposals/{id}", srv.getPercentSucceededProposals).Methods(http.MethodGet).Name("percent_succeeded_proposals")
 
 	return srv
 }

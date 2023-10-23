@@ -125,6 +125,24 @@ func (s *Server) getMonthlyNewProposals(w http.ResponseWriter, r *http.Request) 
 
 }
 
+func (s *Server) getPercentSucceededProposals(w http.ResponseWriter, r *http.Request) {
+	f, verr := analytics.NewGetForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	resp, err := s.analyticsClient.GetPercentSucceededProposals(context.TODO(), &internalapi.PercentSucceededProposalsRequest{
+		DaoId: f.ID.String(),
+	})
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.SendJSON(w, http.StatusOK, helpers.Ptr(resp.Percent))
+}
+
 func convertMonthlyActiveUsersToInternal(mu *internalapi.MonthlyActiveUsers) entity.MonthlyActiveUsers {
 	return entity.MonthlyActiveUsers{
 		PeriodStarted:  *common.NewTime(mu.PeriodStarted.AsTime()),

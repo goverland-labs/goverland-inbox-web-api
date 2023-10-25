@@ -103,7 +103,7 @@ func (a *Application) initRESTWorker() error {
 
 	a.feedClient = inboxapi.NewFeedClient(feedConn)
 
-	srv := rest.NewServer(a.cfg.REST, auth.NewInMemoryStorage(ic), cs, sc, settings, a.feedClient, ac)
+	srv := rest.NewServer(a.cfg.REST, auth.NewInMemoryStorage(ic), cs, sc, settings, a.feedClient, ac, ic)
 	a.manager.AddWorker(process.NewServerWorker("rest", srv.GetHTTPServer()))
 
 	return nil

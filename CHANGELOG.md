@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Recent dao endpoint
+- Add viewed dao to inbox-storage
+
 ## [0.0.36] - 2023-10-31
 
 ### Added

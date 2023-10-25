@@ -34,11 +34,21 @@ type Server struct {
 	settings        inboxapi.SettingsClient
 	feedClient      inboxapi.FeedClient
 	analyticsClient internalapi.AnalyticsClient
+	userClient      inboxapi.UserClient
 
 	daoService *internaldao.Service
 }
 
-func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc inboxapi.SubscriptionClient, settings inboxapi.SettingsClient, feedClient inboxapi.FeedClient, analyticsClient internalapi.AnalyticsClient) *Server {
+func NewServer(
+	cfg config.REST,
+	authStorage AuthStorage,
+	cl *coresdk.Client,
+	sc inboxapi.SubscriptionClient,
+	settings inboxapi.SettingsClient,
+	feedClient inboxapi.FeedClient,
+	analyticsClient internalapi.AnalyticsClient,
+	userClient inboxapi.UserClient,
+) *Server {
 	srv := &Server{
 		authStorage:     authStorage,
 		coreclient:      cl,
@@ -46,6 +56,7 @@ func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc 
 		settings:        settings,
 		feedClient:      feedClient,
 		analyticsClient: analyticsClient,
+		userClient:      userClient,
 		daoService:      internaldao.NewService(internaldao.NewCache(), cl),
 	}
 
@@ -72,6 +83,7 @@ func NewServer(cfg config.REST, authStorage AuthStorage, cl *coresdk.Client, sc 
 
 	handler.HandleFunc("/dao", srv.listDAOs).Methods(http.MethodGet).Name("get_dao_list")
 	handler.HandleFunc("/dao/top", srv.listTopDAOs).Methods(http.MethodGet).Name("get_dao_top")
+	handler.HandleFunc("/dao/recent", srv.recentDao).Methods(http.MethodGet).Name("get_recent_dao")
 	handler.HandleFunc("/dao/{id}/feed", srv.getDAOFeed).Methods(http.MethodGet).Name("get_dao_feed")
 	handler.HandleFunc("/dao/{id}", srv.getDAO).Methods(http.MethodGet).Name("get_dao_item")
 

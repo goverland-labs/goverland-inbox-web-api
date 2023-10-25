@@ -1,16 +1,19 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+
 	coresdk "github.com/goverland-labs/core-web-sdk"
 	coredao "github.com/goverland-labs/core-web-sdk/dao"
 	corefeed "github.com/goverland-labs/core-web-sdk/feed"
 	coreproposal "github.com/goverland-labs/core-web-sdk/proposal"
+	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 
@@ -28,7 +31,7 @@ import (
 )
 
 func (s *Server) getDAO(w http.ResponseWriter, r *http.Request) {
-	session, _ := appctx.ExtractUserSession(r.Context())
+	session, exists := appctx.ExtractUserSession(r.Context())
 
 	f, verr := daoform.NewGetItemForm().ParseAndValidate(r)
 	if verr != nil {
@@ -47,6 +50,19 @@ func (s *Server) getDAO(w http.ResponseWriter, r *http.Request) {
 
 		response.SendEmpty(w, http.StatusInternalServerError)
 		return
+	}
+
+	if exists {
+		go func() {
+			_, err := s.userClient.AddView(context.TODO(), &inboxapi.UserViewRequest{
+				UserId: session.ID.String(),
+				Type:   inboxapi.RecentlyViewedType_RECENTLY_VIEWED_TYPE_DAO,
+				TypeId: f.ID.String(),
+			})
+			if err != nil {
+				log.Error().Err(err).Msgf("add dao view: %s to %s", session.ID.String(), f.ID.String())
+			}
+		}()
 	}
 
 	item.SubscriptionInfo = getSubscription(session, item.ID)
@@ -180,6 +196,70 @@ func (s *Server) getDAOFeed(w http.ResponseWriter, r *http.Request) {
 		Msg("route execution")
 
 	response.AddPaginationHeaders(w, r, resp.Offset, resp.Limit, resp.TotalCnt)
+	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func (s *Server) recentDao(w http.ResponseWriter, r *http.Request) {
+	session, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.SendEmpty(w, http.StatusForbidden)
+	}
+
+	resp, err := s.userClient.LastViewed(r.Context(), &inboxapi.UserLastViewedRequest{
+		UserId: session.ID.String(),
+		Type:   inboxapi.RecentlyViewedType_RECENTLY_VIEWED_TYPE_DAO,
+		Limit:  10,
+	})
+	if err != nil {
+		log.Error().Err(err).Msgf("get last viewed by id: %s", session.ID.String())
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	daoIDs := make([]string, 0, len(resp.List))
+	for _, info := range resp.List {
+		id := info.GetTypeId()
+		if slices.Contains(daoIDs, id) {
+			continue
+		}
+
+		daoIDs = append(daoIDs, id)
+	}
+
+	daoList, err := s.daoService.GetDaoList(r.Context(), dao.DaoListRequest{
+		IDs:   daoIDs,
+		Limit: len(daoIDs),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get dao list by IDs")
+
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// hack to save dao ordering
+	list := make([]*dao.DAO, 0, len(daoList.Items))
+	for i := range resp.List {
+		var di *dao.DAO
+		for j := range daoList.Items {
+			if resp.List[i].TypeId != daoList.Items[j].ID.String() {
+				continue
+			}
+
+			di = daoList.Items[j]
+		}
+
+		list = append(list, di)
+	}
+
+	list = helpers.WrapDAOsIpfsLinks(list)
+	list = enrichSubscriptionInfo(session, list)
+
+	log.Info().
+		Str("route", mux.CurrentRoute(r).GetName()).
+		Int("count", len(list)).
+		Msg("route execution")
+
 	response.SendJSON(w, http.StatusOK, &list)
 }
 

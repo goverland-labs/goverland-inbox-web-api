@@ -7,6 +7,7 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/helpers"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/analytics"
+	"github.com/goverland-labs/inbox-web-api/internal/rest/request"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 	"net/http"
 )
@@ -125,14 +126,14 @@ func (s *Server) getMonthlyNewProposals(w http.ResponseWriter, r *http.Request) 
 
 }
 
-func (s *Server) getPercentSucceededProposals(w http.ResponseWriter, r *http.Request) {
+func (s *Server) getSucceededProposalsCount(w http.ResponseWriter, r *http.Request) {
 	f, verr := analytics.NewGetForm().ParseAndValidate(r)
 	if verr != nil {
 		response.HandleError(verr, w)
 		return
 	}
 
-	resp, err := s.analyticsClient.GetPercentSucceededProposals(context.TODO(), &internalapi.PercentSucceededProposalsRequest{
+	resp, err := s.analyticsClient.GetSucceededProposalsCount(context.TODO(), &internalapi.SucceededProposalsCountRequest{
 		DaoId: f.ID.String(),
 	})
 	if err != nil {
@@ -140,7 +141,67 @@ func (s *Server) getPercentSucceededProposals(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	response.SendJSON(w, http.StatusOK, helpers.Ptr(resp.Percent))
+	response.SendJSON(w, http.StatusOK, helpers.Ptr(entity.ProposalsCount{Succeeded: resp.Succeeded, Finished: resp.Finished}))
+}
+
+func (s *Server) getTopVotersByVp(w http.ResponseWriter, r *http.Request) {
+	f, verr := analytics.NewGetForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	_, limit, err := request.ExtractPagination(r)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	resp, err := s.analyticsClient.GetTopVotersByVp(context.TODO(), &internalapi.TopVotersByVpRequest{
+		DaoId: f.ID.String(),
+		Limit: uint64(limit),
+	})
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	list := make([]entity.VoterWithVp, len(resp.VoterWithVp))
+	for i, voter := range resp.VoterWithVp {
+		list[i] = convertVoterWithVpToInternal(voter)
+	}
+
+	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func (s *Server) getMutualDaos(w http.ResponseWriter, r *http.Request) {
+	f, verr := analytics.NewGetForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	_, limit, err := request.ExtractPagination(r)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	resp, err := s.analyticsClient.GetDaosVotersParticipateIn(context.TODO(), &internalapi.DaosVotersParticipateInRequest{
+		DaoId: f.ID.String(),
+		Limit: uint64(limit),
+	})
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	list := make([]entity.MutualDao, len(resp.DaoVotersParticipateIn))
+	for i, dao := range resp.DaoVotersParticipateIn {
+		list[i] = convertMutualDaoToInternal(dao)
+	}
+
+	response.SendJSON(w, http.StatusOK, &list)
 }
 
 func convertMonthlyActiveUsersToInternal(mu *internalapi.MonthlyActiveUsers) entity.MonthlyActiveUsers {
@@ -155,6 +216,22 @@ func convertVoterBucketToInternal(vg *internalapi.VoterGroup) entity.VoterBucket
 	return entity.VoterBucket{
 		Votes:  vg.Votes,
 		Voters: vg.Voters,
+	}
+}
+
+func convertVoterWithVpToInternal(vv *internalapi.VoterWithVp) entity.VoterWithVp {
+	return entity.VoterWithVp{
+		Voter:      vv.Voter,
+		VpAvg:      vv.VpAvg,
+		VotesCount: vv.VotesCount,
+	}
+}
+
+func convertMutualDaoToInternal(dp *internalapi.DaoVotersParticipateIn) entity.MutualDao {
+	return entity.MutualDao{
+		DaoId:         dp.DaoId,
+		VotersCount:   dp.VotersCount,
+		VotersPercent: dp.PercentVoters,
 	}
 }
 

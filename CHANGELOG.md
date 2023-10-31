@@ -7,6 +7,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.36] - 2023-10-31
+
+### Added
+- Top voters by avg vp
+- Daos where voters also participate
+
+### Changed
+- Percent succeeded proposals response
+
 ## [0.0.35] - 2023-10-23
 
 ### Added

@@ -16,8 +16,8 @@ type VoterBucket struct {
 }
 
 type ExclusiveVoters struct {
-	Count   uint32 `json:"count"`
-	Percent uint32 `json:"percent"`
+	Exclusive uint32 `json:"exclusive"`
+	Total     uint32 `json:"total"`
 }
 
 type ProposalsByMonth struct {

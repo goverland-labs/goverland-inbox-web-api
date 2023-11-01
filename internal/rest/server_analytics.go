@@ -75,7 +75,7 @@ func (s *Server) getExclusiveVoters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.SendJSON(w, http.StatusOK, helpers.Ptr(entity.ExclusiveVoters{Count: resp.Count, Percent: resp.Percent}))
+	response.SendJSON(w, http.StatusOK, helpers.Ptr(entity.ExclusiveVoters{Exclusive: resp.Exclusive, Total: resp.Total}))
 }
 
 func (s *Server) get(w http.ResponseWriter, r *http.Request) {

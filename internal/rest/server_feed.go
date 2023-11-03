@@ -53,8 +53,11 @@ func (s *Server) getFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	feedList := resp.GetList()
-
-	daos, err := s.fetchDAOsForFeed(r.Context(), feedList)
+	daoIds := make([]string, 0, len(feedList))
+	for _, info := range feedList {
+		daoIds = append(daoIds, info.DaoId)
+	}
+	daos, err := s.fetchDAOsByIds(r.Context(), daoIds)
 	if err != nil {
 		response.SendError(w, http.StatusInternalServerError, err.Error())
 		return

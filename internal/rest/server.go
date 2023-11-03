@@ -122,12 +122,7 @@ func (s *Server) GetHTTPServer() *http.Server {
 	return s.httpServer
 }
 
-func (s *Server) fetchDAOsForFeed(ctx context.Context, list []*inboxapi.FeedItem) (map[string]*dao.DAO, error) {
-	daoIds := make([]string, 0, len(list))
-	for _, info := range list {
-		daoIds = append(daoIds, info.DaoId)
-	}
-
+func (s *Server) fetchDAOsByIds(ctx context.Context, daoIds []string) (map[string]*dao.DAO, error) {
 	daolist, err := s.daoService.GetDaoList(ctx, dao.DaoListRequest{
 		IDs:   daoIds,
 		Limit: len(daoIds),

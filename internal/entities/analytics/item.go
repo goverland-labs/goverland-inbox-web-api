@@ -2,6 +2,7 @@ package analytics
 
 import (
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 )
 
 type MonthlyActiveUsers struct {
@@ -37,7 +38,7 @@ type VoterWithVp struct {
 }
 
 type MutualDao struct {
-	DaoId         string  `json:"dao_id"`
-	VotersCount   uint32  `json:"voters_count"`
-	VotersPercent float32 `json:"voters_percent"`
+	DAO           *dao.DAO `json:"dao,omitempty"`
+	VotersCount   uint32   `json:"voters_count"`
+	VotersPercent float32  `json:"voters_percent"`
 }

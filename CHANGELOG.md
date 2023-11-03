@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.39] - 2023-11-03
+
 ### Changed
 - Return dao object vs dao id for mutual daos
 

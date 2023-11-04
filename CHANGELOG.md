@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Return empty subscriptions instead of null
+
 ## [0.0.39] - 2023-11-03
 
 ### Changed

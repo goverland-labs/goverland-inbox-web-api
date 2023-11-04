@@ -94,6 +94,9 @@ func (s *Server) listSubscriptions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	list := subscriptionsStorage.get(session.ID)
+	if list == nil {
+		list = []Subscription{}
+	}
 
 	offset, limit, err := request.ExtractPagination(r)
 	if err != nil {

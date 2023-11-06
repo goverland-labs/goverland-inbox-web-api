@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Subscription Info for mutual daos
+
 ## [0.0.39] - 2023-11-03
 
 ### Changed

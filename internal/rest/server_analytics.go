@@ -3,6 +3,8 @@ package rest
 import (
 	"context"
 	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
+	"github.com/goverland-labs/inbox-web-api/internal/appctx"
+	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	entity "github.com/goverland-labs/inbox-web-api/internal/entities/analytics"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
@@ -176,6 +178,7 @@ func (s *Server) getTopVotersByVp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getMutualDaos(w http.ResponseWriter, r *http.Request) {
+	session, _ := appctx.ExtractUserSession(r.Context())
 	f, verr := analytics.NewGetForm().ParseAndValidate(r)
 	if verr != nil {
 		response.HandleError(verr, w)
@@ -210,7 +213,7 @@ func (s *Server) getMutualDaos(w http.ResponseWriter, r *http.Request) {
 
 	list := make([]entity.MutualDao, len(resp.DaoVotersParticipateIn))
 	for i, md := range resp.DaoVotersParticipateIn {
-		list[i] = convertMutualDaoToInternal(md, daos[md.DaoId])
+		list[i] = convertMutualDaoToInternal(session, md, daos[md.DaoId])
 	}
 
 	response.SendJSON(w, http.StatusOK, &list)
@@ -239,9 +242,11 @@ func convertVoterWithVpToInternal(vv *internalapi.VoterWithVp) entity.VoterWithV
 	}
 }
 
-func convertMutualDaoToInternal(dp *internalapi.DaoVotersParticipateIn, d *dao.DAO) entity.MutualDao {
+func convertMutualDaoToInternal(session auth.Session, dp *internalapi.DaoVotersParticipateIn, d *dao.DAO) entity.MutualDao {
+	md := helpers.WrapDAOIpfsLinks(d)
+	md.SubscriptionInfo = getSubscription(session, d.ID)
 	return entity.MutualDao{
-		DAO:           helpers.WrapDAOIpfsLinks(d),
+		DAO:           md,
 		VotersCount:   dp.VotersCount,
 		VotersPercent: dp.PercentVoters,
 	}

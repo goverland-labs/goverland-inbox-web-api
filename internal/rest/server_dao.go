@@ -208,7 +208,7 @@ func (s *Server) recentDao(w http.ResponseWriter, r *http.Request) {
 	resp, err := s.userClient.LastViewed(r.Context(), &inboxapi.UserLastViewedRequest{
 		UserId: session.ID.String(),
 		Type:   inboxapi.RecentlyViewedType_RECENTLY_VIEWED_TYPE_DAO,
-		Limit:  10,
+		Limit:  30,
 	})
 	if err != nil {
 		log.Error().Err(err).Msgf("get last viewed by id: %s", session.ID.String())

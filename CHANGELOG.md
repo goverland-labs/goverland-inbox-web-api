@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.41] - 2023-11-07
+
+### Changed
+- Recently viewed dao from 10 to 30
+
 ## [0.0.40] - 2023-11-07
 
 ### Changed

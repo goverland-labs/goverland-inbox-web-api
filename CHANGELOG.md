@@ -9,6 +9,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 - Return empty subscriptions instead of null
+- Increased images size of ipfs avatars 180px instead of 90px
 
 ### Added 
 - Subscription info for mutual daos

@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.40] - 2023-11-07
+
 ### Changed
 - Return empty subscriptions instead of null
 - Increased images size of ipfs avatars 180px instead of 90px

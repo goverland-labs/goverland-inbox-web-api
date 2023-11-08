@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.42] - 2023-11-08
+
+### Changed
+- Update ipfs resolve url
+
 ## [0.0.41] - 2023-11-07
 
 ### Changed

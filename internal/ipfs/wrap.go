@@ -7,7 +7,7 @@ import (
 )
 
 const ipfsLinkTemplate = "https://ipfs.io/ipfs/%s"
-const ipfsResolveURL = "https://gateway.4everland.link/ipfs/"
+const ipfsResolveURL = "https://snapshot.4everland.link/ipfs/"
 const ipfsDAOImageLinkTemplate = "https://cdn.stamp.fyi/space/%s?s=180"
 
 var linkRE = regexp.MustCompile(`^ipfs://([a-zA-Z0-9]+)$`)

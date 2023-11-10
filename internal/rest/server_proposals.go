@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -229,6 +230,110 @@ func (s *Server) proposalsTop(w http.ResponseWriter, r *http.Request) {
 
 	response.AddPaginationHeaders(w, r, offset, limit, resp.TotalCnt)
 	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func (h *Server) validateVote(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	proposalID := vars["id"]
+
+	params, verr := proposals.NewValidateVoteForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	validateResponse, err := h.coreclient.ValidateVote(r.Context(), proposalID, coresdk.ValidateVoteRequest{
+		Voter: string(params.Voter),
+	})
+	if err != nil {
+		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("validate proposal vote")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	var voteValidationError *proposal.VoteValidationError
+	if validateResponse.VoteValidationError != nil {
+		voteValidationError = &proposal.VoteValidationError{
+			Message: validateResponse.VoteValidationError.Message,
+			Code:    validateResponse.VoteValidationError.Code,
+		}
+	}
+
+	voteValidation := proposal.VoteValidation{
+		OK:                  validateResponse.OK,
+		VotingPower:         validateResponse.VotingPower,
+		VoteValidationError: voteValidationError,
+	}
+
+	response.SendJSON(w, http.StatusOK, &voteValidation)
+}
+
+func (h *Server) prepareVote(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	proposalID := vars["id"]
+
+	params, verr := proposals.NewPrepareVoteForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	prepareResponse, err := h.coreclient.PrepareVote(r.Context(), proposalID, coresdk.PrepareVoteRequest{
+		Voter:  string(params.Voter),
+		Choice: json.RawMessage(params.Choice),
+		Reason: params.Reason,
+	})
+	if err != nil {
+		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("prepare proposal vote")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	votePreparation := proposal.VotePreparation{
+		TypedData: prepareResponse.TypedData,
+	}
+
+	response.SendJSON(w, http.StatusOK, &votePreparation)
+}
+
+func (h *Server) vote(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	proposalID := vars["id"]
+
+	params, verr := proposals.NewVoteForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+
+		return
+	}
+
+	voteResponse, err := h.coreclient.Vote(r.Context(), proposalID, coresdk.VoteRequest{
+		Voter:  string(params.Voter),
+		Choice: json.RawMessage(params.Choice),
+		Reason: params.Reason,
+		Sig:    params.Sig,
+	})
+	if err != nil {
+		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("vote proposal")
+		response.HandleError(response.ResolveError(err), w)
+
+		return
+	}
+
+	successfulVote := proposal.SuccessfulVote{
+		ID:   voteResponse.ID,
+		IPFS: voteResponse.IPFS,
+		Relayer: proposal.Relayer{
+			Address: voteResponse.Relayer.Address,
+			Receipt: voteResponse.Relayer.Receipt,
+		},
+	}
+
+	response.SendJSON(w, http.StatusOK, &successfulVote)
 }
 
 func convertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) proposal.Proposal {

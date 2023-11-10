@@ -22,3 +22,29 @@ type Vote struct {
 	VpByStrategy []float32       `json:"vp_by_strategy"`
 	VpState      string          `json:"vp_state"`
 }
+
+type VoteValidation struct {
+	OK                  bool                 `json:"ok"`
+	VotingPower         float64              `json:"voting_power"`
+	VoteValidationError *VoteValidationError `json:"error,omitempty"`
+}
+
+type VoteValidationError struct {
+	Message string `json:"message"`
+	Code    uint32 `json:"code"`
+}
+
+type VotePreparation struct {
+	TypedData string `json:"typed_data"`
+}
+
+type SuccessfulVote struct {
+	ID      string  `json:"id"`
+	IPFS    string  `json:"ipfs"`
+	Relayer Relayer `json:"relayer"`
+}
+
+type Relayer struct {
+	Address string `json:"address"`
+	Receipt string `json:"receipt"`
+}

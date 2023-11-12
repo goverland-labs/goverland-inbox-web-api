@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"github.com/gorilla/mux"
 	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
@@ -13,6 +14,7 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/rest/request"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 	"net/http"
+	"strconv"
 )
 
 func (s *Server) getMonthlyActiveUsers(w http.ResponseWriter, r *http.Request) {
@@ -217,6 +219,74 @@ func (s *Server) getMutualDaos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func (s *Server) getEcosystemTotals(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	period, err := strconv.ParseUint(vars["period"], 10, 32)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, "Invalid period")
+		return
+	}
+
+	resp, err := s.analyticsClient.GetTotalsForLastPeriods(context.TODO(), &internalapi.TotalsForLastPeriodsRequest{
+		PeriodInDays: uint32(period),
+	})
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.SendJSON(w, http.StatusOK, helpers.Ptr(entity.EcosystemTotals{
+		Daos: &entity.Total{
+			Current:  resp.Daos.CurrentPeriodTotal,
+			Previous: resp.Daos.PreviousPeriodTotal},
+		Proposals: &entity.Total{
+			Current:  resp.Proposals.CurrentPeriodTotal,
+			Previous: resp.Proposals.PreviousPeriodTotal},
+		Voters: &entity.Total{
+			Current:  resp.Voters.CurrentPeriodTotal,
+			Previous: resp.Voters.PreviousPeriodTotal},
+		Votes: &entity.Total{
+			Current:  resp.Votes.CurrentPeriodTotal,
+			Previous: resp.Votes.PreviousPeriodTotal},
+	}))
+}
+
+func (s *Server) getMonthlyDaos(w http.ResponseWriter, _ *http.Request) {
+	s.sendMonthlyTotals(w, internalapi.ObjectType_OBJECT_TYPE_DAO)
+}
+
+func (s *Server) getMonthlyProposals(w http.ResponseWriter, _ *http.Request) {
+	s.sendMonthlyTotals(w, internalapi.ObjectType_OBJECT_TYPE_PROPOSAL)
+}
+
+func (s *Server) getMonthlyVoters(w http.ResponseWriter, _ *http.Request) {
+	s.sendMonthlyTotals(w, internalapi.ObjectType_OBJECT_TYPE_VOTER)
+}
+
+func (s *Server) sendMonthlyTotals(w http.ResponseWriter, t internalapi.ObjectType) {
+	resp, err := s.analyticsClient.GetMonthlyActive(context.TODO(), &internalapi.MonthlyActiveRequest{
+		Type: t,
+	})
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	list := make([]entity.MonthlyTotals, len(resp.TotalsByMonth))
+	for i, mt := range resp.TotalsByMonth {
+		list[i] = convertMonthlyTotalsToInternal(mt)
+	}
+
+	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func convertMonthlyTotalsToInternal(mt *internalapi.TotalsByMonth) entity.MonthlyTotals {
+	return entity.MonthlyTotals{
+		PeriodStarted: *common.NewTime(mt.PeriodStarted.AsTime()),
+		Total:         mt.Total,
+		TotalOfNew:    mt.NewObjectsTotal,
+	}
 }
 
 func convertMonthlyActiveUsersToInternal(mu *internalapi.MonthlyActiveUsers) entity.MonthlyActiveUsers {

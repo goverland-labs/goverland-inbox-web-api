@@ -114,6 +114,10 @@ func NewServer(
 	handler.HandleFunc("/analytics/succeeded-proposals-count/{id}", srv.getSucceededProposalsCount).Methods(http.MethodGet).Name("succeeded_proposals_count")
 	handler.HandleFunc("/analytics/top-voters-by-vp/{id}", srv.getTopVotersByVp).Methods(http.MethodGet).Name("top_voters_by_vp")
 	handler.HandleFunc("/analytics/mutual-daos/{id}", srv.getMutualDaos).Methods(http.MethodGet).Name("mutual_daos")
+	handler.HandleFunc("/analytics/ecosystem-totals/{period}", srv.getEcosystemTotals).Methods(http.MethodGet).Name("ecosystem_totals")
+	handler.HandleFunc("/analytics/monthly-totals/daos", srv.getMonthlyDaos).Methods(http.MethodGet).Name("monthly_daos")
+	handler.HandleFunc("/analytics/monthly-totals/proposals", srv.getMonthlyProposals).Methods(http.MethodGet).Name("monthly_proposals")
+	handler.HandleFunc("/analytics/monthly-totals/voters", srv.getMonthlyVoters).Methods(http.MethodGet).Name("monthly_voters")
 
 	return srv
 }

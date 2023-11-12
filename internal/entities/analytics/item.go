@@ -42,3 +42,21 @@ type MutualDao struct {
 	VotersCount   uint32   `json:"voters_count"`
 	VotersPercent float32  `json:"voters_percent"`
 }
+
+type EcosystemTotals struct {
+	Daos      *Total `json:"daos"`
+	Proposals *Total `json:"proposals"`
+	Voters    *Total `json:"voters"`
+	Votes     *Total `json:"votes"`
+}
+
+type Total struct {
+	Current  uint64 `json:"current"`
+	Previous uint64 `json:"previous"`
+}
+
+type MonthlyTotals struct {
+	PeriodStarted common.Time `json:"period_started"`
+	Total         uint64      `json:"total"`
+	TotalOfNew    uint64      `json:"total_of_new,omitempty"`
+}

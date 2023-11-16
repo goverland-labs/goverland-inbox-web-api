@@ -294,6 +294,7 @@ func (h *Server) prepareVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	votePreparation := proposal.VotePreparation{
+		ID:        prepareResponse.ID,
 		TypedData: prepareResponse.TypedData,
 	}
 
@@ -301,9 +302,6 @@ func (h *Server) prepareVote(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Server) vote(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	proposalID := vars["id"]
-
 	params, verr := proposals.NewVoteForm().ParseAndValidate(r)
 	if verr != nil {
 		response.HandleError(verr, w)
@@ -311,11 +309,9 @@ func (h *Server) vote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	voteResponse, err := h.coreclient.Vote(r.Context(), proposalID, coresdk.VoteRequest{
-		Voter:  string(params.Voter),
-		Choice: json.RawMessage(params.Choice),
-		Reason: params.Reason,
-		Sig:    params.Sig,
+	voteResponse, err := h.coreclient.Vote(r.Context(), coresdk.VoteRequest{
+		ID:  params.ID,
+		Sig: params.Sig,
 	})
 	if err != nil {
 		log.Error().Err(err).Fields(params.ConvertToMap()).Msg("vote proposal")

@@ -340,11 +340,17 @@ func convertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) p
 		quorumPercent = math.Round(score / float64(pr.Quorum) * 100)
 	}
 
+	var ensName *string
+	if pr.EnsName != "" {
+		ensName = helpers.Ptr(pr.EnsName)
+	}
+
 	return proposal.Proposal{
 		ID:   pr.ID,
 		Ipfs: helpers.Ptr(pr.Ipfs),
 		Author: common.User{
-			Address: common.UserAddress(pr.Author),
+			Address:      common.UserAddress(pr.Author),
+			ResolvedName: ensName,
 		},
 		Created:    *common.NewTime(time.Unix(int64(pr.Created), 0)),
 		Network:    common.Network(pr.Network),

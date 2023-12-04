@@ -8,12 +8,12 @@ import (
 )
 
 type VoteRequest struct {
-	ID  uint64 `json:"id"`
+	ID  string `json:"id"`
 	Sig string `json:"sig"`
 }
 
 type Vote struct {
-	ID  uint64 `json:"id"`
+	ID  string `json:"id"`
 	Sig string `json:"sig"`
 }
 

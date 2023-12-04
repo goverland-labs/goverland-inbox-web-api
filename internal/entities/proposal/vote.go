@@ -35,7 +35,7 @@ type VoteValidationError struct {
 }
 
 type VotePreparation struct {
-	ID        uint64 `json:"id"`
+	ID        string `json:"id"`
 	TypedData string `json:"typed_data"`
 }
 

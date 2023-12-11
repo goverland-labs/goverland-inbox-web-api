@@ -351,6 +351,7 @@ func convertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) p
 		Author: common.User{
 			Address:      common.UserAddress(pr.Author),
 			ResolvedName: ensName,
+			Avatars:      common.GenerateUserAvatars(pr.Author),
 		},
 		Created:    *common.NewTime(time.Unix(int64(pr.Created), 0)),
 		Network:    common.Network(pr.Network),
@@ -439,6 +440,7 @@ func convertVoteToInternal(list []coreproposal.Vote) []proposal.Vote {
 			Voter: common.User{
 				Address:      common.UserAddress(info.Voter),
 				ResolvedName: ensName,
+				Avatars:      common.GenerateUserAvatars(info.Voter),
 			},
 			CreatedAt:    *common.NewTime(time.Unix(int64(info.Created), 0)),
 			DaoID:        info.DaoID,

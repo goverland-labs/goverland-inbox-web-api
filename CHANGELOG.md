@@ -9,6 +9,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 - Author ens name field for votes
+- User avatars for proposals and voters
 
 ## [0.0.45] - 2023-12-06
 

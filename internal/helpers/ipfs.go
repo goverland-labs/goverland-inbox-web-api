@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/feed"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
@@ -10,6 +11,7 @@ import (
 func WrapProposalIpfsLinks(p proposal.Proposal) proposal.Proposal {
 	if p.DAO.Avatar != nil {
 		p.DAO.Avatar = Ptr(ipfs.WrapDAOImageLink(p.DAO.Alias))
+		p.DAO.Avatars = common.GenerateUserAvatars(p.DAO.Alias)
 	}
 
 	return p
@@ -26,6 +28,7 @@ func WrapProposalsIpfsLinks(list []proposal.Proposal) []proposal.Proposal {
 func WrapDAOIpfsLinks(d *dao.DAO) *dao.DAO {
 	if d.Avatar != nil {
 		d.Avatar = Ptr(ipfs.WrapDAOImageLink(d.Alias))
+		d.Avatars = common.GenerateUserAvatars(d.Alias)
 	}
 
 	return d
@@ -42,6 +45,7 @@ func WrapDAOsIpfsLinks(list []*dao.DAO) []*dao.DAO {
 func WrapShortDAOIpfsLinks(d dao.ShortDAO) dao.ShortDAO {
 	if d.Avatar != nil {
 		d.Avatar = Ptr(ipfs.WrapDAOImageLink(d.Alias))
+		d.Avatars = common.GenerateUserAvatars(d.Alias)
 	}
 
 	return d

@@ -7,52 +7,54 @@ import (
 )
 
 type DAO struct {
-	ID               uuid.UUID         `json:"id"`
-	Alias            string            `json:"alias"`
-	CreatedAt        common.Time       `json:"created_at"`
-	UpdatedAt        common.Time       `json:"updated_at"`
-	Name             string            `json:"name"`
-	About            []common.Content  `json:"about"`
-	Avatar           *string           `json:"avatar"`
-	Terms            *string           `json:"terms"`
-	Location         *string           `json:"location"`
-	Website          *string           `json:"website"`
-	Twitter          *string           `json:"twitter"`
-	Github           *string           `json:"github"`
-	Coingecko        *string           `json:"coingecko"`
-	Email            *string           `json:"email"`
-	Symbol           string            `json:"symbol"`
-	Domain           *string           `json:"domain"`
-	Network          common.Network    `json:"network"`
-	Strategies       []common.Strategy `json:"-"`
-	Voting           Voting            `json:"-"`
-	Categories       []common.Category `json:"categories"`
-	Treasures        []common.Treasury `json:"treasures"`
-	Admins           []common.User     `json:"admins"`
-	FollowersCount   int               `json:"followers_count"`
-	VotersCount      int               `json:"voters_count"`
-	ProposalsCount   int               `json:"proposals_count"`
-	Guidelines       *string           `json:"-"`
-	Template         *string           `json:"-"`
-	ParentID         *string           `json:"parent_id,omitempty"`
-	ActivitySince    *common.Time      `json:"activity_since,omitempty"`
-	SubscriptionInfo *SubscriptionInfo `json:"subscription_info"`
+	ID               uuid.UUID          `json:"id"`
+	Alias            string             `json:"alias"`
+	CreatedAt        common.Time        `json:"created_at"`
+	UpdatedAt        common.Time        `json:"updated_at"`
+	Name             string             `json:"name"`
+	About            []common.Content   `json:"about"`
+	Avatar           *string            `json:"avatar"` // deprecated, use avatars instead
+	Avatars          common.UserAvatars `json:"avatars"`
+	Terms            *string            `json:"terms"`
+	Location         *string            `json:"location"`
+	Website          *string            `json:"website"`
+	Twitter          *string            `json:"twitter"`
+	Github           *string            `json:"github"`
+	Coingecko        *string            `json:"coingecko"`
+	Email            *string            `json:"email"`
+	Symbol           string             `json:"symbol"`
+	Domain           *string            `json:"domain"`
+	Network          common.Network     `json:"network"`
+	Strategies       []common.Strategy  `json:"-"`
+	Voting           Voting             `json:"-"`
+	Categories       []common.Category  `json:"categories"`
+	Treasures        []common.Treasury  `json:"treasures"`
+	Admins           []common.User      `json:"admins"`
+	FollowersCount   int                `json:"followers_count"`
+	VotersCount      int                `json:"voters_count"`
+	ProposalsCount   int                `json:"proposals_count"`
+	Guidelines       *string            `json:"-"`
+	Template         *string            `json:"-"`
+	ParentID         *string            `json:"parent_id,omitempty"`
+	ActivitySince    *common.Time       `json:"activity_since,omitempty"`
+	SubscriptionInfo *SubscriptionInfo  `json:"subscription_info"`
 }
 
 type ShortDAO struct {
-	ID               uuid.UUID         `json:"id"`
-	Alias            string            `json:"alias"`
-	CreatedAt        common.Time       `json:"created_at"`
-	UpdatedAt        common.Time       `json:"updated_at"`
-	Name             string            `json:"name"`
-	Avatar           *string           `json:"avatar"`
-	Symbol           string            `json:"symbol"`
-	Network          common.Network    `json:"network"`
-	Categories       []common.Category `json:"categories"`
-	FollowersCount   int               `json:"followers_count"`
-	VotersCount      int               `json:"voters_count"`
-	ProposalsCount   int               `json:"proposals_count"`
-	SubscriptionInfo *SubscriptionInfo `json:"subscription_info"`
+	ID               uuid.UUID          `json:"id"`
+	Alias            string             `json:"alias"`
+	CreatedAt        common.Time        `json:"created_at"`
+	UpdatedAt        common.Time        `json:"updated_at"`
+	Name             string             `json:"name"`
+	Avatar           *string            `json:"avatar"` // deprecated, use avatars instead
+	Avatars          common.UserAvatars `json:"avatars"`
+	Symbol           string             `json:"symbol"`
+	Network          common.Network     `json:"network"`
+	Categories       []common.Category  `json:"categories"`
+	FollowersCount   int                `json:"followers_count"`
+	VotersCount      int                `json:"voters_count"`
+	ProposalsCount   int                `json:"proposals_count"`
+	SubscriptionInfo *SubscriptionInfo  `json:"subscription_info"`
 }
 
 func NewShortDAO(d *DAO) *ShortDAO {

@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- DAO avatars
+
 ## [0.0.46] - 2023-12-14
 
 ### Added

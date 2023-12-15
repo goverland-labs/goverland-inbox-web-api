@@ -8,20 +8,22 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 )
 
-type byDeviceRequest struct {
-	DeviceID string `json:"device_id"`
+type guestAuthRequest struct {
+	DeviceID   string `json:"device_id"`
+	DeviceName string `json:"device_name"`
 }
 
-type ByDeviceForm struct {
-	DeviceID string
+type GuestAuthForm struct {
+	DeviceID   string
+	DeviceName string
 }
 
-func NewByDeviceForm() *ByDeviceForm {
-	return &ByDeviceForm{}
+func NewGuestAuthForm() *GuestAuthForm {
+	return &GuestAuthForm{}
 }
 
-func (f *ByDeviceForm) ParseAndValidate(r *http.Request) (*ByDeviceForm, response.Error) {
-	var request *byDeviceRequest
+func (f *GuestAuthForm) ParseAndValidate(r *http.Request) (*GuestAuthForm, response.Error) {
+	var request *guestAuthRequest
 	if err := helpers.ReadJSON(r.Body, &request); err != nil {
 		ve := response.NewValidationError()
 		ve.SetError(response.GeneralErrorKey, response.InvalidRequestStructure, "invalid request structure")
@@ -31,6 +33,7 @@ func (f *ByDeviceForm) ParseAndValidate(r *http.Request) (*ByDeviceForm, respons
 
 	errors := make(map[string]response.ErrorMessage)
 	f.validateAndSetDeviceID(request, errors)
+	f.validateAndSetDeviceName(request)
 
 	if len(errors) > 0 {
 		return nil, response.NewValidationError(errors)
@@ -39,7 +42,7 @@ func (f *ByDeviceForm) ParseAndValidate(r *http.Request) (*ByDeviceForm, respons
 	return f, nil
 }
 
-func (f *ByDeviceForm) validateAndSetDeviceID(req *byDeviceRequest, errors map[string]response.ErrorMessage) {
+func (f *GuestAuthForm) validateAndSetDeviceID(req *guestAuthRequest, errors map[string]response.ErrorMessage) {
 	deviceID := strings.TrimSpace(req.DeviceID)
 	if deviceID == "" {
 		errors["device_id"] = response.MissedValueError("missed value")
@@ -48,4 +51,13 @@ func (f *ByDeviceForm) validateAndSetDeviceID(req *byDeviceRequest, errors map[s
 	}
 
 	f.DeviceID = deviceID
+}
+
+func (f *GuestAuthForm) validateAndSetDeviceName(request *guestAuthRequest) {
+	deviceName := strings.TrimSpace(request.DeviceName)
+	if deviceName == "" {
+		return
+	}
+
+	f.DeviceName = deviceName
 }

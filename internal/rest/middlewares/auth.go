@@ -11,11 +11,11 @@ import (
 
 const AuthTokenHeader = "Authorization"
 
-type AuthStorage interface {
-	GetSessionByRAW(sessionID string, callback func(uuid.UUID)) (auth.Session, error)
+type AuthService interface {
+	GetSession(sessionID string, callback func(uuid.UUID)) (auth.Session, error)
 }
 
-func Auth(storage AuthStorage, callback func(uuid.UUID)) func(next http.Handler) http.Handler {
+func Auth(storage AuthService, callback func(uuid.UUID)) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := r.Header.Get(AuthTokenHeader)
@@ -24,7 +24,7 @@ func Auth(storage AuthStorage, callback func(uuid.UUID)) func(next http.Handler)
 				return
 			}
 
-			session, err := storage.GetSessionByRAW(token, callback)
+			session, err := storage.GetSession(token, callback)
 			if err != nil {
 				w.WriteHeader(http.StatusForbidden)
 				return

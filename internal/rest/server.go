@@ -28,7 +28,7 @@ type AuthStorage interface {
 
 type Server struct {
 	httpServer      *http.Server
-	authStorage     AuthStorage
+	authService     *auth.Service
 	coreclient      *coresdk.Client
 	subclient       inboxapi.SubscriptionClient
 	settings        inboxapi.SettingsClient
@@ -41,7 +41,7 @@ type Server struct {
 
 func NewServer(
 	cfg config.REST,
-	authStorage AuthStorage,
+	authService *auth.Service,
 	cl *coresdk.Client,
 	sc inboxapi.SubscriptionClient,
 	settings inboxapi.SettingsClient,
@@ -50,7 +50,7 @@ func NewServer(
 	userClient inboxapi.UserClient,
 ) *Server {
 	srv := &Server{
-		authStorage:     authStorage,
+		authService:     authService,
 		coreclient:      cl,
 		subclient:       sc,
 		settings:        settings,
@@ -68,7 +68,7 @@ func NewServer(
 		middleware.Prometheus,
 		middleware.Timeout(cfg.Timeout),
 		middlewares.Log,
-		middlewares.Auth(authStorage, srv.getSubscriptions),
+		middlewares.Auth(authService, srv.getSubscriptions),
 	)
 
 	srv.httpServer = &http.Server{
@@ -79,7 +79,11 @@ func NewServer(
 		ReadHeaderTimeout: cfg.Timeout,
 	}
 
-	handler.HandleFunc("/auth/guest", srv.authByDevice).Methods(http.MethodPost).Name("auth_guest")
+	handler.HandleFunc("/auth/guest", srv.guestAuth).Methods(http.MethodPost).Name("auth_guest")
+	handler.HandleFunc("/auth/siwe", srv.siweAuth).Methods(http.MethodPost).Name("auth_siwe")
+	handler.HandleFunc("/logout", srv.logout).Methods(http.MethodPost).Name("auth_logout")
+	handler.HandleFunc("/me", srv.getMe).Methods(http.MethodGet).Name("auth_get_me")
+	handler.HandleFunc("/me", srv.deleteMe).Methods(http.MethodDelete).Name("auth_delete_me")
 
 	handler.HandleFunc("/dao", srv.listDAOs).Methods(http.MethodGet).Name("get_dao_list")
 	handler.HandleFunc("/dao/top", srv.listTopDAOs).Methods(http.MethodGet).Name("get_dao_top")

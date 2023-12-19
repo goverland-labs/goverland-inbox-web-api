@@ -151,6 +151,7 @@ func convertToProfileInfo(resp *inboxapi.UserProfile) profile.Profile {
 	if role == profile.RegularRole {
 		account = &profile.Account{
 			Address: user.GetAddress(),
+			Avatars: common.GenerateProfileAvatars(user.GetAddress()),
 		}
 	}
 

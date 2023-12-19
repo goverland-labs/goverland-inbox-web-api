@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
@@ -12,10 +13,10 @@ import (
 const AuthTokenHeader = "Authorization"
 
 type AuthService interface {
-	GetSession(sessionID string, callback func(uuid.UUID)) (auth.Session, error)
+	GetSession(sessionID auth.SessionID, callback func(id auth.UserID)) (auth.Session, error)
 }
 
-func Auth(storage AuthService, callback func(uuid.UUID)) func(next http.Handler) http.Handler {
+func Auth(storage AuthService, callback func(id auth.UserID)) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := r.Header.Get(AuthTokenHeader)
@@ -24,7 +25,17 @@ func Auth(storage AuthService, callback func(uuid.UUID)) func(next http.Handler)
 				return
 			}
 
-			session, err := storage.GetSession(token, callback)
+			tokenUUID, err := uuid.Parse(token)
+			if err != nil {
+				log.Warn().
+					Str("token", token).
+					Msg("wrong token")
+
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+
+			session, err := storage.GetSession(auth.SessionID(tokenUUID), callback)
 			if err != nil {
 				w.WriteHeader(http.StatusForbidden)
 				return

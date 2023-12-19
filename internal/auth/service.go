@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
@@ -80,9 +79,9 @@ func (s *Service) Regular(ctx context.Context, request RegularSessionRequest) (I
 	}, nil
 }
 
-func (s *Service) GetSession(sessionID string, callback func(uuid.UUID)) (Session, error) {
+func (s *Service) GetSession(sessionID SessionID, callback func(id UserID)) (Session, error) {
 	sessionResp, err := s.userClient.GetSession(context.Background(), &inboxapi.GetSessionRequest{
-		SessionId: sessionID,
+		SessionId: sessionID.String(),
 	})
 	if err != nil {
 		return Session{}, fmt.Errorf("get session by id: %s: %w", sessionID, err)
@@ -93,12 +92,12 @@ func (s *Service) GetSession(sessionID string, callback func(uuid.UUID)) (Sessio
 		return Session{}, fmt.Errorf("convert session: %w", err)
 	}
 
-	callback(session.ID)
+	callback(session.UserID)
 
 	return session, nil
 }
 
-func (s *Service) Logout(sessionID uuid.UUID) error {
+func (s *Service) Logout(sessionID SessionID) error {
 	_, err := s.userClient.DeleteSession(context.Background(), &inboxapi.DeleteSessionRequest{
 		SessionId: sessionID.String(),
 	})
@@ -109,7 +108,7 @@ func (s *Service) Logout(sessionID uuid.UUID) error {
 	return nil
 }
 
-func (s *Service) DeleteUser(userID uuid.UUID) error {
+func (s *Service) DeleteUser(userID UserID) error {
 	_, err := s.userClient.DeleteUser(context.Background(), &inboxapi.DeleteUserRequest{
 		UserId: userID.String(),
 	})
@@ -120,7 +119,7 @@ func (s *Service) DeleteUser(userID uuid.UUID) error {
 	return nil
 }
 
-func (s *Service) GetProfileInfo(userID uuid.UUID) (interface{}, error) {
+func (s *Service) GetProfileInfo(userID UserID) (interface{}, error) {
 	resp, err := s.userClient.GetUserProfile(context.Background(), &inboxapi.GetUserProfileRequest{
 		UserId: userID.String(),
 	})

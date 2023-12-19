@@ -34,11 +34,11 @@ func (s *Server) guestAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.getSubscriptions(guestInfo.Session.ID)
+	s.getSubscriptions(guestInfo.Session.UserID)
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
-		Str("session_id", guestInfo.Session.ID.String()).
+		Str("user_id", guestInfo.Session.UserID.String()).
 		Msg("route execution")
 
 	response.SendJSON(w, http.StatusOK, &guestInfo.AuthInfo)
@@ -89,11 +89,11 @@ func (s *Server) siweAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.getSubscriptions(regularInfo.Session.ID)
+	s.getSubscriptions(regularInfo.Session.UserID)
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
-		Str("session_id", regularInfo.Session.ID.String()).
+		Str("user_id", regularInfo.Session.UserID.String()).
 		Msg("route execution")
 
 	response.SendJSON(w, http.StatusOK, &regularInfo.AuthInfo)
@@ -117,7 +117,7 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
-		Str("session_id", session.ID.String()).
+		Str("user_id", session.UserID.String()).
 		Msg("route execution")
 
 	response.SendEmpty(w, http.StatusNoContent)
@@ -141,7 +141,7 @@ func (s *Server) getMe(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
-		Str("session_id", session.ID.String()).
+		Str("user_id", session.UserID.String()).
 		Msg("route execution")
 
 	response.SendJSON(w, http.StatusOK, &profileInfo)
@@ -165,7 +165,7 @@ func (s *Server) deleteMe(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
-		Str("session_id", session.ID.String()).
+		Str("user_id", session.UserID.String()).
 		Msg("route execution")
 
 	response.SendEmpty(w, http.StatusNoContent)

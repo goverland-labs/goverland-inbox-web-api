@@ -3,6 +3,7 @@ package rest
 import (
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"github.com/spruceid/siwe-go"
@@ -58,11 +59,19 @@ func (s *Server) siweAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = siweMessage.Verify(f.Signature, nil, nil, nil)
+	pubKey, err := siweMessage.Verify(f.Signature, nil, nil, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("siwe verify")
 
 		response.SendError(w, http.StatusBadRequest, "invalid siwe signature or expired")
+		return
+	}
+	encodedAddress := crypto.PubkeyToAddress(*pubKey)
+
+	if encodedAddress != f.Address {
+		log.Error().Err(err).Msg("address is not related to sign")
+
+		response.SendError(w, http.StatusBadRequest, "address is not related to sign")
 		return
 	}
 

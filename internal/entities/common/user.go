@@ -4,6 +4,7 @@ import "fmt"
 
 var (
 	avatarTemplate = "https://cdn.stamp.fyi/avatar/%s?s=%d"
+	spaceTemplate  = "https://cdn.stamp.fyi/space/%s?s=%d"
 )
 
 type UserAddress string
@@ -26,31 +27,31 @@ type User struct {
 }
 
 func GenerateProfileAvatars(address string) UserAvatars {
-	return generateAvatars([]size{
+	return generateAvatars(avatarTemplate, address, []size{
 		{name: "xs", quality: 32},
 		{name: "s", quality: 52},
 		{name: "m", quality: 92},
 		{name: "l", quality: 152},
 		{name: "xl", quality: 180},
-	}, address)
+	})
 }
 
 func GenerateDAOAvatars(address string) UserAvatars {
-	return generateAvatars([]size{
+	return generateAvatars(spaceTemplate, address, []size{
 		{name: "xs", quality: 32},
 		{name: "s", quality: 64},
 		{name: "m", quality: 92},
 		{name: "l", quality: 152},
 		{name: "xl", quality: 180},
-	}, address)
+	})
 }
 
-func generateAvatars(sizes []size, address string) UserAvatars {
+func generateAvatars(tmpl, address string, sizes []size) UserAvatars {
 	avatars := make(UserAvatars, 0, len(sizes))
 	for i := range sizes {
 		avatars = append(avatars, UserAvatar{
 			Size: sizes[i].name,
-			Link: fmt.Sprintf(avatarTemplate, address, sizes[i].quality),
+			Link: fmt.Sprintf(tmpl, address, sizes[i].quality),
 		})
 	}
 

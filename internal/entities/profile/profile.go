@@ -32,5 +32,6 @@ type Profile struct {
 }
 
 type Account struct {
-	Address string `json:"address,omitempty"`
+	Address string             `json:"address,omitempty"`
+	Avatars common.UserAvatars `json:"avatars"`
 }

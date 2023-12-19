@@ -32,7 +32,7 @@ func TestReplaceLinksInText(t *testing.T) {
 			`
 
 			expected := `
-				The Stargate Foundation will ![image](https://gateway.4everland.link/ipfs/bafkreih657l4daehca3f56mya3b7juvmrwsokblacjmpfk6tllqupdw3rm)
+				The Stargate Foundation will ![image](https://snapshot.4everland.link/ipfs/bafkreih657l4daehca3f56mya3b7juvmrwsokblacjmpfk6tllqupdw3rm)
 				**Summary**
 				The Stargate Foundation does important work to support the Protocol and the mandate of the Stargate DAO
 			`
@@ -49,10 +49,10 @@ func TestReplaceLinksInText(t *testing.T) {
 			`
 
 			expected := `
-				The Stargate Foundation will ![image](https://gateway.4everland.link/ipfs/bafkreih657l4daehca3f56mya3b7juvmrwsokblacjmpfk6tllqupdw3rm)
-				**Summary** https://gateway.4everland.link/ipfs/bafkreih657l4daehca3f56mya3b7juvmrwsokblacjmpfk6tllqupdw3rm
+				The Stargate Foundation will ![image](https://snapshot.4everland.link/ipfs/bafkreih657l4daehca3f56mya3b7juvmrwsokblacjmpfk6tllqupdw3rm)
+				**Summary** https://snapshot.4everland.link/ipfs/bafkreih657l4daehca3f56mya3b7juvmrwsokblacjmpfk6tllqupdw3rm
 				The Stargate Foundation does important work to support the Protocol and the mandate of the Stargate DAO
-				https://gateway.4everland.link/ipfs/bafkreih657l4daehca3f56mya3b7juvmrwsokblacjmpfk6tllqupdw3rm
+				https://snapshot.4everland.link/ipfs/bafkreih657l4daehca3f56mya3b7juvmrwsokblacjmpfk6tllqupdw3rm
 			`
 
 			convey.So(ReplaceLinksInText(text), convey.ShouldEqual, expected)
@@ -66,7 +66,7 @@ func TestReplaceLinksInText(t *testing.T) {
 			`
 
 			expected := `
-				The Stargate Foundation will ![image](https://gateway.4everland.link/ipfs/bafkreih657l4daehca3f56mya3b7juvmrwsokblacjmpfk6tllqupdw3rm)
+				The Stargate Foundation will ![image](https://snapshot.4everland.link/ipfs/bafkreih657l4daehca3f56mya3b7juvmrwsokblacjmpfk6tllqupdw3rm)
 				**Summary**
 				The Stargate Foundation does important work to support the Protocol and the mandate of the Stargate DAO
 			`

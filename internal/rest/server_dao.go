@@ -55,12 +55,12 @@ func (s *Server) getDAO(w http.ResponseWriter, r *http.Request) {
 	if exists {
 		go func() {
 			_, err := s.userClient.AddView(context.TODO(), &inboxapi.UserViewRequest{
-				UserId: session.ID.String(),
+				UserId: session.UserID.String(),
 				Type:   inboxapi.RecentlyViewedType_RECENTLY_VIEWED_TYPE_DAO,
 				TypeId: f.ID.String(),
 			})
 			if err != nil {
-				log.Error().Err(err).Msgf("add dao view: %s to %s", session.ID.String(), f.ID.String())
+				log.Error().Err(err).Msgf("add dao view: %s to user %s", session.UserID.String(), f.ID.String())
 			}
 		}()
 	}
@@ -134,7 +134,7 @@ func (s *Server) listTopDAOs(w http.ResponseWriter, r *http.Request) {
 		Msg("route execution")
 
 	if session != auth.EmptySession {
-		response.AddSubscriptionsCountHeaders(w, len(subscriptionsStorage.get(session.ID)))
+		response.AddSubscriptionsCountHeaders(w, len(subscriptionsStorage.get(session.UserID)))
 	}
 
 	response.AddTotalCounterHeaders(w, resp.TotalCnt)
@@ -206,12 +206,12 @@ func (s *Server) recentDao(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := s.userClient.LastViewed(r.Context(), &inboxapi.UserLastViewedRequest{
-		UserId: session.ID.String(),
+		UserId: session.UserID.String(),
 		Type:   inboxapi.RecentlyViewedType_RECENTLY_VIEWED_TYPE_DAO,
 		Limit:  30,
 	})
 	if err != nil {
-		log.Error().Err(err).Msgf("get last viewed by id: %s", session.ID.String())
+		log.Error().Err(err).Msgf("get last viewed by user id: %s", session.UserID.String())
 		response.SendEmpty(w, http.StatusInternalServerError)
 		return
 	}

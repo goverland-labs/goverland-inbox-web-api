@@ -9,9 +9,21 @@ import (
 
 var EmptySession = Session{}
 
+type UserID uuid.UUID
+
+func (u UserID) String() string {
+	return uuid.UUID(u).String()
+}
+
+type SessionID uuid.UUID
+
+func (s SessionID) String() string {
+	return uuid.UUID(s).String()
+}
+
 type Session struct {
-	ID     uuid.UUID `json:"id"`
-	UserID uuid.UUID `json:"user_id"`
+	ID     SessionID `json:"id"`
+	UserID UserID    `json:"user_id"`
 }
 
 func convertSession(sessionID, userID string) (Session, error) {
@@ -30,8 +42,8 @@ func convertSession(sessionID, userID string) (Session, error) {
 	}
 
 	return Session{
-		ID:     sessionUUID,
-		UserID: userUUID,
+		ID:     SessionID(sessionUUID),
+		UserID: UserID(userUUID),
 	}, nil
 }
 

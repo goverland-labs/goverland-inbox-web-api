@@ -41,7 +41,7 @@ func (s *Server) getFeed(w http.ResponseWriter, r *http.Request) {
 	f, _ := feedform.NewGetFeedForm().ParseAndValidate(r)
 
 	resp, err := s.feedClient.GetUserFeed(context.TODO(), &inboxapi.GetUserFeedRequest{
-		SubscriberId:  session.ID.String(),
+		SubscriberId:  session.UserID.String(),
 		ReadState:     f.Unread.AsProto(),
 		ArchivedState: f.Archived.AsProto(),
 		Limit:         uint32(limit),
@@ -91,7 +91,7 @@ func (s *Server) markFeedItemAsRead(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := s.feedClient.MarkAsRead(context.TODO(), &inboxapi.MarkAsReadRequest{
-		SubscriberId: session.ID.String(),
+		SubscriberId: session.UserID.String(),
 		Ids:          []string{f.ID.String()},
 	})
 
@@ -117,7 +117,7 @@ func (s *Server) markFeedItemAsArchived(w http.ResponseWriter, r *http.Request) 
 	}
 
 	_, err := s.feedClient.MarkAsArchived(context.TODO(), &inboxapi.MarkAsArchivedRequest{
-		SubscriberId: session.ID.String(),
+		SubscriberId: session.UserID.String(),
 		Ids:          []string{f.ID.String()},
 	})
 
@@ -143,7 +143,7 @@ func (s *Server) markFeedItemAsUnarchived(w http.ResponseWriter, r *http.Request
 	}
 
 	_, err := s.feedClient.MarkAsUnarchived(context.TODO(), &inboxapi.MarkAsUnarchivedRequest{
-		SubscriberId: session.ID.String(),
+		SubscriberId: session.UserID.String(),
 		Ids:          []string{f.ID.String()},
 	})
 
@@ -179,7 +179,7 @@ func (s *Server) markAsReadBatch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := s.feedClient.MarkAsRead(context.TODO(), &inboxapi.MarkAsReadRequest{
-		SubscriberId: session.ID.String(),
+		SubscriberId: session.UserID.String(),
 		Ids:          ids,
 		Before:       before,
 	})

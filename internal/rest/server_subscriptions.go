@@ -29,10 +29,10 @@ type Subscription struct {
 
 type subStorage struct {
 	mu   sync.RWMutex
-	subs map[uuid.UUID][]Subscription
+	subs map[auth.UserID][]Subscription
 }
 
-func (s *subStorage) add(id uuid.UUID, subs ...Subscription) {
+func (s *subStorage) add(id auth.UserID, subs ...Subscription) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -46,25 +46,25 @@ func (s *subStorage) add(id uuid.UUID, subs ...Subscription) {
 	s.subs[id] = data
 }
 
-func (s *subStorage) set(id uuid.UUID, subs ...Subscription) {
+func (s *subStorage) set(id auth.UserID, subs ...Subscription) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.subs[id] = subs
 }
 
-func (s *subStorage) get(id uuid.UUID) []Subscription {
+func (s *subStorage) get(id auth.UserID) []Subscription {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	return s.subs[id]
 }
 
-func (s *subStorage) delete(sessionID, subID uuid.UUID) {
+func (s *subStorage) delete(userID auth.UserID, subID uuid.UUID) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	data, ok := s.subs[sessionID]
+	data, ok := s.subs[userID]
 	if !ok {
 		return
 	}
@@ -78,12 +78,12 @@ func (s *subStorage) delete(sessionID, subID uuid.UUID) {
 		list = append(list, data[i])
 	}
 
-	s.subs[sessionID] = list
+	s.subs[userID] = list
 }
 
 var subscriptionsStorage = &subStorage{
 	mu:   sync.RWMutex{},
-	subs: make(map[uuid.UUID][]Subscription),
+	subs: make(map[auth.UserID][]Subscription),
 }
 
 func (s *Server) listSubscriptions(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +93,7 @@ func (s *Server) listSubscriptions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list := subscriptionsStorage.get(session.ID)
+	list := subscriptionsStorage.get(session.UserID)
 	if list == nil {
 		list = []Subscription{}
 	}
@@ -130,7 +130,7 @@ func (s *Server) getSubscription(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list := lo.Filter(subscriptionsStorage.get(session.ID), func(item Subscription, _ int) bool {
+	list := lo.Filter(subscriptionsStorage.get(session.UserID), func(item Subscription, _ int) bool {
 		return item.ID == f.ID
 	})
 
@@ -161,7 +161,7 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list := subscriptionsStorage.get(session.ID)
+	list := subscriptionsStorage.get(session.UserID)
 	initialCount := len(list)
 
 	var sub *Subscription
@@ -190,7 +190,7 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := s.subclient.Subscribe(r.Context(), &inboxapi.SubscribeRequest{
-		SubscriberId: session.ID.String(),
+		SubscriberId: session.UserID.String(),
 		DaoId:        f.DAO.String(),
 	})
 	if err != nil {
@@ -206,7 +206,7 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	list = append(list, *sub)
-	subscriptionsStorage.set(session.ID, list...)
+	subscriptionsStorage.set(session.UserID, list...)
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
@@ -240,13 +240,13 @@ func (s *Server) unsubscribe(w http.ResponseWriter, r *http.Request) {
 		response.SendEmpty(w, http.StatusInternalServerError)
 	}
 
-	initialCount := len(subscriptionsStorage.get(session.ID))
-	subscriptionsStorage.delete(session.ID, f.ID)
+	initialCount := len(subscriptionsStorage.get(session.UserID))
+	subscriptionsStorage.delete(session.UserID, f.ID)
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
 		Int("initial_count", initialCount).
-		Int("new_count", len(subscriptionsStorage.get(session.ID))).
+		Int("new_count", len(subscriptionsStorage.get(session.UserID))).
 		Msg("route execution")
 
 	response.SendEmpty(w, http.StatusOK)
@@ -257,7 +257,7 @@ func getSubscription(session auth.Session, daoID uuid.UUID) *dao.SubscriptionInf
 		return nil
 	}
 
-	for _, subscription := range subscriptionsStorage.get(session.ID) {
+	for _, subscription := range subscriptionsStorage.get(session.UserID) {
 		if subscription.DAO == nil {
 			continue
 		}
@@ -291,19 +291,20 @@ func wrapSubscriptionsIpfsLinks(subs []Subscription) []Subscription {
 
 // todo: simplify me!
 // todo: collect all dao into storage or cache
-func (s *Server) getSubscriptions(sessionID uuid.UUID) {
+func (s *Server) getSubscriptions(userID auth.UserID) {
 	limit, offset := 100, 0
 	subs := make(map[string]Subscription)
 	daoIds := make([]string, 0)
 	for {
 		res, err := s.subclient.ListSubscriptions(context.TODO(), &inboxapi.ListSubscriptionRequest{
-			SubscriberId: sessionID.String(),
+			SubscriberId: userID.String(),
 			Limit:        helpers.Ptr(uint64(limit)),
 			Offset:       helpers.Ptr(uint64(offset)),
 		})
 
 		if err != nil {
-			log.Error().Err(err).Msgf("get subscriptions: %s", sessionID)
+			log.Error().Err(err).Msgf("get subscriptions: %s", userID)
+
 			return
 		}
 
@@ -343,5 +344,5 @@ func (s *Server) getSubscriptions(sessionID uuid.UUID) {
 		list = append(list, sub)
 	}
 
-	subscriptionsStorage.set(sessionID, list...)
+	subscriptionsStorage.set(userID, list...)
 }

@@ -7,6 +7,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.49] - 2023-12-20
+
+### Added
+- Added siwe endpoint and user/sessions control endpoinds 
+- Added user sessions, roles
+- Support new user api 
+
 ## [0.0.48] - 2023-12-19
 
 ### Fixed

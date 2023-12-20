@@ -25,10 +25,11 @@ type Session struct {
 }
 
 type Profile struct {
-	ID           string    `json:"id"`
-	Role         Role      `json:"role"`
-	Account      *Account  `json:"account"`
-	LastSessions []Session `json:"last_sessions"`
+	ID                 string    `json:"id"`
+	Role               Role      `json:"role"`
+	Account            *Account  `json:"account"`
+	SubscriptionsCount int       `json:"subscriptions_count"`
+	LastSessions       []Session `json:"last_sessions"`
 }
 
 type Account struct {

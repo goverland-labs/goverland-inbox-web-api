@@ -119,12 +119,12 @@ func (s *Service) DeleteUser(userID UserID) error {
 	return nil
 }
 
-func (s *Service) GetProfileInfo(userID UserID) (interface{}, error) {
+func (s *Service) GetProfileInfo(userID UserID) (profile.Profile, error) {
 	resp, err := s.userClient.GetUserProfile(context.Background(), &inboxapi.GetUserProfileRequest{
 		UserId: userID.String(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("get profile info by user id: %s: %w", userID, err)
+		return profile.Profile{}, fmt.Errorf("get profile info by user id: %s: %w", userID, err)
 	}
 
 	return convertToProfileInfo(resp), nil

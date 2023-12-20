@@ -10,6 +10,7 @@ import (
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	authsrv "github.com/goverland-labs/inbox-web-api/internal/auth"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/profile"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/auth"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 )
@@ -35,6 +36,7 @@ func (s *Server) guestAuth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.getSubscriptions(guestInfo.Session.UserID)
+	s.enrichProfileInfo(guestInfo.Session, &guestInfo.AuthInfo.Profile)
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
@@ -90,6 +92,7 @@ func (s *Server) siweAuth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.getSubscriptions(regularInfo.Session.UserID)
+	s.enrichProfileInfo(regularInfo.Session, &regularInfo.AuthInfo.Profile)
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
@@ -139,6 +142,8 @@ func (s *Server) getMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.enrichProfileInfo(session, &profileInfo)
+
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
 		Str("user_id", session.UserID.String()).
@@ -169,4 +174,8 @@ func (s *Server) deleteMe(w http.ResponseWriter, r *http.Request) {
 		Msg("route execution")
 
 	response.SendEmpty(w, http.StatusNoContent)
+}
+
+func (s *Server) enrichProfileInfo(session authsrv.Session, p *profile.Profile) {
+	p.SubscriptionsCount = len(subscriptionsStorage.get(session.UserID))
 }

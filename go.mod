@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/analytics-api v0.0.9
 	github.com/goverland-labs/core-web-sdk v0.0.19
-	github.com/goverland-labs/inbox-api v0.0.15-0.20231214162813-28989ca60279
+	github.com/goverland-labs/inbox-api v0.0.15
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.29.1
 	github.com/s-larionov/process-manager v0.0.1

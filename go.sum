@@ -156,8 +156,8 @@ github.com/goverland-labs/analytics-api v0.0.9 h1:oA3bK+Y02Q76dM6XwEdJQtRCS0X5Dn
 github.com/goverland-labs/analytics-api v0.0.9/go.mod h1:apaKjFY2A5PTQyPITUN3iiswXrOQ4msiYneodpZFgBc=
 github.com/goverland-labs/core-web-sdk v0.0.19 h1:4i4dmFdehiq0uFX1JNCrCernEJXDcB6qUGsJk0ZSCS8=
 github.com/goverland-labs/core-web-sdk v0.0.19/go.mod h1:jNuOLZqwm/VOLF1ghOXKHs6B7DiXRCbGXH1ksaTLAgM=
-github.com/goverland-labs/inbox-api v0.0.15 h1:XIq+q41lVkxVn2SqPtVUivqn+XApdMTIzcz/bZaZ/pY=
-github.com/goverland-labs/inbox-api v0.0.15/go.mod h1:gFnTNa5515hTrrGZCQltCHlaaQdShCgL7giy2e+HIRo=
+github.com/goverland-labs/inbox-api v0.0.16 h1:+btj+2YZ5VwYYDJmaxN4Uv8Km704GSqrJxNlmJUasn8=
+github.com/goverland-labs/inbox-api v0.0.16/go.mod h1:gFnTNa5515hTrrGZCQltCHlaaQdShCgL7giy2e+HIRo=
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/holiman/uint256 v1.2.3 h1:K8UWO1HUJpRMXBxbmaY1Y8IAMZC/RsKB+ArEnnK4l5o=

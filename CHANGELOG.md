@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added ens to user profile
+
 ## [0.0.49] - 2023-12-20
 
 ### Added

@@ -33,6 +33,7 @@ type Profile struct {
 }
 
 type Account struct {
-	Address string             `json:"address,omitempty"`
-	Avatars common.UserAvatars `json:"avatars"`
+	Address      string             `json:"address,omitempty"`
+	Avatars      common.UserAvatars `json:"avatars"`
+	ResolvedName string             `json:"resolved_name,omitempty"`
 }

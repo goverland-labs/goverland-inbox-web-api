@@ -12,6 +12,8 @@ require (
 	github.com/goverland-labs/analytics-api v0.0.10
 	github.com/goverland-labs/core-web-sdk v0.0.19
 	github.com/goverland-labs/inbox-api v0.0.16
+	github.com/goverland-labs/platform-events v0.1.13
+	github.com/nats-io/nats.go v1.31.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.29.1
 	github.com/s-larionov/process-manager v0.0.1
@@ -36,9 +38,12 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/holiman/uint256 v1.2.3 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
+	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
+	github.com/nats-io/nkeys v0.4.5 // indirect
+	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect

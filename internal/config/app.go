@@ -8,4 +8,5 @@ type App struct {
 	Core       Core
 	Inbox      Inbox
 	Analytics  Analytics
+	Nats       Nats
 }

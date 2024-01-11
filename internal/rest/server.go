@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
+	"github.com/goverland-labs/inbox-web-api/internal/communicate"
 	"github.com/goverland-labs/inbox-web-api/internal/config"
 	internaldao "github.com/goverland-labs/inbox-web-api/internal/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
@@ -37,6 +38,7 @@ type Server struct {
 	userClient      inboxapi.UserClient
 
 	daoService *internaldao.Service
+	publisher  *communicate.Publisher
 }
 
 func NewServer(
@@ -48,6 +50,7 @@ func NewServer(
 	feedClient inboxapi.FeedClient,
 	analyticsClient internalapi.AnalyticsClient,
 	userClient inboxapi.UserClient,
+	pb *communicate.Publisher,
 ) *Server {
 	srv := &Server{
 		authService:     authService,
@@ -58,6 +61,7 @@ func NewServer(
 		analyticsClient: analyticsClient,
 		userClient:      userClient,
 		daoService:      internaldao.NewService(internaldao.NewCache(), cl),
+		publisher:       pb,
 	}
 
 	handler := mux.NewRouter()
@@ -110,6 +114,8 @@ func NewServer(
 	handler.HandleFunc("/feed/{id}/archive", srv.markFeedItemAsArchived).Methods(http.MethodPost).Name("mark_feed_item_as_archived")
 	handler.HandleFunc("/feed/{id}/unarchive", srv.markFeedItemAsUnarchived).Methods(http.MethodPost).Name("mark_feed_item_as_archived")
 
+	handler.HandleFunc("/notifications", srv.sendCustomPush).Methods(http.MethodPost).Name("send_custom_push")
+	handler.HandleFunc("/notifications/mark-as-clicked", srv.markAsClicked).Methods(http.MethodPost).Name("push_mark_as_clicked")
 	handler.HandleFunc("/notifications/settings", srv.storePushToken).Methods(http.MethodPost).Name("store_push_token")
 	handler.HandleFunc("/notifications/settings", srv.tokenExists).Methods(http.MethodGet).Name("push_token_exists")
 	handler.HandleFunc("/notifications/settings", srv.removePushToken).Methods(http.MethodDelete).Name("remove_push_token")

@@ -9,11 +9,13 @@ import (
 	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
 	coresdk "github.com/goverland-labs/core-web-sdk"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/nats-io/nats.go"
 	"github.com/s-larionov/process-manager"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
+	"github.com/goverland-labs/inbox-web-api/internal/communicate"
 	"github.com/goverland-labs/inbox-web-api/internal/config"
 	"github.com/goverland-labs/inbox-web-api/internal/rest"
 	"github.com/goverland-labs/inbox-web-api/pkg/health"
@@ -26,6 +28,7 @@ type Application struct {
 	cfg     config.App
 
 	feedClient inboxapi.FeedClient
+	pb         *communicate.Publisher
 }
 
 func NewApplication(cfg config.App) (*Application, error) {
@@ -74,7 +77,22 @@ func (a *Application) bootstrap() error {
 }
 
 func (a *Application) initServices() error {
-	// TODO
+	nc, err := nats.Connect(
+		a.cfg.Nats.URL,
+		nats.RetryOnFailedConnect(true),
+		nats.MaxReconnects(a.cfg.Nats.MaxReconnects),
+		nats.ReconnectWait(a.cfg.Nats.ReconnectTimeout),
+	)
+	if err != nil {
+		return err
+	}
+
+	pb, err := communicate.NewPublisher(nc)
+	if err != nil {
+		return err
+	}
+
+	a.pb = pb
 
 	return nil
 }
@@ -105,7 +123,7 @@ func (a *Application) initRESTWorker() error {
 
 	authService := auth.NewService(ic)
 
-	srv := rest.NewServer(a.cfg.REST, authService, cs, sc, settings, a.feedClient, ac, ic)
+	srv := rest.NewServer(a.cfg.REST, authService, cs, sc, settings, a.feedClient, ac, ic, a.pb)
 	a.manager.AddWorker(process.NewServerWorker("rest", srv.GetHTTPServer()))
 
 	return nil

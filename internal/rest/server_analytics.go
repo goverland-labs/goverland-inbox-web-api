@@ -65,6 +65,32 @@ func (s *Server) getVoterBuckets(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (s *Server) getVoterBucketsV2(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	f, verr := analytics.NewBucketsForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	resp, err := s.analyticsClient.GetVoterBucketsV2(context.TODO(), &internalapi.VoterBucketsRequestV2{
+		DaoId:  id,
+		Groups: f.Groups,
+	})
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	list := make([]entity.VoterBucket, len(resp.Groups))
+	for i, group := range resp.Groups {
+		list[i] = convertVoterBucketToInternal(group)
+	}
+
+	response.SendJSON(w, http.StatusOK, &list)
+
+}
+
 func (s *Server) getExclusiveVoters(w http.ResponseWriter, r *http.Request) {
 	f, verr := analytics.NewGetForm().ParseAndValidate(r)
 	if verr != nil {

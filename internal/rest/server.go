@@ -116,7 +116,7 @@ func NewServer(
 
 	handler.HandleFunc("/analytics/monthly-active-users/{id}", srv.getMonthlyActiveUsers).Methods(http.MethodGet).Name("monthly_active_user")
 	handler.HandleFunc("/analytics/voter-buckets/{id}", srv.getVoterBuckets).Methods(http.MethodGet).Name("voter_buckets")
-	handler.HandleFunc("/analytics/voter-buckets-groups/{id}", srv.getVoterBucketsV2).Methods(http.MethodGet).Name("voter_buckets")
+	handler.HandleFunc("/analytics/voter-buckets-groups/{id}", srv.getVoterBucketsV2).Methods(http.MethodGet).Name("voter_buckets_v2")
 	handler.HandleFunc("/analytics/exclusive-voters/{id}", srv.getExclusiveVoters).Methods(http.MethodGet).Name("exclusive_voters")
 	handler.HandleFunc("/analytics/monthly-new-proposals/{id}", srv.getMonthlyNewProposals).Methods(http.MethodGet).Name("monthly_new_proposals")
 	handler.HandleFunc("/analytics/succeeded-proposals-count/{id}", srv.getSucceededProposalsCount).Methods(http.MethodGet).Name("succeeded_proposals_count")

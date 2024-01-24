@@ -2,6 +2,7 @@ package rest
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
@@ -68,6 +69,23 @@ func (s *Server) siweAuth(w http.ResponseWriter, r *http.Request) {
 		response.SendError(w, http.StatusBadRequest, "invalid siwe signature or expired")
 		return
 	}
+
+	issuedAtStr := siweMessage.GetIssuedAt()
+	issuedAt, err := time.Parse(time.RFC3339, issuedAtStr)
+	if err != nil {
+		log.Error().Err(err).Msg("siwe parse issued at")
+
+		response.SendError(w, http.StatusBadRequest, "invalid siwe issued at")
+		return
+	}
+
+	if time.Since(issuedAt) > s.siweTTL {
+		log.Error().Err(err).Msg("siwe issued at is expired")
+
+		response.SendError(w, http.StatusBadRequest, "siwe issued at is expired")
+		return
+	}
+
 	encodedAddress := crypto.PubkeyToAddress(*pubKey)
 
 	if encodedAddress != f.Address {

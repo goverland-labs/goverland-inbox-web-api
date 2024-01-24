@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
@@ -19,6 +20,7 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/middlewares"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/inbox-web-api/internal/tracking"
 	"github.com/goverland-labs/inbox-web-api/pkg/middleware"
 )
 
@@ -39,6 +41,8 @@ type Server struct {
 
 	daoService *internaldao.Service
 	publisher  *communicate.Publisher
+
+	siweTTL time.Duration
 }
 
 func NewServer(
@@ -50,7 +54,9 @@ func NewServer(
 	feedClient inboxapi.FeedClient,
 	analyticsClient internalapi.AnalyticsClient,
 	userClient inboxapi.UserClient,
+	userActivityService *tracking.UserActivityService,
 	pb *communicate.Publisher,
+	siweTTL time.Duration,
 ) *Server {
 	srv := &Server{
 		authService:     authService,
@@ -62,6 +68,7 @@ func NewServer(
 		userClient:      userClient,
 		daoService:      internaldao.NewService(internaldao.NewCache(), cl),
 		publisher:       pb,
+		siweTTL:         siweTTL,
 	}
 
 	handler := mux.NewRouter()
@@ -69,10 +76,10 @@ func NewServer(
 		middleware.Panic,
 		middleware.RequestID(),
 		middleware.RequestIP(),
-		middleware.Prometheus,
 		middleware.Timeout(cfg.Timeout),
 		middlewares.Log,
 		middlewares.Auth(authService, srv.getSubscriptions),
+		middlewares.UserActivity(userActivityService),
 	)
 
 	srv.httpServer = &http.Server{

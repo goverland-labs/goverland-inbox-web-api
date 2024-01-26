@@ -11,6 +11,7 @@ import (
 	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
 	coresdk "github.com/goverland-labs/core-web-sdk"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	resthelpers "github.com/goverland-labs/lib-rest-helpers"
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
@@ -76,6 +77,7 @@ func NewServer(
 		middleware.Panic,
 		middleware.RequestID(),
 		middleware.RequestIP(),
+		resthelpers.Prometheus,
 		middleware.Timeout(cfg.Timeout),
 		middlewares.Log,
 		middlewares.Auth(authService, srv.getSubscriptions),

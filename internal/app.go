@@ -125,6 +125,7 @@ func (a *Application) initRESTWorker() error {
 	authService := auth.NewService(ic)
 
 	uas := tracking.NewUserActivityService(ic)
+	a.manager.AddWorker(process.NewCallbackWorker("user-activity", uas.Start))
 
 	srv := rest.NewServer(a.cfg.REST, authService, cs, sc, settings, a.feedClient, ac, ic, uas, a.pb, a.cfg.SiweTTL)
 	a.manager.AddWorker(process.NewServerWorker("rest", srv.GetHTTPServer()))

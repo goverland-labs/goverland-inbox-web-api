@@ -12,5 +12,5 @@ type App struct {
 	Analytics  Analytics
 	Nats       Nats
 
-	SiweTTL time.Duration `env:"SIWE_TTL" envDefault:"30m"`
+	SiweTTL time.Duration `env:"SIWE_TTL" envDefault:"1h"`
 }

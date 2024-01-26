@@ -18,10 +18,11 @@ type AuthInfo struct {
 }
 
 type Session struct {
-	ID         string      `json:"session_id"`
-	CreatedAt  common.Time `json:"created_at"`
-	DeviceID   string      `json:"device_id"`
-	DeviceName string      `json:"device_name"`
+	ID             string       `json:"session_id"`
+	CreatedAt      common.Time  `json:"created_at"`
+	DeviceID       string       `json:"device_id"`
+	DeviceName     string       `json:"device_name"`
+	LastActivityAt *common.Time `json:"last_activity_at,omitempty"`
 }
 
 type Profile struct {

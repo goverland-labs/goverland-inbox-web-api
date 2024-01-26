@@ -5,12 +5,14 @@ import (
 	"errors"
 
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
 )
 
 type trackingEvent struct {
-	userID auth.UserID
+	userID    auth.UserID
+	sessionID auth.SessionID
 }
 
 type UserActivityService struct {
@@ -26,9 +28,12 @@ func NewUserActivityService(userClient inboxapi.UserClient) *UserActivityService
 	}
 }
 
-func (s *UserActivityService) Track(ctx context.Context, userID auth.UserID) error {
+func (s *UserActivityService) Track(ctx context.Context, session auth.Session) error {
 	select {
-	case s.trackingEvents <- trackingEvent{userID: userID}:
+	case s.trackingEvents <- trackingEvent{
+		userID:    session.UserID,
+		sessionID: session.ID,
+	}:
 		return nil
 	case <-ctx.Done():
 		return nil
@@ -44,10 +49,11 @@ func (s *UserActivityService) Start(ctx context.Context) error {
 			return nil
 		case event := <-s.trackingEvents:
 			_, err := s.userClient.TrackActivity(ctx, &inboxapi.TrackActivityRequest{
-				UserId: event.userID.String(),
+				UserId:    event.userID.String(),
+				SessionId: event.sessionID.String(),
 			})
 			if err != nil {
-				return err
+				log.Error().Err(err).Msg("track user activity")
 			}
 		}
 	}

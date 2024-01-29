@@ -2,6 +2,8 @@ module github.com/goverland-labs/inbox-web-api
 
 go 1.21.1
 
+toolchain go1.21.6
+
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/ethereum/go-ethereum v1.13.5

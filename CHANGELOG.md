@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.52] - 2024-01-29
+
 ### Added
 - Send custom pushes
 - Endpoint for mark pushes as clicked

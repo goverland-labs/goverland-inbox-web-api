@@ -514,7 +514,7 @@ func (h *Server) enrichProposalsVotesInfo(context context.Context, session auth.
 		return list
 	}
 
-	proposalIds := make([]string, len(list))
+	proposalIds := make([]string, 0)
 	for _, info := range list {
 		proposalIds = append(proposalIds, info.ID)
 	}

@@ -112,6 +112,8 @@ func NewServer(
 	handler.HandleFunc("/proposals/{id}/votes/prepare", srv.prepareVote).Methods(http.MethodPost).Name("proposal_vote_prepare")
 	handler.HandleFunc("/proposals/votes", srv.vote).Methods(http.MethodPost).Name("proposal_vote")
 
+	handler.HandleFunc("/user/votes", srv.getUserVotes).Methods(http.MethodGet).Name("get_user_votes")
+
 	handler.HandleFunc("/subscriptions", srv.listSubscriptions).Methods(http.MethodGet).Name("get_subscription_list")
 	handler.HandleFunc("/subscriptions", srv.subscribe).Methods(http.MethodPost).Name("create_subscription")
 	handler.HandleFunc("/subscriptions/{id}", srv.getSubscription).Methods(http.MethodGet).Name("get_subscription_item")

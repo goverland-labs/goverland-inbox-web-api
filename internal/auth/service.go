@@ -158,11 +158,17 @@ func convertToProfileInfo(resp *inboxapi.UserProfile) profile.Profile {
 
 	var sessions []profile.Session
 	for _, session := range resp.GetLastSessions() {
+		var lastActivityAt *common.Time
+		if session.GetLastActivityAt() != nil {
+			lastActivityAt = common.NewTime(session.GetLastActivityAt().AsTime())
+		}
+
 		sessions = append(sessions, profile.Session{
-			ID:         session.GetId(),
-			CreatedAt:  *common.NewTime(session.GetCreatedAt().AsTime()),
-			DeviceID:   session.GetDeviceUuid(),
-			DeviceName: session.GetDeviceName(),
+			ID:             session.GetId(),
+			CreatedAt:      *common.NewTime(session.GetCreatedAt().AsTime()),
+			DeviceID:       session.GetDeviceUuid(),
+			DeviceName:     session.GetDeviceName(),
+			LastActivityAt: lastActivityAt,
 		})
 	}
 

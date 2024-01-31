@@ -18,6 +18,7 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/communicate"
 	"github.com/goverland-labs/inbox-web-api/internal/config"
 	"github.com/goverland-labs/inbox-web-api/internal/rest"
+	"github.com/goverland-labs/inbox-web-api/internal/tracking"
 	"github.com/goverland-labs/inbox-web-api/pkg/health"
 	"github.com/goverland-labs/inbox-web-api/pkg/prometheus"
 )
@@ -123,7 +124,10 @@ func (a *Application) initRESTWorker() error {
 
 	authService := auth.NewService(ic)
 
-	srv := rest.NewServer(a.cfg.REST, authService, cs, sc, settings, a.feedClient, ac, ic, a.pb)
+	uas := tracking.NewUserActivityService(ic)
+	a.manager.AddWorker(process.NewCallbackWorker("user-activity", uas.Start))
+
+	srv := rest.NewServer(a.cfg.REST, authService, cs, sc, settings, a.feedClient, ac, ic, uas, a.pb, a.cfg.SiweTTL)
 	a.manager.AddWorker(process.NewServerWorker("rest", srv.GetHTTPServer()))
 
 	return nil

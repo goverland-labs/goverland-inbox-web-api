@@ -2,11 +2,14 @@ package rest
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
+	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"github.com/spruceid/siwe-go"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	authsrv "github.com/goverland-labs/inbox-web-api/internal/auth"
@@ -68,6 +71,41 @@ func (s *Server) siweAuth(w http.ResponseWriter, r *http.Request) {
 		response.SendError(w, http.StatusBadRequest, "invalid siwe signature or expired")
 		return
 	}
+
+	issuedAtStr := siweMessage.GetIssuedAt()
+	issuedAt, err := time.Parse(time.RFC3339, issuedAtStr)
+	if err != nil {
+		log.Error().Err(err).Msg("siwe parse issued at")
+
+		response.SendError(w, http.StatusBadRequest, "invalid siwe issued at")
+		return
+	}
+
+	if time.Since(issuedAt) > s.siweTTL {
+		log.Error().Err(err).Msg("siwe issued at is expired")
+
+		response.SendError(w, http.StatusBadRequest, "siwe issued at is expired")
+		return
+	}
+
+	useNonceResp, err := s.userClient.UseAuthNonce(r.Context(), &inboxapi.UseAuthNonceRequest{
+		Address:   siweMessage.GetAddress().Hex(),
+		Nonce:     siweMessage.GetNonce(),
+		ExpiredAt: timestamppb.New(issuedAt.Add(s.siweTTL)),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("use nonce")
+
+		response.SendError(w, http.StatusInternalServerError, "failed to use nonce")
+		return
+	}
+	if !useNonceResp.GetValid() {
+		log.Error().Err(err).Msg("nonce is not valid")
+
+		response.SendError(w, http.StatusBadRequest, "nonce is not valid")
+		return
+	}
+
 	encodedAddress := crypto.PubkeyToAddress(*pubKey)
 
 	if encodedAddress != f.Address {

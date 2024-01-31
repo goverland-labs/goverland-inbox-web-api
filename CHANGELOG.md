@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added user activity
+- Added siwe replay protection 
+
 ## [0.0.52] - 2024-01-29
 
 ### Added

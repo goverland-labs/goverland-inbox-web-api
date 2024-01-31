@@ -500,7 +500,7 @@ func (h *Server) enrichProposalVotesInfo(context context.Context, session auth.S
 		return item
 	}
 	votes := ConvertVoteToInternal(resp.Items)
-	item.UserVote = votes[0]
+	item.UserVote = helpers.Ptr(votes[0])
 
 	return item
 }
@@ -532,7 +532,7 @@ func (h *Server) enrichProposalsVotesInfo(context context.Context, session auth.
 	for i := range list {
 		v, ok := votes[list[i].ID]
 		if ok {
-			list[i].UserVote = v
+			list[i].UserVote = helpers.Ptr(v)
 		}
 	}
 

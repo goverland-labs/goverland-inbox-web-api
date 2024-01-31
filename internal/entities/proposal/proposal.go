@@ -36,5 +36,5 @@ type Proposal struct {
 	Flagged          bool               `json:"flagged"`
 	DAO              dao.ShortDAO       `json:"dao"`
 	Timeline         []Timeline         `json:"timeline,omitempty"`
-	UserVote         Vote               `json:"user_vote"`
+	UserVote         *Vote              `json:"user_vote"`
 }

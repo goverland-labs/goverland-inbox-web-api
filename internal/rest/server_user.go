@@ -20,7 +20,6 @@ func (s *Server) getUserVotes(w http.ResponseWriter, r *http.Request) {
 	session, ok := appctx.ExtractUserSession(r.Context())
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
-
 		return
 	}
 
@@ -109,7 +108,7 @@ func (s *Server) getUserVotes(w http.ResponseWriter, r *http.Request) {
 			response.SendError(w, http.StatusBadRequest, fmt.Sprintf("proposal not found: %s", info.ProposalID))
 			return
 		}
-		p.UserVote = info
+		p.UserVote = helpers.Ptr(info)
 		proposalWithVotes[i] = p
 	}
 	log.Info().

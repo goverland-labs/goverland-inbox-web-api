@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -54,6 +55,7 @@ func (s *Server) getProposal(w http.ResponseWriter, r *http.Request) {
 	item := convertProposalToInternal(pr, di)
 
 	item = enrichProposalSubscriptionInfo(session, item)
+	item = s.enrichProposalVotesInfo(r.Context(), session, item)
 	item = helpers.WrapProposalIpfsLinks(item)
 
 	response.SendJSON(w, http.StatusOK, &item)
@@ -79,7 +81,7 @@ func (s *Server) getProposalVotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list := convertVoteToInternal(resp.Items)
+	list := ConvertVoteToInternal(resp.Items)
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
@@ -154,6 +156,7 @@ func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
 	}
 
 	list = enrichProposalsSubscriptionInfo(session, list)
+	list = s.enrichProposalsVotesInfo(r.Context(), session, list)
 	list = helpers.WrapProposalsIpfsLinks(list)
 
 	log.Info().
@@ -220,6 +223,7 @@ func (s *Server) proposalsTop(w http.ResponseWriter, r *http.Request) {
 	}
 
 	list = enrichProposalsSubscriptionInfo(session, list)
+	list = s.enrichProposalsVotesInfo(r.Context(), session, list)
 	list = helpers.WrapProposalsIpfsLinks(list)
 
 	log.Info().
@@ -425,7 +429,7 @@ func convertCoreProposalStrategiesToInternal(list coreproposal.Strategies) []com
 	return res
 }
 
-func convertVoteToInternal(list []coreproposal.Vote) []proposal.Vote {
+func ConvertVoteToInternal(list []coreproposal.Vote) []proposal.Vote {
 	res := make([]proposal.Vote, len(list))
 
 	for i, info := range list {
@@ -477,6 +481,62 @@ func enrichProposalSubscriptionInfo(session auth.Session, item proposal.Proposal
 	item.DAO.SubscriptionInfo = getSubscription(session, item.DAO.ID)
 
 	return item
+}
+func (h *Server) enrichProposalVotesInfo(context context.Context, session auth.Session, item proposal.Proposal) proposal.Proposal {
+	if session == auth.EmptySession {
+		return item
+	}
+	address, ok := h.getUserAddress(session.UserID)
+	if !ok {
+		return item
+	}
+
+	proposalIds := []string{item.ID}
+	resp, err := h.coreclient.GetUserVotes(context, address, coresdk.GetUserVotesRequest{
+		ProposalIDs: proposalIds,
+		Limit:       1,
+	})
+	if err != nil || len(resp.Items) == 0 {
+		return item
+	}
+	votes := ConvertVoteToInternal(resp.Items)
+	item.UserVote = votes[0]
+
+	return item
+}
+
+func (h *Server) enrichProposalsVotesInfo(context context.Context, session auth.Session, list []proposal.Proposal) []proposal.Proposal {
+	if session == auth.EmptySession {
+		return list
+	}
+	address, ok := h.getUserAddress(session.UserID)
+	if !ok {
+		return list
+	}
+
+	proposalIds := make([]string, len(list))
+	for _, info := range list {
+		proposalIds = append(proposalIds, info.ID)
+	}
+	resp, err := h.coreclient.GetUserVotes(context, address, coresdk.GetUserVotesRequest{
+		ProposalIDs: proposalIds,
+		Limit:       len(proposalIds),
+	})
+	if err != nil {
+		return list
+	}
+	votes := make(map[string]proposal.Vote)
+	for _, info := range ConvertVoteToInternal(resp.Items) {
+		votes[info.ProposalID] = info
+	}
+	for i := range list {
+		v, ok := votes[list[i].ID]
+		if ok {
+			list[i].UserVote = v
+		}
+	}
+
+	return list
 }
 
 func maxScore(scores coreproposal.Scores) float64 {

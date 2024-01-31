@@ -10,7 +10,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/analytics-api v0.0.10
-	github.com/goverland-labs/core-web-sdk v0.0.19
+	github.com/goverland-labs/core-web-sdk v0.0.20
 	github.com/goverland-labs/inbox-api v0.0.16
 	github.com/goverland-labs/platform-events v0.1.13
 	github.com/nats-io/nats.go v1.31.0

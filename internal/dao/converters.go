@@ -113,6 +113,7 @@ func ConvertDaoToShort(di *dao.DAO) dao.ShortDAO {
 		UpdatedAt:      di.UpdatedAt,
 		Name:           di.Name,
 		Avatar:         di.Avatar,
+		Terms:          di.Terms,
 		Symbol:         di.Symbol,
 		Network:        di.Network,
 		Categories:     di.Categories,

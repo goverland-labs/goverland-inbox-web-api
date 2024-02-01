@@ -11,6 +11,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 - User votes
+- dao.terms to proposal
 
 ## [0.0.53] - 2024-01-31
 

@@ -97,6 +97,7 @@ func NewServer(
 	handler.HandleFunc("/logout", srv.logout).Methods(http.MethodPost).Name("auth_logout")
 	handler.HandleFunc("/me", srv.getMe).Methods(http.MethodGet).Name("auth_get_me")
 	handler.HandleFunc("/me", srv.deleteMe).Methods(http.MethodDelete).Name("auth_delete_me")
+	handler.HandleFunc("/me/votes", srv.getUserVotes).Methods(http.MethodGet).Name("get_user_votes")
 
 	handler.HandleFunc("/dao", srv.listDAOs).Methods(http.MethodGet).Name("get_dao_list")
 	handler.HandleFunc("/dao/top", srv.listTopDAOs).Methods(http.MethodGet).Name("get_dao_top")
@@ -111,8 +112,6 @@ func NewServer(
 	handler.HandleFunc("/proposals/{id}/votes/validate", srv.validateVote).Methods(http.MethodPost).Name("proposal_vote_validate")
 	handler.HandleFunc("/proposals/{id}/votes/prepare", srv.prepareVote).Methods(http.MethodPost).Name("proposal_vote_prepare")
 	handler.HandleFunc("/proposals/votes", srv.vote).Methods(http.MethodPost).Name("proposal_vote")
-
-	handler.HandleFunc("/user/votes", srv.getUserVotes).Methods(http.MethodGet).Name("get_user_votes")
 
 	handler.HandleFunc("/subscriptions", srv.listSubscriptions).Methods(http.MethodGet).Name("get_subscription_list")
 	handler.HandleFunc("/subscriptions", srv.subscribe).Methods(http.MethodPost).Name("create_subscription")

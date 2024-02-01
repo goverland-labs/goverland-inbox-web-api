@@ -48,6 +48,7 @@ type ShortDAO struct {
 	Name             string             `json:"name"`
 	Avatar           *string            `json:"avatar"` // deprecated, use avatars instead
 	Avatars          common.UserAvatars `json:"avatars"`
+	Terms            *string            `json:"terms"`
 	Symbol           string             `json:"symbol"`
 	Network          common.Network     `json:"network"`
 	Categories       []common.Category  `json:"categories"`
@@ -65,6 +66,7 @@ func NewShortDAO(d *DAO) *ShortDAO {
 		UpdatedAt:        d.UpdatedAt,
 		Name:             d.Name,
 		Avatar:           d.Avatar,
+		Terms:            d.Terms,
 		Symbol:           d.Symbol,
 		Network:          d.Network,
 		Categories:       d.Categories,

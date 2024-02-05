@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## Added
+- User votes to feed
+
 ## [0.0.54] - 2024-02-01
 
 ### Added

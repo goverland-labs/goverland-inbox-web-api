@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"encoding/json"
+	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -63,7 +64,7 @@ func (s *Server) getFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list := helpers.WrapFeedItemsIpfsLinks(convertInboxFeedListToInternal(feedList, daos))
+	list := helpers.WrapFeedItemsIpfsLinks(s.convertInboxFeedListToInternal(r.Context(), session, feedList, daos))
 	totalCount := int(resp.GetTotalCount())
 
 	log.Info().
@@ -192,17 +193,17 @@ func (s *Server) markAsReadBatch(w http.ResponseWriter, r *http.Request) {
 	response.SendEmpty(w, http.StatusOK)
 }
 
-func convertInboxFeedListToInternal(list []*inboxapi.FeedItem, daos map[string]*dao.DAO) []feed.Item {
+func (s *Server) convertInboxFeedListToInternal(ctx context.Context, session auth.Session, list []*inboxapi.FeedItem, daos map[string]*dao.DAO) []feed.Item {
 	converted := make([]feed.Item, 0, len(list))
 
 	for _, item := range list {
-		converted = append(converted, convertInboxFeedItemToInternal(item, daos[item.DaoId]))
+		converted = append(converted, s.convertInboxFeedItemToInternal(ctx, session, item, daos[item.DaoId]))
 	}
 
 	return converted
 }
 
-func convertInboxFeedItemToInternal(item *inboxapi.FeedItem, d *dao.DAO) feed.Item {
+func (s *Server) convertInboxFeedItemToInternal(ctx context.Context, session auth.Session, item *inboxapi.FeedItem, d *dao.DAO) feed.Item {
 	var daoItem *dao.DAO
 	var proposalItem *proposal.Proposal
 
@@ -219,8 +220,9 @@ func convertInboxFeedItemToInternal(item *inboxapi.FeedItem, d *dao.DAO) feed.It
 		if err := json.Unmarshal(item.GetSnapshot(), &proposalSnapshot); err != nil {
 			log.Error().Err(err).Str("feed_id", item.GetId()).Msg("unable to unmarshal proposal snapshot")
 		}
-
-		proposalItem = helpers.Ptr(helpers.WrapProposalIpfsLinks(convertProposalToInternal(proposalSnapshot, d)))
+		pr := convertProposalToInternal(proposalSnapshot, d)
+		pr = s.enrichProposalVotesInfo(ctx, session, pr)
+		proposalItem = helpers.Ptr(helpers.WrapProposalIpfsLinks(pr))
 	}
 
 	feedID, err := uuid.Parse(item.GetId())

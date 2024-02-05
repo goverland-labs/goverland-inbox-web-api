@@ -17,13 +17,9 @@ import (
 )
 
 func (s *Server) getUserVotes(w http.ResponseWriter, r *http.Request) {
-	session, ok := appctx.ExtractUserSession(r.Context())
-	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
+	session, _ := appctx.ExtractUserSession(r.Context())
 
-	address, ok := s.getUserAddress(session.UserID)
+	address, ok := s.getUserAddress(session)
 	if !ok {
 		response.SendEmpty(w, http.StatusOK)
 		return
@@ -43,6 +39,11 @@ func (s *Server) getUserVotes(w http.ResponseWriter, r *http.Request) {
 		log.Error().Err(err).Msgf("get user votes by address: %s", address)
 
 		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	if len(resp.Items) == 0 {
+		response.SendEmpty(w, http.StatusOK)
 		return
 	}
 
@@ -121,8 +122,11 @@ func (s *Server) getUserVotes(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &proposalWithVotes)
 }
 
-func (s *Server) getUserAddress(id auth.UserID) (address string, exist bool) {
-	profileInfo, err := s.authService.GetProfileInfo(id)
+func (s *Server) getUserAddress(session auth.Session) (address string, exist bool) {
+	if session == auth.EmptySession {
+		return "", false
+	}
+	profileInfo, err := s.authService.GetProfileInfo(session.UserID)
 	if err != nil || profileInfo.Account == nil {
 		return "", false
 	}

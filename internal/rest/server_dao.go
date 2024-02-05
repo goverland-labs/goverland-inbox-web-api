@@ -142,6 +142,7 @@ func (s *Server) listTopDAOs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getDAOFeed(w http.ResponseWriter, r *http.Request) {
+	session, _ := appctx.ExtractUserSession(r.Context())
 	f, verr := daoform.NewFeedForm().ParseAndValidate(r)
 	if verr != nil {
 		response.HandleError(verr, w)
@@ -187,7 +188,7 @@ func (s *Server) getDAOFeed(w http.ResponseWriter, r *http.Request) {
 
 	list := make([]feed.Item, len(resp.Items))
 	for i, info := range resp.Items {
-		list[i] = convertFeedToInternal(&info, daos[info.DaoID])
+		list[i] = s.convertFeedToInternal(r.Context(), session, &info, daos[info.DaoID])
 	}
 
 	log.Info().
@@ -275,7 +276,7 @@ func enrichSubscriptionInfo(session auth.Session, list []*dao.DAO) []*dao.DAO {
 	return list
 }
 
-func convertFeedToInternal(fi *corefeed.Item, d *dao.DAO) feed.Item {
+func (s *Server) convertFeedToInternal(ctx context.Context, session auth.Session, fi *corefeed.Item, d *dao.DAO) feed.Item {
 	var daoItem *dao.DAO
 	var proposalItem *proposal.Proposal
 
@@ -292,8 +293,9 @@ func convertFeedToInternal(fi *corefeed.Item, d *dao.DAO) feed.Item {
 		if err := json.Unmarshal(fi.Snapshot, &proposalSnapshot); err != nil {
 			log.Error().Err(err).Str("feed_id", fi.ID.String()).Msg("unable to unmarshal proposal snapshot")
 		}
-
-		proposalItem = helpers.Ptr(helpers.WrapProposalIpfsLinks(convertProposalToInternal(proposalSnapshot, d)))
+		pr := convertProposalToInternal(proposalSnapshot, d)
+		pr = s.enrichProposalVotesInfo(ctx, session, pr)
+		proposalItem = helpers.Ptr(helpers.WrapProposalIpfsLinks(pr))
 	}
 
 	if proposalItem != nil {

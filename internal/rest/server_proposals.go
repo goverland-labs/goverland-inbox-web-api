@@ -69,11 +69,23 @@ func (s *Server) getProposalVotes(w http.ResponseWriter, r *http.Request) {
 		response.SendError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	session, _ := appctx.ExtractUserSession(r.Context())
+	address, ok := s.getUserAddress(session)
+	var req coresdk.GetProposalVotesRequest
+	if ok {
+		req = coresdk.GetProposalVotesRequest{
+			OrderByVoter: address,
+			Offset:       offset,
+			Limit:        limit,
+		}
+	} else {
+		req = coresdk.GetProposalVotesRequest{
+			Offset: offset,
+			Limit:  limit,
+		}
+	}
 
-	resp, err := s.coreclient.GetProposalVotes(r.Context(), id, coresdk.GetProposalVotesRequest{
-		Offset: offset,
-		Limit:  limit,
-	})
+	resp, err := s.coreclient.GetProposalVotes(r.Context(), id, req)
 	if err != nil {
 		log.Error().Err(err).Msgf("get proposal votes by id: %s", id)
 
@@ -483,10 +495,7 @@ func enrichProposalSubscriptionInfo(session auth.Session, item proposal.Proposal
 	return item
 }
 func (h *Server) enrichProposalVotesInfo(context context.Context, session auth.Session, item proposal.Proposal) proposal.Proposal {
-	if session == auth.EmptySession {
-		return item
-	}
-	address, ok := h.getUserAddress(session.UserID)
+	address, ok := h.getUserAddress(session)
 	if !ok {
 		return item
 	}
@@ -506,10 +515,7 @@ func (h *Server) enrichProposalVotesInfo(context context.Context, session auth.S
 }
 
 func (h *Server) enrichProposalsVotesInfo(context context.Context, session auth.Session, list []proposal.Proposal) []proposal.Proposal {
-	if session == auth.EmptySession {
-		return list
-	}
-	address, ok := h.getUserAddress(session.UserID)
+	address, ok := h.getUserAddress(session)
 	if !ok {
 		return list
 	}

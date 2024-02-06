@@ -41,76 +41,72 @@ func (s *Server) getUserVotes(w http.ResponseWriter, r *http.Request) {
 		response.SendEmpty(w, http.StatusInternalServerError)
 		return
 	}
+	proposalWithVotes := make([]proposal.Proposal, len(resp.Items))
+	if len(resp.Items) != 0 {
+		daoIds := make([]string, 0)
+		proposalIds := make([]string, 0)
+		for _, info := range resp.Items {
+			daoIds = append(daoIds, info.DaoID.String())
+			proposalIds = append(proposalIds, info.ProposalID)
+		}
+		daolist, err := s.daoService.GetDaoList(r.Context(), internaldao.DaoListRequest{
+			IDs:   daoIds,
+			Limit: len(daoIds),
+		})
+		if err != nil {
+			log.Error().Err(err).Msg("get dao list by IDs")
 
-	if len(resp.Items) == 0 {
-		response.SendEmpty(w, http.StatusOK)
-		return
-	}
-
-	daoIds := make([]string, 0)
-	proposalIds := make([]string, 0)
-	for _, info := range resp.Items {
-		daoIds = append(daoIds, info.DaoID.String())
-		proposalIds = append(proposalIds, info.ProposalID)
-	}
-	daolist, err := s.daoService.GetDaoList(r.Context(), internaldao.DaoListRequest{
-		IDs:   daoIds,
-		Limit: len(daoIds),
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("get dao list by IDs")
-
-		response.SendError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	proposallist, err := s.coreclient.GetProposalList(r.Context(), coresdk.GetProposalListRequest{
-		ProposalIDs: proposalIds,
-		Limit:       len(proposalIds),
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("get proposal list")
-
-		response.SendError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	daos := make(map[string]*internaldao.DAO)
-	for _, info := range daolist.Items {
-		daos[info.ID.String()] = info
-	}
-
-	proposals := make([]proposal.Proposal, len(proposallist.Items))
-	for i, info := range proposallist.Items {
-		di, ok := daos[info.DaoID.String()]
-		if !ok {
-			log.Error().Msg("dao not found")
-
-			response.SendError(w, http.StatusBadRequest, fmt.Sprintf("dao not found: %s", info.DaoID))
+			response.SendError(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		proposals[i] = convertProposalToInternal(&info, di)
-	}
+		proposallist, err := s.coreclient.GetProposalList(r.Context(), coresdk.GetProposalListRequest{
+			ProposalIDs: proposalIds,
+			Limit:       len(proposalIds),
+		})
+		if err != nil {
+			log.Error().Err(err).Msg("get proposal list")
 
-	proposals = enrichProposalsSubscriptionInfo(session, proposals)
-	proposals = helpers.WrapProposalsIpfsLinks(proposals)
-
-	userProposals := make(map[string]proposal.Proposal)
-	for _, info := range proposals {
-		userProposals[info.ID] = info
-	}
-
-	list := ConvertVoteToInternal(resp.Items)
-	proposalWithVotes := make([]proposal.Proposal, len(list))
-	for i, info := range list {
-		p, ok := userProposals[info.ProposalID]
-		if !ok {
-			log.Error().Msg("proposal not found")
-
-			response.SendError(w, http.StatusBadRequest, fmt.Sprintf("proposal not found: %s", info.ProposalID))
+			response.SendError(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		p.UserVote = helpers.Ptr(info)
-		proposalWithVotes[i] = p
+
+		daos := make(map[string]*internaldao.DAO)
+		for _, info := range daolist.Items {
+			daos[info.ID.String()] = info
+		}
+
+		proposals := make([]proposal.Proposal, len(proposallist.Items))
+		for i, info := range proposallist.Items {
+			di, ok := daos[info.DaoID.String()]
+			if !ok {
+				log.Error().Msg("dao not found")
+
+				response.SendError(w, http.StatusBadRequest, fmt.Sprintf("dao not found: %s", info.DaoID))
+				return
+			}
+			proposals[i] = convertProposalToInternal(&info, di)
+		}
+
+		proposals = enrichProposalsSubscriptionInfo(session, proposals)
+		proposals = helpers.WrapProposalsIpfsLinks(proposals)
+
+		userProposals := make(map[string]proposal.Proposal)
+		for _, info := range proposals {
+			userProposals[info.ID] = info
+		}
+
+		list := ConvertVoteToInternal(resp.Items)
+		for i, info := range list {
+			p, ok := userProposals[info.ProposalID]
+			if !ok {
+				log.Error().Msg("proposal not found")
+
+				response.SendError(w, http.StatusBadRequest, fmt.Sprintf("proposal not found: %s", info.ProposalID))
+				return
+			}
+			p.UserVote = helpers.Ptr(info)
+			proposalWithVotes[i] = p
+		}
 	}
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).

@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Generate avatars based on ens name instead of address
+
 ## [0.0.56] - 2024-02-07
 
 ## Added

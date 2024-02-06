@@ -356,9 +356,11 @@ func convertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) p
 		quorumPercent = math.Round(score / float64(pr.Quorum) * 100)
 	}
 
+	alias := pr.Author
 	var ensName *string
 	if pr.EnsName != "" {
 		ensName = helpers.Ptr(pr.EnsName)
+		alias = pr.EnsName
 	}
 
 	return proposal.Proposal{
@@ -367,7 +369,7 @@ func convertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) p
 		Author: common.User{
 			Address:      common.UserAddress(pr.Author),
 			ResolvedName: ensName,
-			Avatars:      common.GenerateProfileAvatars(pr.Author),
+			Avatars:      common.GenerateProfileAvatars(alias),
 		},
 		Created:    *common.NewTime(time.Unix(int64(pr.Created), 0)),
 		Network:    common.Network(pr.Network),
@@ -446,8 +448,10 @@ func ConvertVoteToInternal(list []coreproposal.Vote) []proposal.Vote {
 
 	for i, info := range list {
 		var ensName *string
+		alias := info.Voter
 		if info.EnsName != "" {
 			ensName = helpers.Ptr(info.EnsName)
+			alias = info.EnsName
 		}
 
 		res[i] = proposal.Vote{
@@ -456,7 +460,7 @@ func ConvertVoteToInternal(list []coreproposal.Vote) []proposal.Vote {
 			Voter: common.User{
 				Address:      common.UserAddress(info.Voter),
 				ResolvedName: ensName,
-				Avatars:      common.GenerateProfileAvatars(info.Voter),
+				Avatars:      common.GenerateProfileAvatars(alias),
 			},
 			CreatedAt:    *common.NewTime(time.Unix(int64(info.Created), 0)),
 			DaoID:        info.DaoID,

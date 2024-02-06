@@ -149,9 +149,14 @@ func convertToProfileInfo(resp *inboxapi.UserProfile) profile.Profile {
 
 	var account *profile.Account
 	if role == profile.RegularRole {
+		alias := user.GetAddress()
+		if user.GetEns() != "" {
+			alias = user.GetEns()
+		}
+
 		account = &profile.Account{
 			Address:      user.GetAddress(),
-			Avatars:      common.GenerateProfileAvatars(user.GetAddress()),
+			Avatars:      common.GenerateProfileAvatars(alias),
 			ResolvedName: user.GetEns(),
 		}
 	}

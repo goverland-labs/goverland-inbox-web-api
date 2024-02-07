@@ -38,6 +38,8 @@ type DAO struct {
 	ParentID         *string            `json:"parent_id,omitempty"`
 	ActivitySince    *common.Time       `json:"activity_since,omitempty"`
 	SubscriptionInfo *SubscriptionInfo  `json:"subscription_info"`
+	ActiveVotes      int                `json:"active_votes"`
+	Verified         bool               `json:"verified"`
 }
 
 type ShortDAO struct {
@@ -56,6 +58,8 @@ type ShortDAO struct {
 	VotersCount      int                `json:"voters_count"`
 	ProposalsCount   int                `json:"proposals_count"`
 	SubscriptionInfo *SubscriptionInfo  `json:"subscription_info"`
+	ActiveVotes      int                `json:"active_votes"`
+	Verified         bool               `json:"verified"`
 }
 
 func NewShortDAO(d *DAO) *ShortDAO {
@@ -74,6 +78,8 @@ func NewShortDAO(d *DAO) *ShortDAO {
 		VotersCount:      d.VotersCount,
 		ProposalsCount:   d.ProposalsCount,
 		SubscriptionInfo: d.SubscriptionInfo,
+		ActiveVotes:      d.ActiveVotes,
+		Verified:         d.Verified,
 	}
 }
 

@@ -50,6 +50,8 @@ func ConvertCoreDaoToInternal(i *coredao.Dao) *dao.DAO {
 		Guidelines:     helpers.Ptr(i.Guidelines),
 		Template:       helpers.Ptr(i.Template),
 		ActivitySince:  activitySince,
+		ActiveVotes:    int(i.ActiveVotes),
+		Verified:       i.Verified,
 		// todo: ParentID
 	}
 }
@@ -120,5 +122,7 @@ func ConvertDaoToShort(di *dao.DAO) dao.ShortDAO {
 		FollowersCount: di.FollowersCount,
 		VotersCount:    di.VotersCount,
 		ProposalsCount: di.ProposalsCount,
+		ActiveVotes:    di.ActiveVotes,
+		Verified:       di.Verified,
 	}
 }

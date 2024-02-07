@@ -12,7 +12,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/analytics-api v0.0.10
-	github.com/goverland-labs/core-web-sdk v0.0.21
+	github.com/goverland-labs/core-web-sdk v0.0.22
 	github.com/goverland-labs/inbox-api v0.0.17
 	github.com/goverland-labs/lib-rest-helpers v0.1.0
 	github.com/goverland-labs/platform-events v0.1.13

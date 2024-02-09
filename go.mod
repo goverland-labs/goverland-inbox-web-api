@@ -13,7 +13,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/analytics-api v0.0.10
 	github.com/goverland-labs/core-web-sdk v0.0.22
-	github.com/goverland-labs/inbox-api v0.0.18-0.20240204203942-9f0b482a4154
+	github.com/goverland-labs/inbox-api v0.0.18
 	github.com/goverland-labs/lib-rest-helpers v0.1.0
 	github.com/goverland-labs/platform-events v0.1.13
 	github.com/nats-io/nats.go v1.31.0

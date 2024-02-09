@@ -3,8 +3,9 @@ package rest
 import (
 	"context"
 	"encoding/json"
-	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	"net/http"
+
+	"github.com/goverland-labs/inbox-web-api/internal/auth"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -130,6 +131,32 @@ func (s *Server) markFeedItemAsArchived(w http.ResponseWriter, r *http.Request) 
 	response.SendEmpty(w, http.StatusOK)
 }
 
+func (s *Server) markFeedItemAsUnread(w http.ResponseWriter, r *http.Request) {
+	session, ok := appctx.ExtractUserSession(r.Context())
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	f, verr := feedform.NewMarkUnmarkItemForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	_, err := s.feedClient.MarkAsUnread(context.TODO(), &inboxapi.MarkAsUnreadRequest{
+		SubscriberId: session.UserID.String(),
+		Ids:          []string{f.ID.String()},
+	})
+
+	if err != nil {
+		response.HandleError(response.ResolveError(err), w)
+		return
+	}
+
+	response.SendEmpty(w, http.StatusOK)
+}
+
 func (s *Server) markFeedItemAsUnarchived(w http.ResponseWriter, r *http.Request) {
 	session, ok := appctx.ExtractUserSession(r.Context())
 	if !ok {
@@ -183,6 +210,43 @@ func (s *Server) markAsReadBatch(w http.ResponseWriter, r *http.Request) {
 		SubscriberId: session.UserID.String(),
 		Ids:          ids,
 		Before:       before,
+	})
+
+	if err != nil {
+		response.HandleError(response.ResolveError(err), w)
+		return
+	}
+
+	response.SendEmpty(w, http.StatusOK)
+}
+
+func (s *Server) markAsUnreadBatch(w http.ResponseWriter, r *http.Request) {
+	session, ok := appctx.ExtractUserSession(r.Context())
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	f, verr := feedform.NewMarkAsUnreadBatchForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	ids := make([]string, 0, len(f.IDs))
+	for _, id := range f.IDs {
+		ids = append(ids, id.String())
+	}
+
+	var after *timestamppb.Timestamp
+	if f.After != nil {
+		after = timestamppb.New(*f.After)
+	}
+
+	_, err := s.feedClient.MarkAsUnread(context.TODO(), &inboxapi.MarkAsUnreadRequest{
+		SubscriberId: session.UserID.String(),
+		Ids:          ids,
+		After:        after,
 	})
 
 	if err != nil {

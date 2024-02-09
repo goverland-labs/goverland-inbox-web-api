@@ -2,8 +2,12 @@ package rest
 
 import (
 	"context"
+	"net/http"
+	"strconv"
+
 	"github.com/gorilla/mux"
 	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
+
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	entity "github.com/goverland-labs/inbox-web-api/internal/entities/analytics"
@@ -13,8 +17,6 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/analytics"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/request"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
-	"net/http"
-	"strconv"
 )
 
 func (s *Server) getMonthlyActiveUsers(w http.ResponseWriter, r *http.Request) {

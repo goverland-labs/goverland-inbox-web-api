@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added mark-as-unread and mark-as-unread bath endpoints
+
 ## [0.0.57] - 2024-02-08
 
 ### Changed

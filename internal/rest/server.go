@@ -121,7 +121,9 @@ func NewServer(
 
 	handler.HandleFunc("/feed", srv.getFeed).Methods(http.MethodGet).Name("get_feed")
 	handler.HandleFunc("/feed/mark-as-read", srv.markAsReadBatch).Methods(http.MethodPost).Name("mark_as_read_batch")
+	handler.HandleFunc("/feed/mark-as-read", srv.markAsUnreadBatch).Methods(http.MethodPost).Name("mark_as_runead_batch")
 	handler.HandleFunc("/feed/{id}/mark-as-read", srv.markFeedItemAsRead).Methods(http.MethodPost).Name("mark_feed_item_as_read")
+	handler.HandleFunc("/feed/{id}/mark-as-unread", srv.markFeedItemAsUnread).Methods(http.MethodPost).Name("mark_feed_item_as_unread")
 	handler.HandleFunc("/feed/{id}/archive", srv.markFeedItemAsArchived).Methods(http.MethodPost).Name("mark_feed_item_as_archived")
 	handler.HandleFunc("/feed/{id}/unarchive", srv.markFeedItemAsUnarchived).Methods(http.MethodPost).Name("mark_feed_item_as_archived")
 

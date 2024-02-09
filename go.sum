@@ -44,6 +44,8 @@ github.com/goverland-labs/core-web-sdk v0.0.22 h1:Yc9CHbgZdg3QNcStpR+dSA7/I4DJ5H
 github.com/goverland-labs/core-web-sdk v0.0.22/go.mod h1:jNuOLZqwm/VOLF1ghOXKHs6B7DiXRCbGXH1ksaTLAgM=
 github.com/goverland-labs/inbox-api v0.0.18-0.20240204203942-9f0b482a4154 h1:/gq+Jxt156SuFaX7ti3NGMkEwCBKcHWof9Go2iZNSA4=
 github.com/goverland-labs/inbox-api v0.0.18-0.20240204203942-9f0b482a4154/go.mod h1:gFnTNa5515hTrrGZCQltCHlaaQdShCgL7giy2e+HIRo=
+github.com/goverland-labs/inbox-api v0.0.18 h1:VaRkRy6Snz3zgLS41YzzQwgFxRFw7lB2RK/CepFA8I4=
+github.com/goverland-labs/inbox-api v0.0.18/go.mod h1:gFnTNa5515hTrrGZCQltCHlaaQdShCgL7giy2e+HIRo=
 github.com/goverland-labs/lib-rest-helpers v0.1.0 h1:aZ/YIiA6gDDCf5EgFuhBFESl+N3cv0F0vr4Y7PwiUA0=
 github.com/goverland-labs/lib-rest-helpers v0.1.0/go.mod h1:mpNPY29842jR0U991Wib8UgHcTLT3PTWBH9E98Voy9U=
 github.com/goverland-labs/platform-events v0.1.13 h1:wBdlvVY2pZFzTRF6uTGaj66xKnLbK5GKrBhW1IoNPK4=

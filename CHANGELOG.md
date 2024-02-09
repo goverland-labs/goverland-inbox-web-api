@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed empty proposals in me can vote endpoint 
+
 ## [0.0.58] - 2024-02-11
 
 ### Fixed

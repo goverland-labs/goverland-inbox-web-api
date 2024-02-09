@@ -138,6 +138,16 @@ func (s *Server) getMeCanVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(proposals.GetProposalIds()) == 0 {
+		log.Info().
+			Str("user_id", session.UserID.String()).
+			Int("count", 0).
+			Msg("me can vote")
+
+		response.SendJSON(w, http.StatusOK, helpers.Ptr([]proposal.Proposal{}))
+		return
+	}
+
 	proposalList, err := s.coreclient.GetProposalList(r.Context(), coresdk.GetProposalListRequest{
 		ProposalIDs: proposals.GetProposalIds(),
 		Limit:       len(proposals.GetProposalIds()),
@@ -195,6 +205,7 @@ func (s *Server) getMeCanVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Info().
+		Str("user_id", session.UserID.String()).
 		Int("count_filtered", len(proposalsWithoutVotes)).
 		Int("total", proposalList.TotalCnt).
 		Msg("me can vote")

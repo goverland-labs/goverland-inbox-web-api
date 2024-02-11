@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.58] - 2024-02-11
+
 ### Fixed
 - Fixed inbox-api dependency
 

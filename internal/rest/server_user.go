@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/core-web-sdk"
+	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
@@ -127,81 +128,78 @@ func (s *Server) getMeCanVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = session
-	w.WriteHeader(http.StatusConflict)
+	proposals, err := s.userClient.GetUserCanVoteProposals(r.Context(), &inboxapi.GetUserCanVoteProposalsRequest{
+		UserId: session.UserID.String(),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get user can vote proposals")
 
-	//proposals, err := s.userClient.GetUserCanVoteProposals(r.Context(), &inboxapi.GetUserCanVoteProposalsRequest{
-	//	UserId: session.UserID.String(),
-	//})
-	//if err != nil {
-	//	log.Error().Err(err).Msg("get user can vote proposals")
-	//
-	//	response.SendEmpty(w, http.StatusInternalServerError)
-	//	return
-	//}
-	//
-	//proposalList, err := s.coreclient.GetProposalList(r.Context(), coresdk.GetProposalListRequest{
-	//	ProposalIDs: proposals.GetProposalIds(),
-	//	Limit:       len(proposals.GetProposalIds()),
-	//})
-	//if err != nil {
-	//	log.Error().Err(err).Msg("get proposal list")
-	//
-	//	response.SendError(w, http.StatusBadRequest, err.Error())
-	//	return
-	//}
-	//
-	//// todo: use caching for getting dao
-	//daoIds := make([]string, 0)
-	//for _, info := range proposalList.Items {
-	//	daoIds = append(daoIds, info.DaoID.String())
-	//}
-	//daolist, err := s.daoService.GetDaoList(r.Context(), internaldao.DaoListRequest{
-	//	IDs:   daoIds,
-	//	Limit: len(daoIds),
-	//})
-	//if err != nil {
-	//	log.Error().Err(err).Msg("get dao list by IDs")
-	//
-	//	response.SendError(w, http.StatusBadRequest, err.Error())
-	//	return
-	//}
-	//
-	//daos := make(map[string]*internaldao.DAO)
-	//for _, info := range daolist.Items {
-	//	daos[info.ID.String()] = info
-	//}
-	//
-	//list := make([]proposal.Proposal, len(proposalList.Items))
-	//for i, info := range proposalList.Items {
-	//	di, ok := daos[info.DaoID.String()]
-	//	if !ok {
-	//		log.Error().Msg("dao not found")
-	//
-	//		response.SendError(w, http.StatusBadRequest, fmt.Sprintf("dao not found: %s", info.DaoID))
-	//		return
-	//	}
-	//	list[i] = convertProposalToInternal(&info, di)
-	//}
-	//
-	//list = s.enrichProposalsVotesInfo(r.Context(), session, list)
-	//list = helpers.WrapProposalsIpfsLinks(list)
-	//
-	//proposalsWithoutVotes := make([]proposal.Proposal, 0, len(list))
-	//for _, p := range list {
-	//	if p.UserVote != nil {
-	//		continue
-	//	}
-	//
-	//	proposalsWithoutVotes = append(proposalsWithoutVotes, p)
-	//}
-	//
-	//log.Info().
-	//	Int("count_filtered", len(proposalsWithoutVotes)).
-	//	Int("total", proposalList.TotalCnt).
-	//	Msg("me can vote")
-	//
-	//response.SendJSON(w, http.StatusOK, &proposalsWithoutVotes)
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	proposalList, err := s.coreclient.GetProposalList(r.Context(), coresdk.GetProposalListRequest{
+		ProposalIDs: proposals.GetProposalIds(),
+		Limit:       len(proposals.GetProposalIds()),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get proposal list")
+
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// todo: use caching for getting dao
+	daoIds := make([]string, 0)
+	for _, info := range proposalList.Items {
+		daoIds = append(daoIds, info.DaoID.String())
+	}
+	daolist, err := s.daoService.GetDaoList(r.Context(), internaldao.DaoListRequest{
+		IDs:   daoIds,
+		Limit: len(daoIds),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get dao list by IDs")
+
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	daos := make(map[string]*internaldao.DAO)
+	for _, info := range daolist.Items {
+		daos[info.ID.String()] = info
+	}
+
+	list := make([]proposal.Proposal, len(proposalList.Items))
+	for i, info := range proposalList.Items {
+		di, ok := daos[info.DaoID.String()]
+		if !ok {
+			log.Error().Msg("dao not found")
+
+			response.SendError(w, http.StatusBadRequest, fmt.Sprintf("dao not found: %s", info.DaoID))
+			return
+		}
+		list[i] = convertProposalToInternal(&info, di)
+	}
+
+	list = s.enrichProposalsVotesInfo(r.Context(), session, list)
+	list = helpers.WrapProposalsIpfsLinks(list)
+
+	proposalsWithoutVotes := make([]proposal.Proposal, 0, len(list))
+	for _, p := range list {
+		if p.UserVote != nil {
+			continue
+		}
+
+		proposalsWithoutVotes = append(proposalsWithoutVotes, p)
+	}
+
+	log.Info().
+		Int("count_filtered", len(proposalsWithoutVotes)).
+		Int("total", proposalList.TotalCnt).
+		Msg("me can vote")
+
+	response.SendJSON(w, http.StatusOK, &proposalsWithoutVotes)
 }
 
 func (s *Server) getUserAddress(session auth.Session) (address string, exist bool) {

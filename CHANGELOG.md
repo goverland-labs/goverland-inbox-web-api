@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed inbox-api dependency
+
 ### Added
 - Added mark-as-unread and mark-as-unread bath endpoints
 

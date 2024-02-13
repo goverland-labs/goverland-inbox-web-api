@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed batch unread endoint
+
 ## [0.0.59] - 2024-02-11
 
 ### Fixed
@@ -25,8 +28,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 - Generate avatars based on ens name instead of address
 
-## [0.0.56] - 2024-02-07
-
+## [0.0.56] - 2024-02-
 ## Added
 - New fields for dao
 

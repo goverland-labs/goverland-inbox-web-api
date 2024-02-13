@@ -32,6 +32,8 @@ type subStorage struct {
 	subs map[auth.UserID][]Subscription
 }
 
+// TODO: Remove or use it
+// nolint:unused
 func (s *subStorage) add(id auth.UserID, subs ...Subscription) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

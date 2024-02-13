@@ -7,8 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added total and unread counters for mark-as... endpoints
+
 ### Fixed
 - Fixed batch unread endoint
+- Fixed linter warnings
 
 ## [0.0.59] - 2024-02-11
 

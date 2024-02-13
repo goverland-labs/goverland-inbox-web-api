@@ -34,7 +34,7 @@ func AddPaginationHeaders(w http.ResponseWriter, r *http.Request, offset, limit,
 	}
 }
 
-func AddUnreadHeader(w http.ResponseWriter, _ *http.Request, count int) {
+func AddUnreadHeader(w http.ResponseWriter, count int) {
 	w.Header().Set(HeaderUnreadCount, fmt.Sprintf("%d", count))
 }
 

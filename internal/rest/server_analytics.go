@@ -111,6 +111,8 @@ func (s *Server) getExclusiveVoters(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, helpers.Ptr(entity.ExclusiveVoters{Exclusive: resp.Exclusive, Total: resp.Total}))
 }
 
+// TODO: Remove or use it
+// nolint:unused
 func (s *Server) get(w http.ResponseWriter, r *http.Request) {
 	f, verr := analytics.NewGetForm().ParseAndValidate(r)
 	if verr != nil {
@@ -132,7 +134,6 @@ func (s *Server) get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.SendJSON(w, http.StatusOK, &list)
-
 }
 
 func (s *Server) getMonthlyNewProposals(w http.ResponseWriter, r *http.Request) {

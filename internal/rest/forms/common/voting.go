@@ -22,7 +22,7 @@ func (v *Voter) ValidateAndSet(voter string, errors map[string]response.ErrorMes
 type Choice json.RawMessage
 
 func (c *Choice) ValidateAndSet(choice json.RawMessage, errors map[string]response.ErrorMessage) {
-	if choice == nil || len(choice) == 0 {
+	if len(choice) == 0 {
 		errors["choice"] = response.ErrorMessage{
 			Code:    response.MissedValue,
 			Message: "missing choice",

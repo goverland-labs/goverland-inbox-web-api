@@ -75,7 +75,7 @@ func (s *Server) getFeed(w http.ResponseWriter, r *http.Request) {
 		Msg("route execution")
 
 	response.AddPaginationHeaders(w, r, offset, limit, totalCount)
-	response.AddUnreadHeader(w, r, int(resp.UnreadCount))
+	response.AddUnreadHeader(w, int(resp.UnreadCount))
 	response.SendJSON(w, http.StatusOK, &list)
 }
 
@@ -92,7 +92,7 @@ func (s *Server) markFeedItemAsRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := s.feedClient.MarkAsRead(context.TODO(), &inboxapi.MarkAsReadRequest{
+	resp, err := s.feedClient.MarkAsRead(context.TODO(), &inboxapi.MarkAsReadRequest{
 		SubscriberId: session.UserID.String(),
 		Ids:          []string{f.ID.String()},
 	})
@@ -102,6 +102,8 @@ func (s *Server) markFeedItemAsRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response.AddTotalCounterHeaders(w, int(resp.GetTotalCount()))
+	response.AddUnreadHeader(w, int(resp.GetUnreadCount()))
 	response.SendEmpty(w, http.StatusOK)
 }
 
@@ -118,7 +120,7 @@ func (s *Server) markFeedItemAsArchived(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	_, err := s.feedClient.MarkAsArchived(context.TODO(), &inboxapi.MarkAsArchivedRequest{
+	resp, err := s.feedClient.MarkAsArchived(context.TODO(), &inboxapi.MarkAsArchivedRequest{
 		SubscriberId: session.UserID.String(),
 		Ids:          []string{f.ID.String()},
 	})
@@ -128,6 +130,8 @@ func (s *Server) markFeedItemAsArchived(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	response.AddTotalCounterHeaders(w, int(resp.GetTotalCount()))
+	response.AddUnreadHeader(w, int(resp.GetUnreadCount()))
 	response.SendEmpty(w, http.StatusOK)
 }
 
@@ -144,7 +148,7 @@ func (s *Server) markFeedItemAsUnread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := s.feedClient.MarkAsUnread(context.TODO(), &inboxapi.MarkAsUnreadRequest{
+	resp, err := s.feedClient.MarkAsUnread(context.TODO(), &inboxapi.MarkAsUnreadRequest{
 		SubscriberId: session.UserID.String(),
 		Ids:          []string{f.ID.String()},
 	})
@@ -154,6 +158,8 @@ func (s *Server) markFeedItemAsUnread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response.AddTotalCounterHeaders(w, int(resp.GetTotalCount()))
+	response.AddUnreadHeader(w, int(resp.GetUnreadCount()))
 	response.SendEmpty(w, http.StatusOK)
 }
 
@@ -170,7 +176,7 @@ func (s *Server) markFeedItemAsUnarchived(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	_, err := s.feedClient.MarkAsUnarchived(context.TODO(), &inboxapi.MarkAsUnarchivedRequest{
+	resp, err := s.feedClient.MarkAsUnarchived(context.TODO(), &inboxapi.MarkAsUnarchivedRequest{
 		SubscriberId: session.UserID.String(),
 		Ids:          []string{f.ID.String()},
 	})
@@ -180,6 +186,8 @@ func (s *Server) markFeedItemAsUnarchived(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	response.AddTotalCounterHeaders(w, int(resp.GetTotalCount()))
+	response.AddUnreadHeader(w, int(resp.GetUnreadCount()))
 	response.SendEmpty(w, http.StatusOK)
 }
 
@@ -206,7 +214,7 @@ func (s *Server) markAsReadBatch(w http.ResponseWriter, r *http.Request) {
 		before = timestamppb.New(*f.Before)
 	}
 
-	_, err := s.feedClient.MarkAsRead(context.TODO(), &inboxapi.MarkAsReadRequest{
+	resp, err := s.feedClient.MarkAsRead(context.TODO(), &inboxapi.MarkAsReadRequest{
 		SubscriberId: session.UserID.String(),
 		Ids:          ids,
 		Before:       before,
@@ -217,6 +225,8 @@ func (s *Server) markAsReadBatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response.AddTotalCounterHeaders(w, int(resp.GetTotalCount()))
+	response.AddUnreadHeader(w, int(resp.GetUnreadCount()))
 	response.SendEmpty(w, http.StatusOK)
 }
 
@@ -243,7 +253,7 @@ func (s *Server) markAsUnreadBatch(w http.ResponseWriter, r *http.Request) {
 		after = timestamppb.New(*f.After)
 	}
 
-	_, err := s.feedClient.MarkAsUnread(context.TODO(), &inboxapi.MarkAsUnreadRequest{
+	resp, err := s.feedClient.MarkAsUnread(context.TODO(), &inboxapi.MarkAsUnreadRequest{
 		SubscriberId: session.UserID.String(),
 		Ids:          ids,
 		After:        after,
@@ -254,6 +264,8 @@ func (s *Server) markAsUnreadBatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response.AddTotalCounterHeaders(w, int(resp.GetTotalCount()))
+	response.AddUnreadHeader(w, int(resp.GetUnreadCount()))
 	response.SendEmpty(w, http.StatusOK)
 }
 

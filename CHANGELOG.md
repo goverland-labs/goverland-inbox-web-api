@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.61] - 2024-02-14
+
+### Added
+- Return empty votes list for guest
+
 ## [0.0.60] - 2024-02-13
 
 ### Added

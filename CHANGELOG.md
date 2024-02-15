@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.62] - 2024-02-15
+
 ### Fixed
 - Proposal score calculation
 

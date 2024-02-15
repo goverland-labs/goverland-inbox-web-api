@@ -349,13 +349,6 @@ func (h *Server) vote(w http.ResponseWriter, r *http.Request) {
 }
 
 func convertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) proposal.Proposal {
-	// TODO: TBD
-	var quorumPercent float64
-	score := maxScore(pr.Scores)
-	if pr.Quorum > 0 {
-		quorumPercent = math.Round(score / float64(pr.Quorum) * 100)
-	}
-
 	alias := pr.Author
 	var ensName *string
 	if pr.EnsName != "" {
@@ -387,7 +380,7 @@ func convertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) p
 		Choices:       pr.Choices,
 		VotingStart:   *common.NewTime(time.Unix(int64(pr.Start), 0)),
 		VotingEnd:     *common.NewTime(time.Unix(int64(pr.End), 0)),
-		Quorum:        quorumPercent,
+		Quorum:        calculateQuorumPercent(pr),
 		Privacy:       helpers.Ptr(pr.Privacy),
 		Snapshot:      helpers.Ptr(pr.Snapshot),
 		State:         helpers.Ptr(proposal.State(pr.State)),
@@ -401,6 +394,15 @@ func convertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) p
 		DAO:           dao.ConvertDaoToShort(di),
 		Timeline:      convertProposalTimelineToInternal(pr.Timeline),
 	}
+}
+
+func calculateQuorumPercent(pr *coreproposal.Proposal) float64 {
+	var quorumPercent float64
+	if pr.Quorum > 0 {
+		quorumPercent = math.Round(float64(pr.ScoresTotal / (pr.Quorum) * 100))
+	}
+
+	return quorumPercent
 }
 
 func convertProposalTimelineToInternal(tl []coreproposal.TimelineItem) []proposal.Timeline {
@@ -547,21 +549,4 @@ func (h *Server) enrichProposalsVotesInfo(context context.Context, session auth.
 	}
 
 	return list
-}
-
-func maxScore(scores coreproposal.Scores) float64 {
-	if len(scores) == 0 {
-		return 0
-	}
-
-	found := scores[0]
-	for i := range scores {
-		if found > scores[i] {
-			continue
-		}
-
-		found = scores[i]
-	}
-
-	return float64(found)
 }

@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Proposal score calculation
+
 ## [0.0.61] - 2024-02-14
 
 ### Added

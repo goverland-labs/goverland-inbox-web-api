@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Filter only active proposals for user can vote
+
 ## [0.0.62] - 2024-02-15
 
 ### Fixed

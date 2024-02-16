@@ -201,6 +201,10 @@ func (s *Server) getMeCanVote(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
+		if !p.IsActive() {
+			continue
+		}
+
 		proposalsWithoutVotes = append(proposalsWithoutVotes, p)
 	}
 

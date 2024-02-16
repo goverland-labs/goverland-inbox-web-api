@@ -38,3 +38,7 @@ type Proposal struct {
 	Timeline         []Timeline         `json:"timeline,omitempty"`
 	UserVote         *Vote              `json:"user_vote"`
 }
+
+func (p *Proposal) IsActive() bool {
+	return p.State != nil && *p.State == ActiveState
+}

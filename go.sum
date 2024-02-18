@@ -38,8 +38,8 @@ github.com/gorilla/handlers v1.5.1 h1:9lRY6j8DEeeBT10CvO9hGW0gmky0BprnvDI5vfhUHH
 github.com/gorilla/handlers v1.5.1/go.mod h1:t8XrUpc4KVXb7HGyJ4/cEnwQiaxrX/hz1Zv/4g96P1Q=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
-github.com/goverland-labs/analytics-api v0.0.10 h1:mXYB6y3LhKn1hNCjAGA/GnZYo8+pNqzoPuan5+nu+QM=
-github.com/goverland-labs/analytics-api v0.0.10/go.mod h1:apaKjFY2A5PTQyPITUN3iiswXrOQ4msiYneodpZFgBc=
+github.com/goverland-labs/analytics-api v0.0.12 h1:wbxZ3DtlzEsw+bmuIlmi50pXuwUr+rX40MGNqRWeXlM=
+github.com/goverland-labs/analytics-api v0.0.12/go.mod h1:apaKjFY2A5PTQyPITUN3iiswXrOQ4msiYneodpZFgBc=
 github.com/goverland-labs/core-web-sdk v0.0.22 h1:Yc9CHbgZdg3QNcStpR+dSA7/I4DJ5H0trI028SPTpRg=
 github.com/goverland-labs/core-web-sdk v0.0.22/go.mod h1:jNuOLZqwm/VOLF1ghOXKHs6B7DiXRCbGXH1ksaTLAgM=
 github.com/goverland-labs/inbox-api v0.0.20 h1:rJHvs251MgakXGrHlJRe6NS43NzAlpcGxyFJEEDCQ0Y=

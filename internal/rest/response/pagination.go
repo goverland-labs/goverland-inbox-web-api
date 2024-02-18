@@ -9,6 +9,7 @@ import (
 const (
 	HeaderTotalCount   = "X-Total-Count"
 	HeaderUnreadCount  = "X-Unread-Count"
+	HeaderVpTotal      = "X-Total-Avg-Vp"
 	HeaderOffset       = "X-Offset"
 	HeaderLimit        = "X-Limit"
 	HeaderPrevPageLink = "X-Prev-Page"
@@ -36,6 +37,10 @@ func AddPaginationHeaders(w http.ResponseWriter, r *http.Request, offset, limit,
 
 func AddUnreadHeader(w http.ResponseWriter, count int) {
 	w.Header().Set(HeaderUnreadCount, fmt.Sprintf("%d", count))
+}
+
+func AddVpTotalHeader(w http.ResponseWriter, total float32) {
+	w.Header().Set(HeaderVpTotal, fmt.Sprintf("%f", total))
 }
 
 func AddTotalCounterHeaders(w http.ResponseWriter, totalCnt int) {

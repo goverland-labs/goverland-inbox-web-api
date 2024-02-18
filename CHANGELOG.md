@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.64] - 2024-02-18
+
+### Added
+- Totals for Vp Avg
+
 ## [0.0.63] - 2024-02-16
 
 ### Fixed

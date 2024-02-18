@@ -11,7 +11,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
-	github.com/goverland-labs/analytics-api v0.0.10
+	github.com/goverland-labs/analytics-api v0.0.12
 	github.com/goverland-labs/core-web-sdk v0.0.22
 	github.com/goverland-labs/inbox-api v0.0.20
 	github.com/goverland-labs/lib-rest-helpers v0.1.0

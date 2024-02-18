@@ -185,15 +185,16 @@ func (s *Server) getTopVotersByVp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, limit, err := request.ExtractPagination(r)
+	offset, limit, err := request.ExtractPagination(r)
 	if err != nil {
 		response.SendError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	resp, err := s.analyticsClient.GetTopVotersByVp(context.TODO(), &internalapi.TopVotersByVpRequest{
-		DaoId: f.ID.String(),
-		Limit: uint64(limit),
+		DaoId:  f.ID.String(),
+		Offset: uint32(offset),
+		Limit:  uint32(limit),
 	})
 	if err != nil {
 		response.SendError(w, http.StatusInternalServerError, err.Error())
@@ -205,6 +206,8 @@ func (s *Server) getTopVotersByVp(w http.ResponseWriter, r *http.Request) {
 		list[i] = convertVoterWithVpToInternal(voter)
 	}
 
+	response.AddPaginationHeaders(w, r, offset, limit, int(resp.Voters))
+	response.AddVpTotalHeader(w, resp.TotalAvgVp)
 	response.SendJSON(w, http.StatusOK, &list)
 }
 

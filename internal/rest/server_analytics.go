@@ -358,5 +358,6 @@ func convertMonthlyNewProposalsToInternal(pm *internalapi.ProposalsByMonth) enti
 	return entity.ProposalsByMonth{
 		PeriodStarted:  *common.NewTime(pm.PeriodStarted.AsTime()),
 		ProposalsCount: pm.ProposalsCount,
+		SpamCount:      pm.SpamCount,
 	}
 }

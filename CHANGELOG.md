@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed last activity at for me endpoint
+
 ## [0.0.64] - 2024-02-18
 
 ### Added

@@ -13,6 +13,7 @@ import (
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	authsrv "github.com/goverland-labs/inbox-web-api/internal/auth"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/profile"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/auth"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
@@ -216,4 +217,11 @@ func (s *Server) deleteMe(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) enrichProfileInfo(session authsrv.Session, p *profile.Profile) {
 	p.SubscriptionsCount = len(subscriptionsStorage.get(session.UserID))
+
+	for i := range p.LastSessions {
+		lastSession := &p.LastSessions[i]
+		if lastSession.ID == session.ID.String() {
+			lastSession.LastActivityAt = common.NewTime(time.Now())
+		}
+	}
 }

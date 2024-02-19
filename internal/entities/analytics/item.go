@@ -24,6 +24,7 @@ type ExclusiveVoters struct {
 type ProposalsByMonth struct {
 	PeriodStarted  common.Time `json:"period_started"`
 	ProposalsCount uint64      `json:"proposals_count"`
+	SpamCount      uint64      `json:"spam_count"`
 }
 
 type ProposalsCount struct {

@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Use proposals from core storage instead of feed snapshot
+
 ## [0.0.66] - 2024-02-19
 
 ### Added

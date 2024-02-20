@@ -49,7 +49,7 @@ func (s *Service) GetDao(ctx context.Context, id uuid.UUID) (*dao.DAO, error) {
 	return internal, nil
 }
 
-func (s *Service) GetDaoByIDs(ctx context.Context, ids ...uuid.UUID) ([]*dao.DAO, error) {
+func (s *Service) GetDaoByIDs(ctx context.Context, ids ...uuid.UUID) (map[uuid.UUID]*dao.DAO, error) {
 	hits, missed := s.cache.GetDaoByIDs(ids...)
 	if len(missed) == 0 {
 		return hits, nil
@@ -68,13 +68,12 @@ func (s *Service) GetDaoByIDs(ctx context.Context, ids ...uuid.UUID) ([]*dao.DAO
 		return nil, fmt.Errorf("get dao list: %w", err)
 	}
 
-	existIdx := len(hits)
 	for i := range resp.Items {
 		internal := ConvertCoreDaoToInternal(&resp.Items[i])
-		hits = append(hits, internal)
-	}
+		hits[internal.ID] = internal
 
-	s.cache.AddToCache(hits[existIdx:]...)
+		s.cache.AddToCache(internal)
+	}
 
 	return hits, nil
 }

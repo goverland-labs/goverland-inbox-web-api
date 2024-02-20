@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -19,6 +20,8 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/config"
 	internaldao "github.com/goverland-labs/inbox-web-api/internal/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
+	internalproposal "github.com/goverland-labs/inbox-web-api/internal/proposal"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/middlewares"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 	"github.com/goverland-labs/inbox-web-api/internal/tracking"
@@ -41,6 +44,7 @@ type Server struct {
 	userClient      inboxapi.UserClient
 
 	daoService *internaldao.Service
+	prService  *internalproposal.Service
 	publisher  *communicate.Publisher
 
 	siweTTL time.Duration
@@ -59,6 +63,8 @@ func NewServer(
 	pb *communicate.Publisher,
 	siweTTL time.Duration,
 ) *Server {
+	ds := internaldao.NewService(internaldao.NewCache(), cl)
+	ps := internalproposal.NewService(internalproposal.NewCache(), cl, ds)
 	srv := &Server{
 		authService:     authService,
 		coreclient:      cl,
@@ -67,7 +73,8 @@ func NewServer(
 		feedClient:      feedClient,
 		analyticsClient: analyticsClient,
 		userClient:      userClient,
-		daoService:      internaldao.NewService(internaldao.NewCache(), cl),
+		daoService:      ds,
+		prService:       ps,
 		publisher:       pb,
 		siweTTL:         siweTTL,
 	}
@@ -153,22 +160,28 @@ func (s *Server) GetHTTPServer() *http.Server {
 	return s.httpServer
 }
 
-func (s *Server) fetchDAOsByIds(ctx context.Context, daoIds []string) (map[string]*dao.DAO, error) {
-	daolist, err := s.daoService.GetDaoList(ctx, dao.DaoListRequest{
-		IDs:   daoIds,
-		Limit: len(daoIds),
-	})
+func (s *Server) fetchDAOsByIds(ctx context.Context, daoIds []uuid.UUID) (map[uuid.UUID]*dao.DAO, error) {
+	list, err := s.daoService.GetDaoByIDs(ctx, daoIds...)
+	if err != nil {
+		return nil, fmt.Errorf("daoService.GetDaoByIDs: %w", err)
+	}
+
+	return list, nil
+}
+func (s *Server) fetchProposalsByIds(ctx context.Context, ids []string) (map[string]*proposal.Proposal, error) {
+	resp, err := s.prService.GetList(ctx, ids...)
 	if err != nil {
 		log.Error().Err(err).Msg("get dao list by IDs")
+
 		return nil, err
 	}
 
-	daos := make(map[string]*dao.DAO)
-	for _, info := range daolist.Items {
-		daos[info.ID.String()] = info
+	list := make(map[string]*proposal.Proposal)
+	for _, info := range resp {
+		list[info.ID] = info
 	}
 
-	return daos, nil
+	return list, nil
 }
 
 func configureCorsHandler(router *mux.Router) http.Handler {

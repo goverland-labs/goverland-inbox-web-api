@@ -3,22 +3,20 @@ package rest
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	coredao "github.com/goverland-labs/core-web-sdk/dao"
 	coreproposal "github.com/goverland-labs/core-web-sdk/proposal"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
-	internaldao "github.com/goverland-labs/inbox-web-api/internal/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/feed"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
 	"github.com/goverland-labs/inbox-web-api/internal/helpers"
@@ -55,17 +53,22 @@ func (s *Server) getFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	feedList := resp.GetList()
-	daoIds := make([]string, 0, len(feedList))
+	daoIds := make([]uuid.UUID, 0, len(feedList))
+	proposalIds := make([]string, 0, len(feedList))
 	for _, info := range feedList {
-		daoIds = append(daoIds, info.DaoId)
+		daoIds = append(daoIds, uuid.MustParse(info.DaoId))
+		if info.ProposalId != nil {
+			proposalIds = append(proposalIds, *info.ProposalId)
+		}
 	}
-	daos, err := s.fetchDAOsByIds(r.Context(), daoIds)
+
+	pl, err := s.fetchProposalsByIds(r.Context(), proposalIds)
 	if err != nil {
 		response.SendError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	list := helpers.WrapFeedItemsIpfsLinks(s.convertInboxFeedListToInternal(r.Context(), session, feedList, daos))
+	list := helpers.WrapFeedItemsIpfsLinks(s.convertInboxFeedListToInternal(r.Context(), session, feedList, pl))
 	totalCount := int(resp.GetTotalCount())
 
 	log.Info().
@@ -269,46 +272,51 @@ func (s *Server) markAsUnreadBatch(w http.ResponseWriter, r *http.Request) {
 	response.SendEmpty(w, http.StatusOK)
 }
 
-func (s *Server) convertInboxFeedListToInternal(ctx context.Context, session auth.Session, list []*inboxapi.FeedItem, daos map[string]*dao.DAO) []feed.Item {
+func (s *Server) convertInboxFeedListToInternal(
+	ctx context.Context,
+	session auth.Session,
+	list []*inboxapi.FeedItem,
+	pr map[string]*proposal.Proposal,
+) []feed.Item {
 	converted := make([]feed.Item, 0, len(list))
-
 	for _, item := range list {
-		converted = append(converted, s.convertInboxFeedItemToInternal(ctx, session, item, daos[item.DaoId]))
+		data, err := s.convertInboxFeedItemToInternal(ctx, session, item, pr)
+		if err != nil {
+			continue
+		}
+
+		converted = append(converted, data)
 	}
 
 	return converted
 }
 
-func (s *Server) convertInboxFeedItemToInternal(ctx context.Context, session auth.Session, item *inboxapi.FeedItem, d *dao.DAO) feed.Item {
-	var daoItem *dao.DAO
-	var proposalItem *proposal.Proposal
-
-	switch item.Type {
-	case "dao":
-		var daoSnapshot *coredao.Dao
-		if err := json.Unmarshal(item.GetSnapshot(), &daoSnapshot); err != nil {
-			log.Error().Err(err).Str("feed_id", item.GetId()).Msg("unable to unmarshal dao snapshot")
-		}
-
-		daoItem = helpers.WrapDAOIpfsLinks(internaldao.ConvertCoreDaoToInternal(daoSnapshot))
-	case "proposal":
-		var proposalSnapshot *coreproposal.Proposal
-		if err := json.Unmarshal(item.GetSnapshot(), &proposalSnapshot); err != nil {
-			log.Error().Err(err).Str("feed_id", item.GetId()).Msg("unable to unmarshal proposal snapshot")
-		}
-		pr := convertProposalToInternal(proposalSnapshot, d)
-		pr = s.enrichProposalVotesInfo(ctx, session, pr)
-		proposalItem = helpers.Ptr(helpers.WrapProposalIpfsLinks(pr))
+func (s *Server) convertInboxFeedItemToInternal(
+	ctx context.Context,
+	session auth.Session,
+	item *inboxapi.FeedItem,
+	pr map[string]*proposal.Proposal,
+) (feed.Item, error) {
+	if item.GetType() != "proposal" {
+		return feed.Item{}, errors.New("invalid type")
 	}
+
+	var proposalItem *proposal.Proposal
+	if item.ProposalId == nil {
+		return feed.Item{}, errors.New("empty proposal id")
+	}
+
+	details, ok := pr[*item.ProposalId]
+	if !ok {
+		return feed.Item{}, errors.New("no proposal found")
+	}
+
+	enriched := s.enrichProposalVotesInfo(ctx, session, *details)
+	proposalItem = helpers.Ptr(helpers.WrapProposalIpfsLinks(enriched))
 
 	feedID, err := uuid.Parse(item.GetId())
 	if err != nil {
 		log.Error().Err(err).Str("id", item.GetId()).Msg("unable to parse feed id")
-	}
-
-	daoID, err := uuid.Parse(item.GetDaoId())
-	if err != nil {
-		log.Error().Err(err).Str("id", item.GetDaoId()).Msg("unable to parse feed dao id")
 	}
 
 	var readAt *common.Time
@@ -331,14 +339,13 @@ func (s *Server) convertInboxFeedItemToInternal(ctx context.Context, session aut
 		UpdatedAt:    *common.NewTime(item.UpdatedAt.AsTime()),
 		ReadAt:       readAt,
 		ArchivedAt:   archivedAt,
-		DaoID:        daoID,
+		DaoID:        proposalItem.DAO.ID,
 		ProposalID:   item.GetProposalId(),
 		DiscussionID: item.GetDiscussionId(),
 		Type:         item.GetType(),
 		Action:       item.GetAction(),
-		DAO:          daoItem,
 		Proposal:     proposalItem,
-	}
+	}, nil
 }
 
 func convertFeedTimelineToProposal(src json.RawMessage) []proposal.Timeline {

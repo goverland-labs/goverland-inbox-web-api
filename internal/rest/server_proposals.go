@@ -31,7 +31,7 @@ func (s *Server) getProposal(w http.ResponseWriter, r *http.Request) {
 	session, _ := appctx.ExtractUserSession(r.Context())
 	id := mux.Vars(r)["id"]
 
-	pr, err := s.coreclient.GetProposal(r.Context(), id)
+	pr, err := s.prService.GetByID(r.Context(), id)
 	if err != nil && errors.Is(err, coresdk.ErrNotFound) {
 		response.SendEmpty(w, http.StatusNotFound)
 		return
@@ -44,17 +44,7 @@ func (s *Server) getProposal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	di, err := s.daoService.GetDao(r.Context(), pr.DaoID)
-	if err != nil {
-		log.Error().Err(err).Msgf("get dao by id: %s", pr.DaoID)
-
-		response.SendEmpty(w, http.StatusInternalServerError)
-		return
-	}
-
-	item := convertProposalToInternal(pr, di)
-
-	item = enrichProposalSubscriptionInfo(session, item)
+	item := enrichProposalSubscriptionInfo(session, *pr)
 	item = s.enrichProposalVotesInfo(r.Context(), session, item)
 	item = helpers.WrapProposalIpfsLinks(item)
 
@@ -348,6 +338,7 @@ func (h *Server) vote(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &successfulVote)
 }
 
+// todo: remove it when moved to proposal service
 func convertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) proposal.Proposal {
 	alias := pr.Author
 	var ensName *string

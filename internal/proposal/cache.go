@@ -1,22 +1,20 @@
-package dao
+package proposal
 
 import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
-
-	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
 )
 
 const (
-	daoCacheItemTTL    = 15 * time.Minute
-	cleanCacheInterval = 5 * time.Minute
+	proposalCacheItemTTL = 15 * time.Minute
+	cleanCacheInterval   = 5 * time.Minute
 )
 
 type cachedItem struct {
 	expiresAt time.Time
-	value     *dao.DAO
+	value     *proposal.Proposal
 }
 
 func (i cachedItem) expired() bool {
@@ -25,7 +23,7 @@ func (i cachedItem) expired() bool {
 
 type Cache struct {
 	mu    sync.RWMutex
-	cache map[uuid.UUID]cachedItem
+	cache map[string]cachedItem
 }
 
 func (r *Cache) clean() {
@@ -43,7 +41,7 @@ func (r *Cache) clean() {
 
 func NewCache() *Cache {
 	repo := &Cache{
-		cache: make(map[uuid.UUID]cachedItem),
+		cache: make(map[string]cachedItem),
 	}
 
 	go func() {
@@ -57,14 +55,14 @@ func NewCache() *Cache {
 	return repo
 }
 
-func (r *Cache) GetDaoByIDs(ids ...uuid.UUID) (map[uuid.UUID]*dao.DAO, []uuid.UUID) {
-	hits := make(map[uuid.UUID]*dao.DAO, len(ids))
-	missed := make([]uuid.UUID, 0, len(ids))
+func (r *Cache) GetProposalsByIDs(ids ...string) ([]*proposal.Proposal, []string) {
+	hits := make([]*proposal.Proposal, 0, len(ids))
+	missed := make([]string, 0, len(ids))
 	r.mu.RLock()
 	for _, id := range ids {
 		item, ok := r.cache[id]
 		if ok && !item.expired() {
-			hits[item.value.ID] = item.value
+			hits = append(hits, item.value)
 		} else {
 			missed = append(missed, id)
 		}
@@ -74,11 +72,11 @@ func (r *Cache) GetDaoByIDs(ids ...uuid.UUID) (map[uuid.UUID]*dao.DAO, []uuid.UU
 	return hits, missed
 }
 
-func (r *Cache) AddToCache(list ...*dao.DAO) {
+func (r *Cache) AddToCache(list ...*proposal.Proposal) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	expiresAt := time.Now().Add(daoCacheItemTTL)
+	expiresAt := time.Now().Add(proposalCacheItemTTL)
 	for i := range list {
 		ci := cachedItem{
 			expiresAt: expiresAt,
@@ -88,7 +86,7 @@ func (r *Cache) AddToCache(list ...*dao.DAO) {
 	}
 }
 
-func (r *Cache) GetByID(id uuid.UUID) (*dao.DAO, bool) {
+func (r *Cache) GetByID(id string) (*proposal.Proposal, bool) {
 	r.mu.RLock()
 	item, ok := r.cache[id]
 	r.mu.RUnlock()

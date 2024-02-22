@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Dao feed caching
+
 ## [0.0.67] - 2024-02-22
 
 ### Changed

@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	proposalCacheItemTTL = 15 * time.Minute
-	cleanCacheInterval   = 5 * time.Minute
+	proposalCacheItemTTL = 5 * time.Minute
+	cleanCacheInterval   = 1 * time.Minute
 )
 
 type cachedItem struct {

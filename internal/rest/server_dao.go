@@ -2,7 +2,6 @@ package rest
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -10,16 +9,13 @@ import (
 	"github.com/gorilla/mux"
 
 	coresdk "github.com/goverland-labs/core-web-sdk"
-	coredao "github.com/goverland-labs/core-web-sdk/dao"
 	corefeed "github.com/goverland-labs/core-web-sdk/feed"
-	coreproposal "github.com/goverland-labs/core-web-sdk/proposal"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
-	internaldao "github.com/goverland-labs/inbox-web-api/internal/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/feed"
@@ -160,20 +156,12 @@ func (s *Server) getDAOFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	daoIDs := make([]string, 0, len(resp.Items))
+	daoIDs := make([]uuid.UUID, 0, len(resp.Items))
 	for _, info := range resp.Items {
-		id := info.DaoID.String()
-		if slices.Contains(daoIDs, id) {
-			continue
-		}
-
-		daoIDs = append(daoIDs, id)
+		daoIDs = append(daoIDs, info.DaoID)
 	}
 
-	daoList, err := s.daoService.GetDaoList(r.Context(), dao.DaoListRequest{
-		IDs:   daoIDs,
-		Limit: len(daoIDs),
-	})
+	daoList, err := s.daoService.GetDaoByIDs(r.Context(), daoIDs...)
 	if err != nil {
 		log.Error().Err(err).Msg("get dao list by IDs")
 
@@ -181,14 +169,20 @@ func (s *Server) getDAOFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	daos := make(map[uuid.UUID]*dao.DAO)
-	for _, info := range daoList.Items {
-		daos[info.ID] = info
+	ids := make([]string, 0, len(resp.Items))
+	for _, info := range resp.Items {
+		ids = append(ids, info.ProposalID)
+	}
+
+	pl, err := s.fetchProposalsByIds(r.Context(), ids)
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	list := make([]feed.Item, len(resp.Items))
 	for i, info := range resp.Items {
-		list[i] = s.convertFeedToInternal(r.Context(), session, &info, daos[info.DaoID])
+		list[i] = s.convertFeedToInternal(r.Context(), session, &info, pl[info.ProposalID], daoList[info.DaoID])
 	}
 
 	log.Info().
@@ -276,30 +270,18 @@ func enrichSubscriptionInfo(session auth.Session, list []*dao.DAO) []*dao.DAO {
 	return list
 }
 
-func (s *Server) convertFeedToInternal(ctx context.Context, session auth.Session, fi *corefeed.Item, d *dao.DAO) feed.Item {
-	var daoItem *dao.DAO
-	var proposalItem *proposal.Proposal
-
-	switch fi.Type {
-	case "dao":
-		var daoSnapshot *coredao.Dao
-		if err := json.Unmarshal(fi.Snapshot, &daoSnapshot); err != nil {
-			log.Error().Err(err).Str("feed_id", fi.ID.String()).Msg("unable to unmarshal dao snapshot")
-		}
-
-		daoItem = helpers.WrapDAOIpfsLinks(internaldao.ConvertCoreDaoToInternal(daoSnapshot))
-	case "proposal":
-		var proposalSnapshot *coreproposal.Proposal
-		if err := json.Unmarshal(fi.Snapshot, &proposalSnapshot); err != nil {
-			log.Error().Err(err).Str("feed_id", fi.ID.String()).Msg("unable to unmarshal proposal snapshot")
-		}
-		pr := convertProposalToInternal(proposalSnapshot, d)
-		pr = s.enrichProposalVotesInfo(ctx, session, pr)
-		proposalItem = helpers.Ptr(helpers.WrapProposalIpfsLinks(pr))
-	}
-
-	if proposalItem != nil {
-		proposalItem.Timeline = convertFeedTimelineToProposal(fi.Timeline)
+func (s *Server) convertFeedToInternal(
+	ctx context.Context,
+	session auth.Session,
+	fi *corefeed.Item,
+	pi *proposal.Proposal,
+	d *dao.DAO,
+) feed.Item {
+	var pr proposal.Proposal
+	if pi != nil {
+		pr = s.enrichProposalVotesInfo(ctx, session, *pi)
+		pr = helpers.WrapProposalIpfsLinks(pr)
+		pr.Timeline = convertFeedTimelineToProposal(fi.Timeline)
 	}
 
 	return feed.Item{
@@ -311,7 +293,7 @@ func (s *Server) convertFeedToInternal(ctx context.Context, session auth.Session
 		DiscussionID: fi.DiscussionID,
 		Type:         fi.Type,
 		Action:       fi.Action,
-		DAO:          daoItem,
-		Proposal:     proposalItem,
+		DAO:          helpers.WrapDAOIpfsLinks(d),
+		Proposal:     &pr,
 	}
 }

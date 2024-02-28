@@ -11,12 +11,12 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
 	coresdk "github.com/goverland-labs/core-web-sdk"
+	"github.com/goverland-labs/goverland-platform-events/pkg/natsclient"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	resthelpers "github.com/goverland-labs/lib-rest-helpers"
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
-	"github.com/goverland-labs/inbox-web-api/internal/communicate"
 	"github.com/goverland-labs/inbox-web-api/internal/config"
 	internaldao "github.com/goverland-labs/inbox-web-api/internal/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
@@ -45,7 +45,7 @@ type Server struct {
 
 	daoService *internaldao.Service
 	prService  *internalproposal.Service
-	publisher  *communicate.Publisher
+	publisher  *natsclient.Publisher
 
 	siweTTL time.Duration
 }
@@ -60,7 +60,7 @@ func NewServer(
 	analyticsClient internalapi.AnalyticsClient,
 	userClient inboxapi.UserClient,
 	userActivityService *tracking.UserActivityService,
-	pb *communicate.Publisher,
+	pb *natsclient.Publisher,
 	siweTTL time.Duration,
 ) *Server {
 	ds := internaldao.NewService(internaldao.NewCache(), cl)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
 	coresdk "github.com/goverland-labs/core-web-sdk"
+	"github.com/goverland-labs/goverland-platform-events/pkg/natsclient"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/nats-io/nats.go"
 	"github.com/s-larionov/process-manager"
@@ -15,7 +16,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
-	"github.com/goverland-labs/inbox-web-api/internal/communicate"
 	"github.com/goverland-labs/inbox-web-api/internal/config"
 	"github.com/goverland-labs/inbox-web-api/internal/rest"
 	"github.com/goverland-labs/inbox-web-api/internal/tracking"
@@ -29,7 +29,7 @@ type Application struct {
 	cfg     config.App
 
 	feedClient inboxapi.FeedClient
-	pb         *communicate.Publisher
+	pb         *natsclient.Publisher
 }
 
 func NewApplication(cfg config.App) (*Application, error) {
@@ -88,7 +88,7 @@ func (a *Application) initServices() error {
 		return err
 	}
 
-	pb, err := communicate.NewPublisher(nc)
+	pb, err := natsclient.NewPublisher(nc)
 	if err != nil {
 		return err
 	}

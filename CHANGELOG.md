@@ -9,6 +9,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 - Dao feed caching
+- Nats metrics
 
 ## [0.0.67] - 2024-02-22
 

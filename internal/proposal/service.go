@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	coresdk "github.com/goverland-labs/core-web-sdk"
-	coreproposal "github.com/goverland-labs/core-web-sdk/proposal"
+	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
+	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"

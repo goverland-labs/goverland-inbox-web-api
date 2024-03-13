@@ -33,9 +33,9 @@ type ProposalsCount struct {
 }
 
 type VoterWithVp struct {
-	Voter      string  `json:"voter"`
-	VpAvg      float32 `json:"vp_avg"`
-	VotesCount uint32  `json:"votes_count"`
+	Voter      common.User `json:"voter"`
+	VpAvg      float32     `json:"vp_avg"`
+	VotesCount uint32      `json:"votes_count"`
 }
 
 type MutualDao struct {

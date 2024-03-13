@@ -3,7 +3,7 @@ package dao
 import (
 	"time"
 
-	coredao "github.com/goverland-labs/core-web-sdk/dao"
+	coredao "github.com/goverland-labs/goverland-core-sdk-go/dao"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"

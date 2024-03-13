@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	coreproposal "github.com/goverland-labs/core-web-sdk/proposal"
+	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/timestamppb"

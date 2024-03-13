@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
+	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
@@ -203,8 +204,19 @@ func (s *Server) getTopVotersByVp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	list := make([]entity.VoterWithVp, len(resp.VoterWithVp))
+	addresses := make([]string, 0)
+	for _, info := range resp.VoterWithVp {
+		addresses = append(addresses, info.Voter)
+	}
+	enslist, err := s.coreclient.GetEnsNames(r.Context(), coresdk.GetEnsNamesRequest{
+		Addresses: addresses,
+	})
+	ensNames := make(map[string]string)
+	for _, info := range enslist.EnsNames {
+		ensNames[info.Address] = info.Name
+	}
 	for i, voter := range resp.VoterWithVp {
-		list[i] = convertVoterWithVpToInternal(voter)
+		list[i] = convertVoterWithVpToInternal(voter, ensNames[voter.Voter])
 	}
 
 	response.AddPaginationHeaders(w, r, offset, limit, int(resp.Voters))
@@ -337,9 +349,19 @@ func convertVoterBucketToInternal(vg *internalapi.VoterGroup) entity.VoterBucket
 	}
 }
 
-func convertVoterWithVpToInternal(vv *internalapi.VoterWithVp) entity.VoterWithVp {
+func convertVoterWithVpToInternal(vv *internalapi.VoterWithVp, name string) entity.VoterWithVp {
+	alias := vv.Voter
+	var ensName *string
+	if name != "" {
+		ensName = helpers.Ptr(name)
+		alias = name
+	}
 	return entity.VoterWithVp{
-		Voter:      vv.Voter,
+		Voter: common.User{
+			Address:      common.UserAddress(vv.Voter),
+			ResolvedName: ensName,
+			Avatars:      common.GenerateProfileAvatars(alias),
+		},
 		VpAvg:      vv.VpAvg,
 		VotesCount: vv.VotesCount,
 	}

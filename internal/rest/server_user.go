@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	coresdk "github.com/goverland-labs/core-web-sdk"
+	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 

@@ -7,6 +7,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.69] - 2024-03-13
+
+### Added
+- User field for top voter endpoint
+
+### Changed
+- core-web-sdk dependency name
+
 ## [0.0.68] - 2024-03-06
 
 ### Added

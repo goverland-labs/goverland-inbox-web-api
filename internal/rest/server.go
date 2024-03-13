@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
-	coresdk "github.com/goverland-labs/core-web-sdk"
+	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	"github.com/goverland-labs/goverland-platform-events/pkg/natsclient"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	resthelpers "github.com/goverland-labs/lib-rest-helpers"

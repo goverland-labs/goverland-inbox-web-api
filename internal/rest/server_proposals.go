@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	coresdk "github.com/goverland-labs/core-web-sdk"
-	coreproposal "github.com/goverland-labs/core-web-sdk/proposal"
+	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
+	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"

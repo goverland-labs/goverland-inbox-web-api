@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	coresdk "github.com/goverland-labs/core-web-sdk"
-	coredao "github.com/goverland-labs/core-web-sdk/dao"
-	corefeed "github.com/goverland-labs/core-web-sdk/feed"
+	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
+	coredao "github.com/goverland-labs/goverland-core-sdk-go/dao"
+	corefeed "github.com/goverland-labs/goverland-core-sdk-go/feed"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"

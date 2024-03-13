@@ -1,7 +1,7 @@
 package proposal
 
 import (
-	coreproposal "github.com/goverland-labs/core-web-sdk/proposal"
+	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 )

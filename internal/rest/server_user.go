@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
@@ -231,4 +234,56 @@ func (s *Server) getUserAddress(session auth.Session) (address string, exist boo
 		return "", false
 	}
 	return ad, true
+}
+
+func (s *Server) getRecommendedDao(w http.ResponseWriter, r *http.Request) {
+	session, ok := appctx.ExtractUserSession(r.Context())
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+
+		return
+	}
+
+	available, err := s.userClient.GetAvailableDaoByWallet(r.Context(), &inboxapi.GetAvailableDaoByWalletRequest{
+		UserId: session.UserID.String(),
+	})
+	if err != nil {
+		switch status.Code(err) {
+		case codes.InvalidArgument, codes.FailedPrecondition:
+			response.SendError(w, http.StatusBadRequest, err.Error())
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			response.SendError(w, http.StatusInternalServerError, err.Error())
+		}
+
+		return
+	}
+
+	daoIDs := make([]uuid.UUID, 0, len(available.DaoUuids))
+	for i := range available.DaoUuids {
+		daoIDs = append(daoIDs, uuid.MustParse(available.DaoUuids[i]))
+	}
+
+	daoList, err := s.daoService.GetDaoByIDs(r.Context(), daoIDs...)
+	if err != nil {
+		log.Error().Err(err).Msg("get dao list by IDs")
+
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	list := make([]*internaldao.DAO, 0, len(daoList))
+	for _, di := range daoList {
+		list = append(list, di)
+	}
+
+	list = helpers.WrapDAOsIpfsLinks(list)
+	list = enrichSubscriptionInfo(session, list)
+
+	log.Info().
+		Str("route", mux.CurrentRoute(r).GetName()).
+		Int("count", len(list)).
+		Msg("route execution")
+
+	response.SendJSON(w, http.StatusOK, &list)
 }

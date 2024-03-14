@@ -8,6 +8,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- Recommended DAO endpoint
+
+## [0.0.71] - 2024-03-15
+
+### Added
 - Featured proposals endpoint
 
 ## [0.0.70] - 2024-03-15

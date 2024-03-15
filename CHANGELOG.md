@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.70] - 2024-03-15
+
+### Added
+- Total Vp for proposal votes
+
 ## [0.0.69] - 2024-03-13
 
 ### Added

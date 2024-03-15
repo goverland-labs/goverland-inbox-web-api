@@ -9,7 +9,8 @@ import (
 const (
 	HeaderTotalCount   = "X-Total-Count"
 	HeaderUnreadCount  = "X-Unread-Count"
-	HeaderVpTotal      = "X-Total-Avg-Vp"
+	HeaderTotalAvgVp   = "X-Total-Avg-Vp"
+	HeaderTotalVp      = "X-Total-Vp"
 	HeaderOffset       = "X-Offset"
 	HeaderLimit        = "X-Limit"
 	HeaderPrevPageLink = "X-Prev-Page"
@@ -39,8 +40,12 @@ func AddUnreadHeader(w http.ResponseWriter, count int) {
 	w.Header().Set(HeaderUnreadCount, fmt.Sprintf("%d", count))
 }
 
+func AddAvgVpTotalHeader(w http.ResponseWriter, total float32) {
+	w.Header().Set(HeaderTotalAvgVp, fmt.Sprintf("%f", total))
+}
+
 func AddVpTotalHeader(w http.ResponseWriter, total float32) {
-	w.Header().Set(HeaderVpTotal, fmt.Sprintf("%f", total))
+	w.Header().Set(HeaderTotalVp, fmt.Sprintf("%f", total))
 }
 
 func AddTotalCounterHeaders(w http.ResponseWriter, totalCnt int) {

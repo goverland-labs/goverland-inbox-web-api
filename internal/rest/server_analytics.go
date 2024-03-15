@@ -220,7 +220,7 @@ func (s *Server) getTopVotersByVp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.AddPaginationHeaders(w, r, offset, limit, int(resp.Voters))
-	response.AddVpTotalHeader(w, resp.TotalAvgVp)
+	response.AddAvgVpTotalHeader(w, resp.TotalAvgVp)
 	response.SendJSON(w, http.StatusOK, &list)
 }
 

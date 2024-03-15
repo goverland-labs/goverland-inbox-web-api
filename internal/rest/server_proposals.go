@@ -92,6 +92,7 @@ func (s *Server) getProposalVotes(w http.ResponseWriter, r *http.Request) {
 		Msg("route execution")
 
 	response.AddPaginationHeaders(w, r, offset, limit, resp.TotalCnt)
+	response.AddVpTotalHeader(w, resp.TotalVp)
 	response.SendJSON(w, http.StatusOK, &list)
 }
 

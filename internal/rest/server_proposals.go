@@ -13,6 +13,7 @@ import (
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
@@ -111,12 +112,26 @@ func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var proposalIds []string
+	if f.Featured {
+		featuredProposals, err := s.ibxProposalClient.GetFeaturedProposals(r.Context(), &emptypb.Empty{})
+		if err != nil {
+			log.Error().Err(err).Msg("get featured proposals")
+			response.SendError(w, http.StatusBadRequest, err.Error())
+
+			return
+		}
+
+		proposalIds = featuredProposals.ProposalIds
+	}
+
 	resp, err := s.coreclient.GetProposalList(r.Context(), coresdk.GetProposalListRequest{
-		Offset:   offset,
-		Limit:    limit,
-		Dao:      f.DAO,
-		Category: string(f.Category),
-		Title:    f.Query,
+		Offset:      offset,
+		Limit:       limit,
+		Dao:         f.DAO,
+		Category:    string(f.Category),
+		Title:       f.Query,
+		ProposalIDs: proposalIds,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("get proposal list")

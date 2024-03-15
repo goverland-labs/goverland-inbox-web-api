@@ -115,6 +115,7 @@ func (a *Application) initRESTWorker() error {
 	}
 
 	ic := inboxapi.NewUserClient(strageConn)
+	pc := inboxapi.NewProposalClient(strageConn)
 	sc := inboxapi.NewSubscriptionClient(strageConn)
 	settings := inboxapi.NewSettingsClient(strageConn)
 	cs := coresdk.NewClient(a.cfg.Core.CoreURL)
@@ -127,7 +128,7 @@ func (a *Application) initRESTWorker() error {
 	uas := tracking.NewUserActivityService(ic)
 	a.manager.AddWorker(process.NewCallbackWorker("user-activity", uas.Start))
 
-	srv := rest.NewServer(a.cfg.REST, authService, cs, sc, settings, a.feedClient, ac, ic, uas, a.pb, a.cfg.SiweTTL)
+	srv := rest.NewServer(a.cfg.REST, authService, cs, sc, settings, a.feedClient, ac, ic, pc, uas, a.pb, a.cfg.SiweTTL)
 	a.manager.AddWorker(process.NewServerWorker("rest", srv.GetHTTPServer()))
 
 	return nil

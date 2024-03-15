@@ -2,6 +2,7 @@ package proposals
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
@@ -12,12 +13,14 @@ type ListRequest struct {
 	DAO      string
 	Category string
 	Query    string
+	Featured string
 }
 
 type ListForm struct {
 	DAO      string
 	Query    string
 	Category common.Category
+	Featured bool
 	Limit    int
 	Offset   int
 }
@@ -31,12 +34,14 @@ func (f *ListForm) ParseAndValidate(r *http.Request) (*ListForm, response.Error)
 		DAO:      r.URL.Query().Get("dao"),
 		Category: r.URL.Query().Get("category"),
 		Query:    r.URL.Query().Get("query"),
+		Featured: r.URL.Query().Get("featured"),
 	}
 
 	errors := make(map[string]response.ErrorMessage)
 	f.validateAndSetQuery(req, errors)
 	f.validateAndSetCategory(req, errors)
 	f.validateAndSetDAOs(req, errors)
+	f.validateAndSetFeatured(req, errors)
 
 	if len(errors) > 0 {
 		return nil, response.NewValidationError(errors)
@@ -70,4 +75,20 @@ func (f *ListForm) validateAndSetDAOs(req *ListRequest, errors map[string]respon
 	}
 
 	f.DAO = daosRAW
+}
+
+func (f *ListForm) validateAndSetFeatured(req *ListRequest, errors map[string]response.ErrorMessage) {
+	if req.Featured == "" {
+		return
+	}
+
+	featured, err := strconv.ParseBool(req.Featured)
+	if err != nil {
+		errors["featured"] = response.ErrorMessage{
+			Message: "invalid value",
+		}
+		return
+	}
+
+	f.Featured = featured
 }

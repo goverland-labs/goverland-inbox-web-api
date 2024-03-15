@@ -34,14 +34,15 @@ type AuthStorage interface {
 }
 
 type Server struct {
-	httpServer      *http.Server
-	authService     *auth.Service
-	coreclient      *coresdk.Client
-	subclient       inboxapi.SubscriptionClient
-	settings        inboxapi.SettingsClient
-	feedClient      inboxapi.FeedClient
-	analyticsClient internalapi.AnalyticsClient
-	userClient      inboxapi.UserClient
+	httpServer        *http.Server
+	authService       *auth.Service
+	coreclient        *coresdk.Client
+	subclient         inboxapi.SubscriptionClient
+	settings          inboxapi.SettingsClient
+	feedClient        inboxapi.FeedClient
+	analyticsClient   internalapi.AnalyticsClient
+	userClient        inboxapi.UserClient
+	ibxProposalClient inboxapi.ProposalClient
 
 	daoService *internaldao.Service
 	prService  *internalproposal.Service
@@ -59,6 +60,7 @@ func NewServer(
 	feedClient inboxapi.FeedClient,
 	analyticsClient internalapi.AnalyticsClient,
 	userClient inboxapi.UserClient,
+	ibxProposalClient inboxapi.ProposalClient,
 	userActivityService *tracking.UserActivityService,
 	pb *natsclient.Publisher,
 	siweTTL time.Duration,
@@ -66,17 +68,18 @@ func NewServer(
 	ds := internaldao.NewService(internaldao.NewCache(), cl)
 	ps := internalproposal.NewService(internalproposal.NewCache(), cl, ds)
 	srv := &Server{
-		authService:     authService,
-		coreclient:      cl,
-		subclient:       sc,
-		settings:        settings,
-		feedClient:      feedClient,
-		analyticsClient: analyticsClient,
-		userClient:      userClient,
-		daoService:      ds,
-		prService:       ps,
-		publisher:       pb,
-		siweTTL:         siweTTL,
+		authService:       authService,
+		coreclient:        cl,
+		subclient:         sc,
+		settings:          settings,
+		feedClient:        feedClient,
+		analyticsClient:   analyticsClient,
+		userClient:        userClient,
+		ibxProposalClient: ibxProposalClient,
+		daoService:        ds,
+		prService:         ps,
+		publisher:         pb,
+		siweTTL:           siweTTL,
 	}
 
 	handler := mux.NewRouter()

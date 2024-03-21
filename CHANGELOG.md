@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.72] - 2024-03-21
+
 ### Added
 - Recommended DAO endpoint
 

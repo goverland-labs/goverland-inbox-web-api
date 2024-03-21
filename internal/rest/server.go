@@ -144,6 +144,8 @@ func NewServer(
 	handler.HandleFunc("/notifications/settings", srv.tokenExists).Methods(http.MethodGet).Name("push_token_exists")
 	handler.HandleFunc("/notifications/settings", srv.removePushToken).Methods(http.MethodDelete).Name("remove_push_token")
 
+	handler.HandleFunc("/stats/totals", srv.getStatsTotals).Methods(http.MethodGet).Name("get_stats_totals")
+
 	handler.HandleFunc("/analytics/monthly-active-users/{id}", srv.getMonthlyActiveUsers).Methods(http.MethodGet).Name("monthly_active_user")
 	handler.HandleFunc("/analytics/voter-buckets/{id}", srv.getVoterBuckets).Methods(http.MethodGet).Name("voter_buckets")
 	handler.HandleFunc("/analytics/voter-buckets-groups/{id}", srv.getVoterBucketsV2).Methods(http.MethodGet).Name("voter_buckets_v2")

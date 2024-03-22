@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.73] - 2024-03-22
+
 ### Fixed
 - Fixed empty result for featured proposals
 

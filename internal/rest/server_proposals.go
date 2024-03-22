@@ -122,6 +122,13 @@ func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if len(featuredProposals.ProposalIds) == 0 {
+			response.AddPaginationHeaders(w, r, offset, limit, 0)
+			response.SendJSON(w, http.StatusOK, &[]proposal.Proposal{})
+
+			return
+		}
+
 		proposalIds = featuredProposals.ProposalIds
 	}
 

@@ -1,7 +1,9 @@
 package rest
 
 import (
+	"context"
 	"fmt"
+	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -20,6 +22,24 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/rest/request"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 )
+
+func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
+	address := mux.Vars(r)["address"]
+	user, err := s.authService.GetUserInfo(address)
+	if err != nil {
+		log.Error().Err(err).Msg("get public profile info")
+		response.SendEmpty(w, http.StatusInternalServerError)
+
+		return
+	}
+
+	log.Info().
+		Str("route", mux.CurrentRoute(r).GetName()).
+		Str("address", address).
+		Msg("route execution")
+
+	response.SendJSON(w, http.StatusOK, &user)
+}
 
 func (s *Server) getUserVotes(w http.ResponseWriter, r *http.Request) {
 	offset, limit, err := request.ExtractPagination(r)
@@ -46,58 +66,11 @@ func (s *Server) getUserVotes(w http.ResponseWriter, r *http.Request) {
 		}
 		proposalWithVotes = make([]proposal.Proposal, len(resp.Items))
 		if len(resp.Items) != 0 {
-			daoIds := make([]string, 0)
-			proposalIds := make([]string, 0)
-			for _, info := range resp.Items {
-				daoIds = append(daoIds, info.DaoID.String())
-				proposalIds = append(proposalIds, info.ProposalID)
-			}
-			daolist, err := s.daoService.GetDaoList(r.Context(), internaldao.DaoListRequest{
-				IDs:   daoIds,
-				Limit: len(daoIds),
-			})
+			userProposals, err := s.collectProposals(resp.Items, r.Context())
 			if err != nil {
-				log.Error().Err(err).Msg("get dao list by IDs")
-
 				response.SendError(w, http.StatusBadRequest, err.Error())
 				return
 			}
-			proposallist, err := s.coreclient.GetProposalList(r.Context(), coresdk.GetProposalListRequest{
-				ProposalIDs: proposalIds,
-				Limit:       len(proposalIds),
-			})
-			if err != nil {
-				log.Error().Err(err).Msg("get proposal list")
-
-				response.SendError(w, http.StatusBadRequest, err.Error())
-				return
-			}
-
-			daos := make(map[string]*internaldao.DAO)
-			for _, info := range daolist.Items {
-				daos[info.ID.String()] = info
-			}
-
-			proposals := make([]proposal.Proposal, len(proposallist.Items))
-			for i, info := range proposallist.Items {
-				di, ok := daos[info.DaoID.String()]
-				if !ok {
-					log.Error().Msg("dao not found")
-
-					response.SendError(w, http.StatusBadRequest, fmt.Sprintf("dao not found: %s", info.DaoID))
-					return
-				}
-				proposals[i] = convertProposalToInternal(&info, di)
-			}
-
-			proposals = enrichProposalsSubscriptionInfo(session, proposals)
-			proposals = helpers.WrapProposalsIpfsLinks(proposals)
-
-			userProposals := make(map[string]proposal.Proposal)
-			for _, info := range proposals {
-				userProposals[info.ID] = info
-			}
-
 			list := ConvertVoteToInternal(resp.Items)
 			for i, info := range list {
 				p, ok := userProposals[info.ProposalID]
@@ -121,6 +94,129 @@ func (s *Server) getUserVotes(w http.ResponseWriter, r *http.Request) {
 
 	response.AddPaginationHeaders(w, r, offset, limit, total)
 	response.SendJSON(w, http.StatusOK, &proposalWithVotes)
+}
+
+func (s *Server) getPublicUserVotes(w http.ResponseWriter, r *http.Request) {
+	offset, limit, err := request.ExtractPagination(r)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	address := mux.Vars(r)["address"]
+	resp, err := s.coreclient.GetUserVotes(r.Context(), address, coresdk.GetUserVotesRequest{
+		Offset: offset,
+		Limit:  limit,
+	})
+	if err != nil {
+		log.Error().Err(err).Msgf("get user votes by address: %s", address)
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+	proposalWithVotes := make([]proposal.Proposal, len(resp.Items))
+	if len(resp.Items) != 0 {
+		userProposals, err := s.collectProposals(resp.Items, r.Context())
+		if err != nil {
+			response.SendError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		proposalIds := make([]string, 0)
+		for _, info := range resp.Items {
+			proposalIds = append(proposalIds, info.ProposalID)
+		}
+
+		list := ConvertVoteToInternal(resp.Items)
+		session, _ := appctx.ExtractUserSession(r.Context())
+		meAddress, meAddressExists := s.getUserAddress(session)
+
+		meVotes := make(map[string]proposal.Vote)
+		if meAddressExists {
+			meResp, _ := s.coreclient.GetUserVotes(r.Context(), meAddress, coresdk.GetUserVotesRequest{
+				Limit:       limit,
+				ProposalIDs: proposalIds,
+			})
+			meList := ConvertVoteToInternal(meResp.Items)
+			for _, info := range meList {
+				meVotes[info.ProposalID] = info
+			}
+		}
+		for i, info := range list {
+			p, ok := userProposals[info.ProposalID]
+			if !ok {
+				log.Error().Msg("proposal not found")
+
+				response.SendError(w, http.StatusBadRequest, fmt.Sprintf("proposal not found: %s", info.ProposalID))
+				return
+			}
+			p.PublicUserVote = helpers.Ptr(info)
+			v, ok := meVotes[info.ProposalID]
+			if ok {
+				p.UserVote = helpers.Ptr(v)
+			}
+			proposalWithVotes[i] = p
+		}
+	}
+
+	log.Info().
+		Str("route", mux.CurrentRoute(r).GetName()).
+		Int("count", len(proposalWithVotes)).
+		Int("total", resp.TotalCnt).
+		Msg("route execution")
+
+	response.AddPaginationHeaders(w, r, offset, limit, resp.TotalCnt)
+	response.SendJSON(w, http.StatusOK, &proposalWithVotes)
+}
+
+func (s *Server) collectProposals(votes []coreproposal.Vote, ctx context.Context) (map[string]proposal.Proposal, error) {
+	daoIds := make([]string, 0)
+	proposalIds := make([]string, 0)
+	for _, info := range votes {
+		daoIds = append(daoIds, info.DaoID.String())
+		proposalIds = append(proposalIds, info.ProposalID)
+	}
+	daolist, err := s.daoService.GetDaoList(ctx, internaldao.DaoListRequest{
+		IDs:   daoIds,
+		Limit: len(daoIds),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get dao list by IDs")
+
+		return nil, err
+	}
+	proposallist, err := s.coreclient.GetProposalList(ctx, coresdk.GetProposalListRequest{
+		ProposalIDs: proposalIds,
+		Limit:       len(proposalIds),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get proposal list")
+
+		return nil, err
+	}
+
+	daos := make(map[string]*internaldao.DAO)
+	for _, info := range daolist.Items {
+		daos[info.ID.String()] = info
+	}
+
+	proposals := make([]proposal.Proposal, len(proposallist.Items))
+	for i, info := range proposallist.Items {
+		di, ok := daos[info.DaoID.String()]
+		if !ok {
+			log.Error().Msg("dao not found")
+
+			return nil, err
+		}
+		proposals[i] = convertProposalToInternal(&info, di)
+	}
+	session, _ := appctx.ExtractUserSession(ctx)
+	proposals = enrichProposalsSubscriptionInfo(session, proposals)
+	proposals = helpers.WrapProposalsIpfsLinks(proposals)
+
+	userProposals := make(map[string]proposal.Proposal)
+	for _, info := range proposals {
+		userProposals[info.ID] = info
+	}
+	return userProposals, nil
 }
 
 func (s *Server) getMeCanVote(w http.ResponseWriter, r *http.Request) {

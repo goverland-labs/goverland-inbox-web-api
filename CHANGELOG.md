@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.75] - 2024-03-25
+
+### Added
+- Public profile endpoints
+
 ## [0.0.74] - 2024-03-22
 
 ### Added

@@ -130,6 +130,17 @@ func (s *Service) GetProfileInfo(userID UserID) (profile.Profile, error) {
 	return convertToProfileInfo(resp), nil
 }
 
+func (s *Service) GetUserInfo(address string) (profile.PublicProfile, error) {
+	resp, err := s.userClient.GetUser(context.Background(), &inboxapi.GetUserRequest{
+		Address: address,
+	})
+	if err != nil {
+		return profile.PublicProfile{}, fmt.Errorf("get user info by address: %s: %w", address, err)
+	}
+
+	return convertToPublicProfile(resp), nil
+}
+
 var protoRoleToRole = map[inboxapi.UserRole]profile.Role{
 	inboxapi.UserRole_USER_ROLE_UNKNOWN: profile.UnknownRole,
 	inboxapi.UserRole_USER_ROLE_GUEST:   profile.GuestRole,
@@ -185,4 +196,19 @@ func convertToProfileInfo(resp *inboxapi.UserProfile) profile.Profile {
 	}
 
 	return profileInfo
+}
+
+func convertToPublicProfile(user *inboxapi.UserInfo) profile.PublicProfile {
+	alias := user.GetAddress()
+	if user.GetEns() != "" {
+		alias = user.GetEns()
+	}
+
+	account := &profile.Account{
+		Address:      user.GetAddress(),
+		Avatars:      common.GenerateProfileAvatars(alias),
+		ResolvedName: user.GetEns(),
+	}
+
+	return profile.PublicProfile{ID: user.GetId(), Account: account}
 }

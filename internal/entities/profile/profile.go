@@ -38,3 +38,8 @@ type Account struct {
 	Avatars      common.UserAvatars `json:"avatars"`
 	ResolvedName string             `json:"resolved_name,omitempty"`
 }
+
+type PublicProfile struct {
+	ID      string   `json:"id"`
+	Account *Account `json:"user"`
+}

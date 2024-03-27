@@ -22,14 +22,15 @@ import (
 )
 
 func (s *Server) getMonthlyActiveUsers(w http.ResponseWriter, r *http.Request) {
-	f, verr := analytics.NewGetForm().ParseAndValidate(r)
+	f, verr := analytics.NewMonthlyForm().ParseAndValidate(r)
 	if verr != nil {
 		response.HandleError(verr, w)
 		return
 	}
 
 	resp, err := s.analyticsClient.GetMonthlyActiveUsers(context.TODO(), &internalapi.MonthlyActiveUsersRequest{
-		DaoId: f.ID.String(),
+		DaoId:          f.ID.String(),
+		PeriodInMonths: f.Period,
 	})
 	if err != nil {
 		response.SendError(w, http.StatusInternalServerError, err.Error())
@@ -139,14 +140,15 @@ func (s *Server) get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getMonthlyNewProposals(w http.ResponseWriter, r *http.Request) {
-	f, verr := analytics.NewGetForm().ParseAndValidate(r)
+	f, verr := analytics.NewMonthlyForm().ParseAndValidate(r)
 	if verr != nil {
 		response.HandleError(verr, w)
 		return
 	}
 
 	resp, err := s.analyticsClient.GetMonthlyNewProposals(context.TODO(), &internalapi.MonthlyNewProposalsRequest{
-		DaoId: f.ID.String(),
+		DaoId:          f.ID.String(),
+		PeriodInMonths: f.Period,
 	})
 	if err != nil {
 		response.SendError(w, http.StatusInternalServerError, err.Error())
@@ -181,7 +183,7 @@ func (s *Server) getSucceededProposalsCount(w http.ResponseWriter, r *http.Reque
 }
 
 func (s *Server) getTopVotersByVp(w http.ResponseWriter, r *http.Request) {
-	f, verr := analytics.NewGetForm().ParseAndValidate(r)
+	f, verr := analytics.NewMonthlyForm().ParseAndValidate(r)
 	if verr != nil {
 		response.HandleError(verr, w)
 		return
@@ -194,9 +196,10 @@ func (s *Server) getTopVotersByVp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := s.analyticsClient.GetTopVotersByVp(context.TODO(), &internalapi.TopVotersByVpRequest{
-		DaoId:  f.ID.String(),
-		Offset: uint32(offset),
-		Limit:  uint32(limit),
+		DaoId:          f.ID.String(),
+		Offset:         uint32(offset),
+		Limit:          uint32(limit),
+		PeriodInMonths: f.Period,
 	})
 	if err != nil {
 		response.SendError(w, http.StatusInternalServerError, err.Error())

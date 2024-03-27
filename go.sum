@@ -38,8 +38,8 @@ github.com/gorilla/handlers v1.5.1 h1:9lRY6j8DEeeBT10CvO9hGW0gmky0BprnvDI5vfhUHH
 github.com/gorilla/handlers v1.5.1/go.mod h1:t8XrUpc4KVXb7HGyJ4/cEnwQiaxrX/hz1Zv/4g96P1Q=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
-github.com/goverland-labs/analytics-api v0.0.13 h1:vjbFOpf3sXFJqU6rz9uMmF4a6grFDBQXXVQowwLcnd0=
-github.com/goverland-labs/analytics-api v0.0.13/go.mod h1:apaKjFY2A5PTQyPITUN3iiswXrOQ4msiYneodpZFgBc=
+github.com/goverland-labs/analytics-api v0.0.14 h1:7EOQ1xf+QMEN/1O2Z8IwVucSs51MxGBvU0uua0Mf8A0=
+github.com/goverland-labs/analytics-api v0.0.14/go.mod h1:apaKjFY2A5PTQyPITUN3iiswXrOQ4msiYneodpZFgBc=
 github.com/goverland-labs/goverland-core-sdk-go v0.1.3 h1:EFci+26/3GmhrhCMFmboCTw+06bsBl1KU46ncfGTmt8=
 github.com/goverland-labs/goverland-core-sdk-go v0.1.3/go.mod h1:8OPh3hODfwLE4ckzY3DRJ4Shs6RXdUGB/KN8o+L6kT4=
 github.com/goverland-labs/goverland-platform-events v0.2.1 h1:gqy5VTMxPkd46ct1NBuRAP9lOWsRMG5q3oAtK5i8Xaw=

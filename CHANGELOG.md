@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.77] - 2024-03-27
+
+### Added
+- Monthly filter for analytics endpoints
+
 ## [0.0.76] - 2024-03-27
 
 ### Fixed

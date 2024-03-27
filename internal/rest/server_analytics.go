@@ -258,9 +258,12 @@ func (s *Server) getMutualDaos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list := make([]entity.MutualDao, len(resp.DaoVotersParticipateIn))
-	for i, md := range resp.DaoVotersParticipateIn {
-		list[i] = convertMutualDaoToInternal(session, md, daos[uuid.MustParse(md.DaoId)])
+	list := make([]entity.MutualDao, 0)
+	for _, md := range resp.DaoVotersParticipateIn {
+		d, ok := daos[uuid.MustParse(md.DaoId)]
+		if ok {
+			list = append(list, convertMutualDaoToInternal(session, md, d))
+		}
 	}
 
 	response.SendJSON(w, http.StatusOK, &list)

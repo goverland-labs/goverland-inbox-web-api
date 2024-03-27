@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -25,12 +26,25 @@ import (
 
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 	address := mux.Vars(r)["address"]
-	user, err := s.authService.GetUserInfo(address)
+	enslist, err := s.coreclient.GetEnsNames(r.Context(), coresdk.GetEnsNamesRequest{
+		Addresses: []string{address},
+	})
 	if err != nil {
 		log.Error().Err(err).Msg("get public profile info")
 		response.SendEmpty(w, http.StatusInternalServerError)
 
 		return
+	}
+	alias := address
+	var ensName *string
+	if len(enslist.EnsNames) > 0 && enslist.EnsNames[0].Name != "" {
+		ensName = helpers.Ptr(enslist.EnsNames[0].Name)
+		alias = enslist.EnsNames[0].Name
+	}
+	user := common.User{
+		Address:      common.UserAddress(address),
+		ResolvedName: ensName,
+		Avatars:      common.GenerateProfileAvatars(alias),
 	}
 
 	log.Info().

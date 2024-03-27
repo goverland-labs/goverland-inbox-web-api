@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.76] - 2024-03-27
+
+### Fixed
+- Public profile endpoint to get the information from core
+- Mutual dao. Skip incorrect dao id.
+
 ## [0.0.75] - 2024-03-25
 
 ### Added

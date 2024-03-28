@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.78] - 2024-03-28
+
+### Fixed
+- Remove duplicate dao ids
+
 ## [0.0.77] - 2024-03-27
 
 ### Added

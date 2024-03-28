@@ -5,6 +5,7 @@ import (
 	"fmt"
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
+	"golang.org/x/exp/slices"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -188,6 +189,8 @@ func (s *Server) collectProposals(votes []coreproposal.Vote, ctx context.Context
 		daoIds = append(daoIds, info.DaoID.String())
 		proposalIds = append(proposalIds, info.ProposalID)
 	}
+	slices.Sort(daoIds)
+	daoIds = slices.Compact(daoIds)
 	daolist, err := s.daoService.GetDaoList(ctx, internaldao.DaoListRequest{
 		IDs:   daoIds,
 		Limit: len(daoIds),

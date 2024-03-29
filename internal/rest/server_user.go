@@ -200,14 +200,27 @@ func (s *Server) collectProposals(votes []coreproposal.Vote, ctx context.Context
 
 		return nil, err
 	}
-	proposallist, err := s.coreclient.GetProposalList(ctx, coresdk.GetProposalListRequest{
-		ProposalIDs: proposalIds,
-		Limit:       len(proposalIds),
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("get proposal list")
+	pc := len(proposalIds)
+	proposalItems := make([]coreproposal.Proposal, 0)
+	for pc > 0 {
+		limit := pc
+		ids := proposalIds
+		const MAX_PROPOSALS_BY_REQUEST = 80
+		if pc > MAX_PROPOSALS_BY_REQUEST {
+			limit = MAX_PROPOSALS_BY_REQUEST
+			ids = proposalIds[:MAX_PROPOSALS_BY_REQUEST]
+			proposalIds = proposalIds[MAX_PROPOSALS_BY_REQUEST:]
+		}
+		proposallist, err := s.coreclient.GetProposalList(ctx, coresdk.GetProposalListRequest{
+			ProposalIDs: ids,
+			Limit:       limit})
+		if err != nil {
+			log.Error().Err(err).Msg("get proposal list")
 
-		return nil, err
+			return nil, err
+		}
+		proposalItems = append(proposalItems, proposallist.Items...)
+		pc = pc - MAX_PROPOSALS_BY_REQUEST
 	}
 
 	daos := make(map[string]*internaldao.DAO)
@@ -215,8 +228,8 @@ func (s *Server) collectProposals(votes []coreproposal.Vote, ctx context.Context
 		daos[info.ID.String()] = info
 	}
 
-	proposals := make([]proposal.Proposal, len(proposallist.Items))
-	for i, info := range proposallist.Items {
+	proposals := make([]proposal.Proposal, len(proposalItems))
+	for i, info := range proposalItems {
 		di, ok := daos[info.DaoID.String()]
 		if !ok {
 			log.Error().Msg("dao not found")

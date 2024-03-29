@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.79] - 2024-03-29
+
+### Fixed
+- Proposal list request with huge limit
+
 ## [0.0.78] - 2024-03-28
 
 ### Fixed

@@ -20,7 +20,9 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	internaldao "github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
+	internaltools "github.com/goverland-labs/inbox-web-api/internal/entities/tools"
 	"github.com/goverland-labs/inbox-web-api/internal/helpers"
+	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/tools"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/request"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 )
@@ -174,6 +176,35 @@ func (s *Server) getPublicUserVotes(w http.ResponseWriter, r *http.Request) {
 
 	response.AddPaginationHeaders(w, r, offset, limit, resp.TotalCnt)
 	response.SendJSON(w, http.StatusOK, &proposalWithVotes)
+}
+
+func (s *Server) getAddressVotingPower(w http.ResponseWriter, r *http.Request) {
+	f, verr := tools.NewVotingPowerForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	var vp internaltools.VotingPower
+	for _, addr := range f.Addresses {
+		score := 0
+		// todo maybe create batch method, but seems in our case generally we will have one address to check
+		user, err := s.userClient.GetUser(r.Context(), &inboxapi.GetUserRequest{
+			Address: addr,
+		})
+		if err != nil {
+			log.Error().Err(err).Msg("get user by address")
+		} else if user.GetRole() == inboxapi.UserRole_USER_ROLE_REGULAR {
+			score = 1
+		}
+
+		vp.Score = append(vp.Score, internaltools.VotingPowerScore{
+			Score:   score,
+			Address: addr,
+		})
+	}
+
+	response.SendJSON(w, http.StatusOK, &vp)
 }
 
 func (s *Server) collectProposals(votes []coreproposal.Vote, ctx context.Context) (map[string]proposal.Proposal, error) {

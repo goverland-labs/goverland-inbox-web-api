@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.80] - 2024-03-31
+
+### Fixed
+- Skip votes if the proposal is canceled or spam
+
 ## [0.0.79] - 2024-03-29
 
 ### Fixed

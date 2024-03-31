@@ -79,7 +79,7 @@ func (s *Server) getUserVotes(w http.ResponseWriter, r *http.Request) {
 			response.SendEmpty(w, http.StatusInternalServerError)
 			return
 		}
-		proposalWithVotes = make([]proposal.Proposal, len(resp.Items))
+		proposalWithVotes = make([]proposal.Proposal, 0)
 		if len(resp.Items) != 0 {
 			userProposals, err := s.collectProposals(resp.Items, r.Context())
 			if err != nil {
@@ -87,16 +87,13 @@ func (s *Server) getUserVotes(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			list := ConvertVoteToInternal(resp.Items)
-			for i, info := range list {
+			for _, info := range list {
 				p, ok := userProposals[info.ProposalID]
 				if !ok {
-					log.Error().Msg("proposal not found")
-
-					response.SendError(w, http.StatusBadRequest, fmt.Sprintf("proposal not found: %s", info.ProposalID))
-					return
+					continue
 				}
 				p.UserVote = helpers.Ptr(info)
-				proposalWithVotes[i] = p
+				proposalWithVotes = append(proposalWithVotes, p)
 			}
 		}
 		total = resp.TotalCnt
@@ -128,7 +125,7 @@ func (s *Server) getPublicUserVotes(w http.ResponseWriter, r *http.Request) {
 		response.SendEmpty(w, http.StatusInternalServerError)
 		return
 	}
-	proposalWithVotes := make([]proposal.Proposal, len(resp.Items))
+	proposalWithVotes := make([]proposal.Proposal, 0)
 	if len(resp.Items) != 0 {
 		userProposals, err := s.collectProposals(resp.Items, r.Context())
 		if err != nil {
@@ -155,20 +152,17 @@ func (s *Server) getPublicUserVotes(w http.ResponseWriter, r *http.Request) {
 				meVotes[info.ProposalID] = info
 			}
 		}
-		for i, info := range list {
+		for _, info := range list {
 			p, ok := userProposals[info.ProposalID]
 			if !ok {
-				log.Error().Msg("proposal not found")
-
-				response.SendError(w, http.StatusBadRequest, fmt.Sprintf("proposal not found: %s", info.ProposalID))
-				return
+				continue
 			}
 			p.PublicUserVote = helpers.Ptr(info)
 			v, ok := meVotes[info.ProposalID]
 			if ok {
 				p.UserVote = helpers.Ptr(v)
 			}
-			proposalWithVotes[i] = p
+			proposalWithVotes = append(proposalWithVotes, p)
 		}
 	}
 

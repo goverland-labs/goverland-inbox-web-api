@@ -113,6 +113,8 @@ func NewServer(
 	handler.HandleFunc("/user/{address}", srv.getUser).Methods(http.MethodGet).Name("get_user")
 	handler.HandleFunc("/user/{address}/votes", srv.getPublicUserVotes).Methods(http.MethodGet).Name("get_public_user_votes")
 
+	handler.HandleFunc("/tools/address-vp", srv.getAddressVotingPower).Methods(http.MethodPost).Name("get_address_voting_power")
+
 	handler.HandleFunc("/dao", srv.listDAOs).Methods(http.MethodGet).Name("get_dao_list")
 	handler.HandleFunc("/dao/top", srv.listTopDAOs).Methods(http.MethodGet).Name("get_dao_top")
 	handler.HandleFunc("/dao/recent", srv.recentDao).Methods(http.MethodGet).Name("get_recent_dao")

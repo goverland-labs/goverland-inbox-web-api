@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added tool endpoint for getting voting power for specific users
+
 ## [0.0.80] - 2024-03-31
 
 ### Fixed

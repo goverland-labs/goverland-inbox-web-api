@@ -28,8 +28,10 @@ func (s *Server) guestAuth(w http.ResponseWriter, r *http.Request) {
 
 	guestInfo, err := s.authService.Guest(r.Context(), authsrv.GuestSessionRequest{
 		SessionRequest: authsrv.SessionRequest{
-			DeviceID:   f.DeviceID,
-			DeviceName: f.DeviceName,
+			DeviceID:    f.DeviceID,
+			DeviceName:  f.DeviceName,
+			AppPlatform: f.AppPlatform,
+			AppVersion:  f.AppVersion,
 		},
 	})
 	if err != nil {
@@ -118,8 +120,10 @@ func (s *Server) siweAuth(w http.ResponseWriter, r *http.Request) {
 
 	regularInfo, err := s.authService.Regular(r.Context(), authsrv.RegularSessionRequest{
 		SessionRequest: authsrv.SessionRequest{
-			DeviceID:   f.DeviceID,
-			DeviceName: f.DeviceName,
+			DeviceID:    f.DeviceID,
+			DeviceName:  f.DeviceName,
+			AppPlatform: f.AppPlatform,
+			AppVersion:  f.AppVersion,
 		},
 		Address: f.Address.Hex(),
 	})

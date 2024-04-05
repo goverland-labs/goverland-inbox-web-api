@@ -11,8 +11,10 @@ import (
 )
 
 type SessionRequest struct {
-	DeviceID   string
-	DeviceName string
+	DeviceID    string
+	DeviceName  string
+	AppPlatform string
+	AppVersion  string
 }
 
 type GuestSessionRequest struct {
@@ -40,6 +42,8 @@ func (s *Service) Guest(ctx context.Context, request GuestSessionRequest) (Info,
 		Account: &inboxapi.CreateSessionRequest_Guest{
 			Guest: &inboxapi.Guest{},
 		},
+		AppPlatform: request.AppPlatform,
+		AppVersion:  request.AppVersion,
 	})
 	if err != nil {
 		return Info{}, fmt.Errorf("create session by request: %+v: %w", request, err)
@@ -57,8 +61,10 @@ func (s *Service) Guest(ctx context.Context, request GuestSessionRequest) (Info,
 
 func (s *Service) Regular(ctx context.Context, request RegularSessionRequest) (Info, error) {
 	resp, err := s.userClient.CreateSession(ctx, &inboxapi.CreateSessionRequest{
-		DeviceUuid: request.DeviceID,
-		DeviceName: request.DeviceName,
+		DeviceUuid:  request.DeviceID,
+		DeviceName:  request.DeviceName,
+		AppVersion:  request.AppVersion,
+		AppPlatform: request.AppPlatform,
 		Account: &inboxapi.CreateSessionRequest_Regular{
 			Regular: &inboxapi.Regular{
 				Address: request.Address,

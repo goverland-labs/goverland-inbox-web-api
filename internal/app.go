@@ -28,8 +28,9 @@ type Application struct {
 	manager *process.Manager
 	cfg     config.App
 
-	feedClient inboxapi.FeedClient
-	pb         *natsclient.Publisher
+	feedClient        inboxapi.FeedClient
+	achievementClient inboxapi.AchievementClient
+	pb                *natsclient.Publisher
 }
 
 func NewApplication(cfg config.App) (*Application, error) {
@@ -120,6 +121,7 @@ func (a *Application) initRESTWorker() error {
 	settings := inboxapi.NewSettingsClient(strageConn)
 	cs := coresdk.NewClient(a.cfg.Core.CoreURL)
 	ac := internalapi.NewAnalyticsClient(anConn)
+	a.achievementClient = inboxapi.NewAchievementClient(strageConn)
 
 	a.feedClient = inboxapi.NewFeedClient(feedConn)
 
@@ -128,7 +130,7 @@ func (a *Application) initRESTWorker() error {
 	uas := tracking.NewUserActivityService(ic)
 	a.manager.AddWorker(process.NewCallbackWorker("user-activity", uas.Start))
 
-	srv := rest.NewServer(a.cfg.REST, authService, cs, sc, settings, a.feedClient, ac, ic, pc, uas, a.pb, a.cfg.SiweTTL)
+	srv := rest.NewServer(a.cfg.REST, authService, cs, sc, settings, a.feedClient, a.achievementClient, ac, ic, pc, uas, a.pb, a.cfg.SiweTTL)
 	a.manager.AddWorker(process.NewServerWorker("rest", srv.GetHTTPServer()))
 
 	return nil

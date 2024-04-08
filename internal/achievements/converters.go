@@ -17,22 +17,21 @@ func ConvertItemToInternal(item *inboxapi.AchievementInfo) achievements.Item {
 		viewedAt = common.NewTime(item.GetViewedAt().AsTime())
 	}
 
+	images := make([]achievements.Image, 0, len(item.GetImages()))
+	for _, image := range item.GetImages() {
+		images = append(images, achievements.Image{
+			Size: image.GetSize(),
+			Link: image.GetPath(),
+		})
+	}
+
 	return achievements.Item{
 		ID:                 item.GetId(),
 		Title:              item.GetTitle(),
 		Subtitle:           item.GetSubtitle(),
 		Description:        item.GetDescription(),
 		AchievementMessage: item.GetAchievementMessage(),
-		Images: []achievements.Image{
-			{
-				Size: "s",
-				Link: item.GetImage(),
-			},
-			{
-				Size: "l",
-				Link: item.GetImage(),
-			},
-		},
+		Images:             images,
 		Progress: achievements.Progress{
 			Goal:    int(item.GetProgress().GetGoal()),
 			Current: int(item.GetProgress().GetCurrent()),

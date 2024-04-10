@@ -216,6 +216,12 @@ func (s *Server) getParticipatedDaos(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+	if list.TotalCnt == 0 {
+		response.AddPaginationHeaders(w, r, 0, 0, 0)
+		response.SendJSON(w, http.StatusOK, &[]*internaldao.DAO{})
+
+		return
+	}
 	daoIds := make([]string, 0)
 	for _, info := range list.Ids {
 		daoIds = append(daoIds, info.String())

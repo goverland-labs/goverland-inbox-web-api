@@ -207,6 +207,37 @@ func (s *Server) getAddressVotingPower(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &vp)
 }
 
+func (s *Server) getParticipatedDaos(w http.ResponseWriter, r *http.Request) {
+	address := mux.Vars(r)["address"]
+	list, err := s.coreclient.GetUserParticipatedDaos(r.Context(), address)
+	if err != nil {
+		log.Error().Err(err).Msg("get participated daos")
+		response.SendEmpty(w, http.StatusInternalServerError)
+
+		return
+	}
+	daoIds := make([]string, 0)
+	for _, info := range list.Ids {
+		daoIds = append(daoIds, info.String())
+	}
+	daolist, err := s.daoService.GetDaoList(r.Context(), internaldao.DaoListRequest{
+		IDs:   daoIds,
+		Limit: len(daoIds),
+	})
+
+	daos := helpers.WrapDAOsIpfsLinks(daolist.Items)
+	session, _ := appctx.ExtractUserSession(r.Context())
+	daos = enrichSubscriptionInfo(session, daos)
+
+	log.Info().
+		Str("route", mux.CurrentRoute(r).GetName()).
+		Int("count", len(daos)).
+		Msg("route execution")
+
+	response.AddPaginationHeaders(w, r, 0, len(daos), daolist.TotalCnt)
+	response.SendJSON(w, http.StatusOK, &daos)
+}
+
 func (s *Server) collectProposals(votes []coreproposal.Vote, ctx context.Context) (map[string]proposal.Proposal, error) {
 	daoIds := make([]string, 0)
 	proposalIds := make([]string, 0)

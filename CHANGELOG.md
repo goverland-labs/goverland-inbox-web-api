@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.83] - 2024-04-11
+
 ### Added
 - Achievements handlers
 

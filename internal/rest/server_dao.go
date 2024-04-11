@@ -133,7 +133,6 @@ func (s *Server) listTopDAOs(w http.ResponseWriter, r *http.Request) {
 		response.AddSubscriptionsCountHeaders(w, len(subscriptionsStorage.get(session.UserID)))
 	}
 
-	response.AddTotalCounterHeaders(w, resp.TotalCnt)
 	response.SendJSON(w, http.StatusOK, &resp.Categories)
 }
 

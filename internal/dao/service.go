@@ -130,13 +130,7 @@ func (s *Service) GetTop(ctx context.Context, limit int) (*dao.ListTop, error) {
 		}
 	}
 
-	total, err := s.GetDaoList(ctx, dao.DaoListRequest{Limit: 1})
-	if err != nil {
-		return nil, fmt.Errorf("get dao top: %w", err)
-	}
-
 	list.Categories = grouped
-	list.TotalCnt = total.TotalCnt
 
 	return list, nil
 }

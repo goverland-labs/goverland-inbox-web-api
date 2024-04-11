@@ -10,6 +10,11 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 )
 
+const (
+	AppPlatformHeader = "X-App-Platform"
+	AppVersionHeader  = "X-App-Version"
+)
+
 type siweAuthRequest struct {
 	DeviceID   string `json:"device_id"`
 	DeviceName string `json:"device_name"`
@@ -19,11 +24,13 @@ type siweAuthRequest struct {
 }
 
 type SiweAuthForm struct {
-	DeviceID   string
-	DeviceName string
-	Message    string
-	Address    common.Address
-	Signature  string
+	DeviceID    string
+	DeviceName  string
+	Message     string
+	Address     common.Address
+	Signature   string
+	AppPlatform string
+	AppVersion  string
 }
 
 func NewSiweAuthForm() *SiweAuthForm {
@@ -45,6 +52,9 @@ func (f *SiweAuthForm) ParseAndValidate(r *http.Request) (*SiweAuthForm, respons
 	f.validateAndSetMessage(request, errors)
 	f.validateAndSetAddress(request, errors)
 	f.validateAndSetSignature(request, errors)
+
+	f.AppPlatform = r.Header.Get(AppPlatformHeader)
+	f.AppVersion = r.Header.Get(AppVersionHeader)
 
 	if len(errors) > 0 {
 		return nil, response.NewValidationError(errors)

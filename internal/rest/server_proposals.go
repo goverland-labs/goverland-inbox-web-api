@@ -9,9 +9,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
+	"github.com/goverland-labs/goverland-platform-events/events/inbox"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -331,6 +333,11 @@ func (h *Server) prepareVote(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Server) vote(w http.ResponseWriter, r *http.Request) {
+	session, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.SendEmpty(w, http.StatusForbidden)
+	}
+
 	params, verr := proposals.NewVoteForm().ParseAndValidate(r)
 	if verr != nil {
 		response.HandleError(verr, w)
@@ -356,6 +363,13 @@ func (h *Server) vote(w http.ResponseWriter, r *http.Request) {
 			Address: voteResponse.Relayer.Address,
 			Receipt: voteResponse.Relayer.Receipt,
 		},
+	}
+
+	if err = h.publisher.PublishJSON(context.TODO(), inbox.SubjectRecalculateAchievement, inbox.AchievementRecalculateEvent{
+		UserID: uuid.UUID(session.UserID),
+		Type:   inbox.AchievementTypeVote,
+	}); err != nil {
+		log.Error().Err(err).Msg("publish vote event")
 	}
 
 	response.SendJSON(w, http.StatusOK, &successfulVote)

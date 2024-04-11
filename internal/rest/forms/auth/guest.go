@@ -14,8 +14,10 @@ type guestAuthRequest struct {
 }
 
 type GuestAuthForm struct {
-	DeviceID   string
-	DeviceName string
+	DeviceID    string
+	DeviceName  string
+	AppPlatform string
+	AppVersion  string
 }
 
 func NewGuestAuthForm() *GuestAuthForm {
@@ -34,6 +36,9 @@ func (f *GuestAuthForm) ParseAndValidate(r *http.Request) (*GuestAuthForm, respo
 	errors := make(map[string]response.ErrorMessage)
 	f.validateAndSetDeviceID(request, errors)
 	f.validateAndSetDeviceName(request)
+
+	f.AppPlatform = r.Header.Get(AppPlatformHeader)
+	f.AppVersion = r.Header.Get(AppVersionHeader)
 
 	if len(errors) > 0 {
 		return nil, response.NewValidationError(errors)

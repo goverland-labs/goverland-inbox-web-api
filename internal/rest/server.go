@@ -40,6 +40,7 @@ type Server struct {
 	subclient         inboxapi.SubscriptionClient
 	settings          inboxapi.SettingsClient
 	feedClient        inboxapi.FeedClient
+	achievementClient inboxapi.AchievementClient
 	analyticsClient   internalapi.AnalyticsClient
 	userClient        inboxapi.UserClient
 	ibxProposalClient inboxapi.ProposalClient
@@ -58,6 +59,7 @@ func NewServer(
 	sc inboxapi.SubscriptionClient,
 	settings inboxapi.SettingsClient,
 	feedClient inboxapi.FeedClient,
+	achievementClient inboxapi.AchievementClient,
 	analyticsClient internalapi.AnalyticsClient,
 	userClient inboxapi.UserClient,
 	ibxProposalClient inboxapi.ProposalClient,
@@ -73,6 +75,7 @@ func NewServer(
 		subclient:         sc,
 		settings:          settings,
 		feedClient:        feedClient,
+		achievementClient: achievementClient,
 		analyticsClient:   analyticsClient,
 		userClient:        userClient,
 		ibxProposalClient: ibxProposalClient,
@@ -115,6 +118,9 @@ func NewServer(
 	handler.HandleFunc("/user/{address}/participated-daos", srv.getParticipatedDaos).Methods(http.MethodGet).Name("get_participated_daos")
 
 	handler.HandleFunc("/tools/address-vp", srv.getAddressVotingPower).Methods(http.MethodPost).Name("get_address_voting_power")
+
+	handler.HandleFunc("/me/achievements", srv.getAchievementsList).Methods(http.MethodGet).Name("achievement_get_list")
+	handler.HandleFunc("/me/achievements/{id}/mark-as-read", srv.markAchievementItemAsViewed).Methods(http.MethodPost).Name("achievement_mark_as_viewed")
 
 	handler.HandleFunc("/dao", srv.listDAOs).Methods(http.MethodGet).Name("get_dao_list")
 	handler.HandleFunc("/dao/top", srv.listTopDAOs).Methods(http.MethodGet).Name("get_dao_top")

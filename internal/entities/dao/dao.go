@@ -108,5 +108,4 @@ type Top struct {
 
 type ListTop struct {
 	Categories map[common.Category]Top
-	TotalCnt   int
 }

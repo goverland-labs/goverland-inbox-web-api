@@ -3,10 +3,13 @@ package rest
 import (
 	"context"
 	"fmt"
-	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	"golang.org/x/exp/slices"
 	"net/http"
+	"sort"
+
+	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
+	"golang.org/x/exp/slices"
+
+	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -464,6 +467,11 @@ func (s *Server) getRecommendedDao(w http.ResponseWriter, r *http.Request) {
 	for _, di := range daoList {
 		list = append(list, di)
 	}
+
+	// sort by popularity index desc
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].PopularityIndex > list[j].PopularityIndex
+	})
 
 	list = helpers.WrapDAOsIpfsLinks(list)
 	list = enrichSubscriptionInfo(session, list)

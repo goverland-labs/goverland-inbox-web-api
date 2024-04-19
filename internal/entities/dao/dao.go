@@ -40,6 +40,7 @@ type DAO struct {
 	SubscriptionInfo *SubscriptionInfo  `json:"subscription_info"`
 	ActiveVotes      int                `json:"active_votes"`
 	Verified         bool               `json:"verified"`
+	PopularityIndex  float64            `json:"popularity_index"`
 }
 
 type ShortDAO struct {

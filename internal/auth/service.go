@@ -49,7 +49,11 @@ func (s *Service) Guest(ctx context.Context, request GuestSessionRequest) (Info,
 		return Info{}, fmt.Errorf("create session by request: %+v: %w", request, err)
 	}
 
-	session, err := convertSession(resp.GetCreatedSession().GetId(), resp.GetUserProfile().GetUser().GetId())
+	session, err := convertSession(
+		resp.GetCreatedSession().GetId(),
+		resp.GetUserProfile().GetUser().GetId(),
+		resp.GetCreatedSession().GetDeviceUuid(),
+	)
 	if err != nil {
 		return Info{}, fmt.Errorf("convert session: %w", err)
 	}
@@ -75,7 +79,11 @@ func (s *Service) Regular(ctx context.Context, request RegularSessionRequest) (I
 		return Info{}, fmt.Errorf("create session by request: %+v: %w", request, err)
 	}
 
-	session, err := convertSession(resp.GetCreatedSession().GetId(), resp.GetUserProfile().GetUser().GetId())
+	session, err := convertSession(
+		resp.GetCreatedSession().GetId(),
+		resp.GetUserProfile().GetUser().GetId(),
+		resp.GetCreatedSession().GetDeviceUuid(),
+	)
 	if err != nil {
 		return Info{}, fmt.Errorf("convert session: %w", err)
 	}
@@ -93,7 +101,11 @@ func (s *Service) GetSession(sessionID SessionID, callback func(id UserID)) (Ses
 		return Session{}, fmt.Errorf("get session by id: %s: %w", sessionID, err)
 	}
 
-	session, err := convertSession(sessionResp.GetSession().GetId(), sessionResp.GetUser().GetId())
+	session, err := convertSession(
+		sessionResp.GetSession().GetId(),
+		sessionResp.GetUser().GetId(),
+		sessionResp.GetSession().GetDeviceUuid(),
+	)
 	if err != nil {
 		return Session{}, fmt.Errorf("convert session: %w", err)
 	}

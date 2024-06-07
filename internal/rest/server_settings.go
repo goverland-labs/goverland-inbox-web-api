@@ -26,8 +26,9 @@ func (s *Server) storePushToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := s.settings.AddPushToken(r.Context(), &inboxapi.AddPushTokenRequest{
-		UserId: session.UserID.String(),
-		Token:  f.Token,
+		UserId:     session.UserID.String(),
+		Token:      f.Token,
+		DeviceUuid: session.DeviceUUID,
 	})
 	if err != nil {
 		log.Error().Err(err).Msgf("store token for user: %s", session.UserID.String())
@@ -47,7 +48,8 @@ func (s *Server) tokenExists(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := s.settings.PushTokenExists(r.Context(), &inboxapi.PushTokenExistsRequest{
-		UserId: session.UserID.String(),
+		UserId:     session.UserID.String(),
+		DeviceUuid: session.DeviceUUID,
 	})
 	if err != nil {
 		log.Error().Err(err).Msgf("check token exists for user: %s", session.UserID.String())
@@ -67,7 +69,8 @@ func (s *Server) removePushToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := s.settings.RemovePushToken(r.Context(), &inboxapi.RemovePushTokenRequest{
-		UserId: session.UserID.String(),
+		UserId:     session.UserID.String(),
+		DeviceUuid: session.DeviceUUID,
 	})
 	if err != nil {
 		log.Error().Err(err).Msgf("remove push token for user: %s", session.UserID.String())

@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.85] - 2024-06-13
+
 ### Changed
 - Add device uuid for push tokens requests
 

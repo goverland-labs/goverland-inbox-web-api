@@ -22,11 +22,12 @@ func (s SessionID) String() string {
 }
 
 type Session struct {
-	ID     SessionID `json:"id"`
-	UserID UserID    `json:"user_id"`
+	ID         SessionID `json:"id"`
+	UserID     UserID    `json:"user_id"`
+	DeviceUUID string    `json:"device_uuid"`
 }
 
-func convertSession(sessionID, userID string) (Session, error) {
+func convertSession(sessionID, userID, deviceUUID string) (Session, error) {
 	sessionUUID, err := uuid.Parse(sessionID)
 	if err != nil {
 		log.Err(err).Msgf("parse session id: %s", sessionID)
@@ -42,8 +43,9 @@ func convertSession(sessionID, userID string) (Session, error) {
 	}
 
 	return Session{
-		ID:     SessionID(sessionUUID),
-		UserID: UserID(userUUID),
+		ID:         SessionID(sessionUUID),
+		UserID:     UserID(userUUID),
+		DeviceUUID: deviceUUID,
 	}, nil
 }
 

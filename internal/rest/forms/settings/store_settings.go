@@ -8,10 +8,10 @@ import (
 )
 
 type DaoSettings struct {
-	NewProposalCreated bool `json:"new_proposal_created"`
-	QuorumReached      bool `json:"quorum_reached"`
-	VoteFinishesSoon   bool `json:"vote_finishes_soon"`
-	VoteFinished       bool `json:"vote_finished"`
+	NewProposalCreated *bool `json:"new_proposal_created,omitempty"`
+	QuorumReached      *bool `json:"quorum_reached,omitempty"`
+	VoteFinishesSoon   *bool `json:"vote_finishes_soon,omitempty"`
+	VoteFinished       *bool `json:"vote_finished,omitempty"`
 }
 
 type StoreSettingsRequest struct {

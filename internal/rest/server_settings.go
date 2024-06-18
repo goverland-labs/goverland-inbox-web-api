@@ -109,22 +109,22 @@ func (s *Server) storeSettings(w http.ResponseWriter, r *http.Request) {
 	response.SendEmpty(w, http.StatusOK)
 }
 
-func fillStoreDAOSettingsRequest(in *settingsform.StoreSettingsForm) []inboxapi.PUSH_SETTINGS_DAO {
-	var result []inboxapi.PUSH_SETTINGS_DAO
-	if in.Dao.NewProposalCreated {
-		result = append(result, inboxapi.PUSH_SETTINGS_DAO_PUSH_SETTINGS_NEW_PROPOSAL_CREATED)
+func fillStoreDAOSettingsRequest(in *settingsform.StoreSettingsForm) *inboxapi.PushSettingsDao {
+	result := &inboxapi.PushSettingsDao{}
+	if in.Dao.NewProposalCreated != nil {
+		result.NewProposalCreated = *in.Dao.NewProposalCreated
 	}
 
-	if in.Dao.QuorumReached {
-		result = append(result, inboxapi.PUSH_SETTINGS_DAO_PUSH_SETTINGS_QUORUM_REACHED)
+	if in.Dao.QuorumReached != nil {
+		result.QuorumReached = *in.Dao.QuorumReached
 	}
 
-	if in.Dao.VoteFinished {
-		result = append(result, inboxapi.PUSH_SETTINGS_DAO_PUSH_SETTINGS_VOTE_FINISHED)
+	if in.Dao.VoteFinished != nil {
+		result.VoteFinished = *in.Dao.VoteFinished
 	}
 
-	if in.Dao.VoteFinishesSoon {
-		result = append(result, inboxapi.PUSH_SETTINGS_DAO_PUSH_SETTINGS_VOTE_FINISHES_SOON)
+	if in.Dao.VoteFinishesSoon != nil {
+		result.VoteFinishesSoon = *in.Dao.VoteFinishesSoon
 	}
 
 	return result
@@ -153,18 +153,10 @@ func (s *Server) getSettings(w http.ResponseWriter, r *http.Request) {
 func convertPushDetailsToInternal(in *inboxapi.GetPushDetailsResponse) *settings.Details {
 	details := &settings.Details{}
 
-	for _, option := range in.GetDao() {
-		switch option {
-		case inboxapi.PUSH_SETTINGS_DAO_PUSH_SETTINGS_VOTE_FINISHES_SOON:
-			details.Dao.VoteFinishesSoon = true
-		case inboxapi.PUSH_SETTINGS_DAO_PUSH_SETTINGS_VOTE_FINISHED:
-			details.Dao.VoteFinished = true
-		case inboxapi.PUSH_SETTINGS_DAO_PUSH_SETTINGS_QUORUM_REACHED:
-			details.Dao.QuorumReached = true
-		case inboxapi.PUSH_SETTINGS_DAO_PUSH_SETTINGS_NEW_PROPOSAL_CREATED:
-			details.Dao.NewProposalCreated = true
-		}
-	}
+	details.Dao.VoteFinishesSoon = in.GetDao().GetVoteFinishesSoon()
+	details.Dao.VoteFinished = in.GetDao().GetVoteFinished()
+	details.Dao.QuorumReached = in.GetDao().GetQuorumReached()
+	details.Dao.NewProposalCreated = in.GetDao().GetNewProposalCreated()
 
 	return details
 }

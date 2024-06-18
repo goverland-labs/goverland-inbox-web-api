@@ -110,21 +110,11 @@ func (s *Server) storeSettings(w http.ResponseWriter, r *http.Request) {
 }
 
 func fillStoreDAOSettingsRequest(in *settingsform.StoreSettingsForm) *inboxapi.PushSettingsDao {
-	result := &inboxapi.PushSettingsDao{}
-	if in.Dao.NewProposalCreated != nil {
-		result.NewProposalCreated = *in.Dao.NewProposalCreated
-	}
-
-	if in.Dao.QuorumReached != nil {
-		result.QuorumReached = *in.Dao.QuorumReached
-	}
-
-	if in.Dao.VoteFinished != nil {
-		result.VoteFinished = *in.Dao.VoteFinished
-	}
-
-	if in.Dao.VoteFinishesSoon != nil {
-		result.VoteFinishesSoon = *in.Dao.VoteFinishesSoon
+	result := &inboxapi.PushSettingsDao{
+		NewProposalCreated: in.Dao.NewProposalCreated,
+		QuorumReached:      in.Dao.QuorumReached,
+		VoteFinishesSoon:   in.Dao.VoteFinishesSoon,
+		VoteFinished:       in.Dao.VoteFinished,
 	}
 
 	return result

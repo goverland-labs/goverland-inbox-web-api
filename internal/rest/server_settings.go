@@ -5,6 +5,8 @@ import (
 
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/settings"
@@ -130,6 +132,11 @@ func (s *Server) getSettings(w http.ResponseWriter, r *http.Request) {
 	details, err := s.settings.GetPushDetails(r.Context(), &inboxapi.GetPushDetailsRequest{
 		UserId: session.UserID.String(),
 	})
+	if status.Code(err) == codes.NotFound {
+		response.SendEmpty(w, http.StatusNotFound)
+		return
+	}
+
 	if err != nil {
 		log.Error().Err(err).Msgf("remove push token for user: %s", session.UserID.String())
 

@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Push settings details
+
 ## [0.0.85] - 2024-06-13
 
 ### Changed

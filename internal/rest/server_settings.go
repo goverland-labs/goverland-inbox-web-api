@@ -5,6 +5,8 @@ import (
 
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/settings"
@@ -80,4 +82,78 @@ func (s *Server) removePushToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.SendEmpty(w, http.StatusOK)
+}
+
+func (s *Server) storeSettings(w http.ResponseWriter, r *http.Request) {
+	session, ok := appctx.ExtractUserSession(r.Context())
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	f, verr := settingsform.NewStoreSettingsForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	_, err := s.settings.SetPushDetails(r.Context(), &inboxapi.SetPushDetailsRequest{
+		UserId: session.UserID.String(),
+		Dao:    fillStoreDAOSettingsRequest(f),
+	})
+	if err != nil {
+		log.Error().Err(err).Msgf("set push details for user: %s", session.UserID.String())
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	response.SendEmpty(w, http.StatusOK)
+}
+
+func fillStoreDAOSettingsRequest(in *settingsform.StoreSettingsForm) *inboxapi.PushSettingsDao {
+	result := &inboxapi.PushSettingsDao{
+		NewProposalCreated: in.Dao.NewProposalCreated,
+		QuorumReached:      in.Dao.QuorumReached,
+		VoteFinishesSoon:   in.Dao.VoteFinishesSoon,
+		VoteFinished:       in.Dao.VoteFinished,
+	}
+
+	return result
+}
+
+func (s *Server) getSettings(w http.ResponseWriter, r *http.Request) {
+	session, ok := appctx.ExtractUserSession(r.Context())
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	details, err := s.settings.GetPushDetails(r.Context(), &inboxapi.GetPushDetailsRequest{
+		UserId: session.UserID.String(),
+	})
+	if status.Code(err) == codes.NotFound {
+		response.SendEmpty(w, http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		log.Error().Err(err).Msgf("remove push token for user: %s", session.UserID.String())
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	response.SendJSON(w, http.StatusOK, convertPushDetailsToInternal(details))
+}
+
+func convertPushDetailsToInternal(in *inboxapi.GetPushDetailsResponse) *settings.Details {
+	details := &settings.Details{}
+
+	details.Dao.VoteFinishesSoon = in.GetDao().GetVoteFinishesSoon()
+	details.Dao.VoteFinished = in.GetDao().GetVoteFinished()
+	details.Dao.QuorumReached = in.GetDao().GetQuorumReached()
+	details.Dao.NewProposalCreated = in.GetDao().GetNewProposalCreated()
+
+	return details
 }

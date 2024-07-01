@@ -154,6 +154,8 @@ func NewServer(
 	handler.HandleFunc("/notifications/settings", srv.storePushToken).Methods(http.MethodPost).Name("store_push_token")
 	handler.HandleFunc("/notifications/settings", srv.tokenExists).Methods(http.MethodGet).Name("push_token_exists")
 	handler.HandleFunc("/notifications/settings", srv.removePushToken).Methods(http.MethodDelete).Name("remove_push_token")
+	handler.HandleFunc("/notifications/settings/details", srv.storeSettings).Methods(http.MethodPost).Name("post_store_settings")
+	handler.HandleFunc("/notifications/settings/details", srv.getSettings).Methods(http.MethodGet).Name("get_settings_details")
 
 	handler.HandleFunc("/stats/totals", srv.getStatsTotals).Methods(http.MethodGet).Name("get_stats_totals")
 

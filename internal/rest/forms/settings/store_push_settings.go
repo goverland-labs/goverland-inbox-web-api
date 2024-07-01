@@ -18,15 +18,15 @@ type StoreSettingsRequest struct {
 	Dao DaoSettings `json:"dao"`
 }
 
-type StoreSettingsForm struct {
+type StorePushSettingsForm struct {
 	Dao DaoSettings
 }
 
-func NewStoreSettingsForm() *StoreSettingsForm {
-	return &StoreSettingsForm{}
+func NewStorePushSettingsForm() *StorePushSettingsForm {
+	return &StorePushSettingsForm{}
 }
 
-func (f *StoreSettingsForm) ParseAndValidate(r *http.Request) (*StoreSettingsForm, response.Error) {
+func (f *StorePushSettingsForm) ParseAndValidate(r *http.Request) (*StorePushSettingsForm, response.Error) {
 	var request *StoreSettingsRequest
 	if err := helpers.ReadJSON(r.Body, &request); err != nil {
 		ve := response.NewValidationError()
@@ -40,6 +40,6 @@ func (f *StoreSettingsForm) ParseAndValidate(r *http.Request) (*StoreSettingsFor
 	return f, nil
 }
 
-func (f *StoreSettingsForm) validateAndSetDAOSettings(req *StoreSettingsRequest) {
+func (f *StorePushSettingsForm) validateAndSetDAOSettings(req *StoreSettingsRequest) {
 	f.Dao = req.Dao
 }

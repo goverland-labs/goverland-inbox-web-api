@@ -12,8 +12,8 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/analytics-api v0.0.14
-	github.com/goverland-labs/goverland-core-sdk-go v0.1.5
-	github.com/goverland-labs/goverland-platform-events v0.2.2
+	github.com/goverland-labs/goverland-core-sdk-go v0.1.6-0.20240702140122-296d9bea48ba
+	github.com/goverland-labs/goverland-platform-events v0.2.6-0.20240702123930-cc976c7ac20c
 	github.com/goverland-labs/inbox-api v0.0.28-0.20240701150553-0c3d056974c7
 	github.com/goverland-labs/lib-rest-helpers v0.1.0
 	github.com/nats-io/nats.go v1.31.0

@@ -9,7 +9,7 @@ import (
 
 type StoreFeedSettingsRequest struct {
 	ArchiveProposalAfterVote *bool   `json:"archive_proposal_after_vote,omitempty"`
-	AutoarchiveAfterDuration *string `json:"autoarchive_after_duration,omitempty"`
+	AutoarchiveAfterDuration *string `json:"autoarchive_after,omitempty"`
 }
 
 type StoreFeedSettingsForm struct {

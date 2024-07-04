@@ -371,7 +371,7 @@ func (h *Server) vote(w http.ResponseWriter, r *http.Request) {
 			UserID: uuid.UUID(session.UserID),
 			Type:   inbox.AchievementTypeVote,
 		}); err != nil {
-			log.Error().Err(err).Msg("publish vote event")
+			log.Error().Err(err).Msg("publish recalculate event")
 		}
 
 		if err = h.publisher.PublishJSON(context.TODO(), inbox.SubjectVoteCreated, inbox.VotePayload{

@@ -142,6 +142,8 @@ func NewServer(
 	handler.HandleFunc("/subscriptions/{id}", srv.unsubscribe).Methods(http.MethodDelete).Name("delete_subscription")
 
 	handler.HandleFunc("/feed", srv.getFeed).Methods(http.MethodGet).Name("get_feed")
+	handler.HandleFunc("/feed/settings", srv.storeFeedSettings).Methods(http.MethodPost).Name("store_feed_settings")
+	handler.HandleFunc("/feed/settings", srv.getFeedSettings).Methods(http.MethodGet).Name("get_feed_settings")
 	handler.HandleFunc("/feed/mark-as-read", srv.markAsReadBatch).Methods(http.MethodPost).Name("mark_as_read_batch")
 	handler.HandleFunc("/feed/mark-as-unread", srv.markAsUnreadBatch).Methods(http.MethodPost).Name("mark_as_unnead_batch")
 	handler.HandleFunc("/feed/{id}/mark-as-read", srv.markFeedItemAsRead).Methods(http.MethodPost).Name("mark_feed_item_as_read")

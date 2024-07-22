@@ -7,7 +7,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-
 ## [0.2.1] - 2024-07-22
 
 ### Added
@@ -17,7 +16,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 - Feed settings details
-
 
 ## [0.1.0] - 2024-07-01
 

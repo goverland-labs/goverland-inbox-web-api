@@ -55,7 +55,11 @@ func (s *Server) getProposal(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getProposalVotes(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["id"]
+	f, verr := proposals.NewGetVotesForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
 
 	offset, limit, err := request.ExtractPagination(r)
 	if err != nil {
@@ -77,10 +81,11 @@ func (s *Server) getProposalVotes(w http.ResponseWriter, r *http.Request) {
 			Limit:  limit,
 		}
 	}
+	req.Name = f.Name
 
-	resp, err := s.coreclient.GetProposalVotes(r.Context(), id, req)
+	resp, err := s.coreclient.GetProposalVotes(r.Context(), f.ID, req)
 	if err != nil {
-		log.Error().Err(err).Msgf("get proposal votes by id: %s", id)
+		log.Error().Err(err).Msgf("get proposal votes by id: %s", f.ID)
 
 		response.SendEmpty(w, http.StatusInternalServerError)
 		return

@@ -7,10 +7,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.1.1] - 2024-07-22
+
+## [0.2.1] - 2024-07-22
 
 ### Added
 - Search for votes
+
+## [0.2.0] - 2024-07-05
+
+### Added
+- Feed settings details
+
 
 ## [0.1.0] - 2024-07-01
 

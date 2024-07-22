@@ -370,12 +370,22 @@ func (h *Server) vote(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	if err = h.publisher.PublishJSON(context.TODO(), inbox.SubjectRecalculateAchievement, inbox.AchievementRecalculateEvent{
-		UserID: uuid.UUID(session.UserID),
-		Type:   inbox.AchievementTypeVote,
-	}); err != nil {
-		log.Error().Err(err).Msg("publish vote event")
-	}
+	go func() {
+		// todo: use SubjectVoteCreated instead of this subject
+		if err = h.publisher.PublishJSON(context.TODO(), inbox.SubjectRecalculateAchievement, inbox.AchievementRecalculateEvent{
+			UserID: uuid.UUID(session.UserID),
+			Type:   inbox.AchievementTypeVote,
+		}); err != nil {
+			log.Error().Err(err).Msg("publish recalculate event")
+		}
+
+		if err = h.publisher.PublishJSON(context.TODO(), inbox.SubjectVoteCreated, inbox.VotePayload{
+			UserID:     uuid.UUID(session.UserID),
+			ProposalID: voteResponse.ProposalID,
+		}); err != nil {
+			log.Error().Err(err).Msg("publish vote event")
+		}
+	}()
 
 	response.SendJSON(w, http.StatusOK, &successfulVote)
 }

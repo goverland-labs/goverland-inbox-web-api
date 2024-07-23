@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"net/http"
+	"sort"
 	"sync"
 
 	"github.com/google/uuid"
@@ -99,6 +100,7 @@ func (s *Server) listSubscriptions(w http.ResponseWriter, r *http.Request) {
 	if list == nil {
 		list = []Subscription{}
 	}
+	sort.Slice(list, func(i, j int) bool { return list[i].CreatedAt.AsTime().After(*list[j].CreatedAt.AsTime()) })
 
 	offset, limit, err := request.ExtractPagination(r)
 	if err != nil {

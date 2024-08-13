@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.2] - 2024-08-13
+
+### Changed
+- Parameter's name for search
+
 ## [0.2.1] - 2024-07-22
 
 ### Added

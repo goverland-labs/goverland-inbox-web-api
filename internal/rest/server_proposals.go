@@ -81,7 +81,7 @@ func (s *Server) getProposalVotes(w http.ResponseWriter, r *http.Request) {
 			Limit:  limit,
 		}
 	}
-	req.Name = f.Name
+	req.Query = f.Query
 
 	resp, err := s.coreclient.GetProposalVotes(r.Context(), f.ID, req)
 	if err != nil {

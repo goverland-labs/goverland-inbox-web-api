@@ -9,15 +9,15 @@ import (
 )
 
 type GetVotesRequest struct {
-	ID   string
-	Name string
+	ID    string
+	Query string
 }
 
 type GetVotesForm struct {
 	helpers.Pagination
 
-	ID   string
-	Name string
+	ID    string
+	Query string
 }
 
 func NewGetVotesForm() *GetVotesForm {
@@ -26,13 +26,13 @@ func NewGetVotesForm() *GetVotesForm {
 
 func (f *GetVotesForm) ParseAndValidate(r *http.Request) (*GetVotesForm, response.Error) {
 	req := &GetVotesRequest{
-		ID:   mux.Vars(r)["id"],
-		Name: r.URL.Query().Get("name"),
+		ID:    mux.Vars(r)["id"],
+		Query: r.URL.Query().Get("query"),
 	}
 
 	errors := make(map[string]response.ErrorMessage)
 	f.validateAndSetId(req, errors)
-	f.validateAndSetName(req, errors)
+	f.validateAndSetQuery(req, errors)
 	f.ValidateAndSetPagination(r, errors)
 
 	if len(errors) > 0 {
@@ -53,11 +53,11 @@ func (f *GetVotesForm) validateAndSetId(req *GetVotesRequest, errors map[string]
 	f.ID = id
 }
 
-func (f *GetVotesForm) validateAndSetName(req *GetVotesRequest, _ map[string]response.ErrorMessage) {
-	name := strings.TrimSpace(req.Name)
-	if name == "" {
+func (f *GetVotesForm) validateAndSetQuery(req *GetVotesRequest, _ map[string]response.ErrorMessage) {
+	query := strings.TrimSpace(req.Query)
+	if query == "" {
 		return
 	}
 
-	f.Name = name
+	f.Query = query
 }

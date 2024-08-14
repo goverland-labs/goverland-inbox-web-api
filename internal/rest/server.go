@@ -69,7 +69,7 @@ func NewServer(
 	pb *natsclient.Publisher,
 	siweTTL time.Duration,
 ) *Server {
-	ds := internaldao.NewService(internaldao.NewCache(), cl)
+	ds := internaldao.NewService(internaldao.NewCache(), cl, authService)
 	ps := internalproposal.NewService(internalproposal.NewCache(), cl, ds, ibxProposalClient)
 	srv := &Server{
 		authService:       authService,
@@ -130,6 +130,7 @@ func NewServer(
 	handler.HandleFunc("/dao/recent", srv.recentDao).Methods(http.MethodGet).Name("get_recent_dao")
 	handler.HandleFunc("/dao/{id}/feed", srv.getDAOFeed).Methods(http.MethodGet).Name("get_dao_feed")
 	handler.HandleFunc("/dao/{id}", srv.getDAO).Methods(http.MethodGet).Name("get_dao_item")
+	handler.HandleFunc("/dao/{id}/delegates", srv.getDelegates).Methods(http.MethodGet).Name("get_dao_delegates")
 
 	handler.HandleFunc("/proposals", srv.listProposals).Methods(http.MethodGet).Name("get_proposal_list")
 	handler.HandleFunc("/proposals/top", srv.proposalsTop).Methods(http.MethodGet).Name("get_proposal_top")

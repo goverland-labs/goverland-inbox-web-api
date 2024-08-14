@@ -11,10 +11,20 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/ipfs"
 )
 
+const delegationStrategyName = "split-delegation"
+
 func ConvertCoreDaoToInternal(i *coredao.Dao) *dao.DAO {
 	var activitySince *common.Time
 	if i.ActivitySince > 0 {
 		activitySince = common.NewTime(time.Unix(int64(i.ActivitySince), 0))
+	}
+
+	var delegation *dao.Delegation
+	for _, d := range i.Strategies {
+		if d.Name == delegationStrategyName {
+			delegation = &dao.Delegation{}
+			break
+		}
 	}
 
 	return &dao.DAO{
@@ -53,6 +63,7 @@ func ConvertCoreDaoToInternal(i *coredao.Dao) *dao.DAO {
 		ActiveVotes:     int(i.ActiveVotes),
 		Verified:        i.Verified,
 		PopularityIndex: i.PopularityIndex,
+		Delegation:      delegation,
 		// todo: ParentID
 	}
 }

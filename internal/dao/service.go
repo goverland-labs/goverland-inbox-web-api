@@ -9,8 +9,11 @@ import (
 	coredao "github.com/goverland-labs/goverland-core-sdk-go/dao"
 	corefeed "github.com/goverland-labs/goverland-core-sdk-go/feed"
 
+	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/profile"
+	"github.com/goverland-labs/inbox-web-api/internal/helpers"
 )
 
 type DaoProvider interface {
@@ -18,17 +21,25 @@ type DaoProvider interface {
 	GetDaoList(ctx context.Context, params coresdk.GetDaoListRequest) (*coredao.List, error)
 	GetDaoTop(ctx context.Context, params coresdk.GetDaoTopRequest) (*coredao.TopCategories, error)
 	GetDaoFeed(ctx context.Context, id uuid.UUID, params coresdk.GetDaoFeedRequest) (*corefeed.Feed, error)
+	GetDelegates(ctx context.Context, id uuid.UUID, params coresdk.GetDelegatesRequest) (coredao.Delegates, error)
+	GetDelegateProfile(ctx context.Context, id uuid.UUID, address string) (coredao.DelegateProfile, error)
+}
+
+type AuthService interface {
+	GetProfileInfo(userID auth.UserID) (profile.Profile, error)
 }
 
 type Service struct {
-	cache *Cache
-	dp    DaoProvider
+	cache       *Cache
+	dp          DaoProvider
+	authService AuthService
 }
 
-func NewService(cache *Cache, dp DaoProvider) *Service {
+func NewService(cache *Cache, dp DaoProvider, authService AuthService) *Service {
 	return &Service{
-		cache: cache,
-		dp:    dp,
+		cache:       cache,
+		dp:          dp,
+		authService: authService,
 	}
 }
 
@@ -133,4 +144,74 @@ func (s *Service) GetTop(ctx context.Context, limit int) (*dao.ListTop, error) {
 	list.Categories = grouped
 
 	return list, nil
+}
+
+func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.UserID, req dao.GetDelegatesRequest) (dao.Delegates, error) {
+	resp, err := s.dp.GetDelegates(ctx, id, coresdk.GetDelegatesRequest{
+		Query:  req.Query,
+		By:     req.By,
+		Offset: req.Offset,
+		Limit:  req.Limit,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get delegates: %w", err)
+	}
+
+	delegatesWeights := make(map[string]float64)
+	if userAddress := s.getUserAddress(userID); userAddress != nil {
+		profileResp, err := s.dp.GetDelegateProfile(ctx, id, *userAddress)
+		if err != nil {
+			return nil, fmt.Errorf("get delegate profile: %w", err)
+		}
+
+		for _, delegateItem := range profileResp.Delegates {
+			delegatesWeights[delegateItem.Address] = delegateItem.Weight
+		}
+	}
+
+	delegates := make(dao.Delegates, 0, len(resp))
+	for _, d := range resp {
+		alias := d.Address
+		var ensName *string
+		if d.ENSName != "" {
+			ensName = helpers.Ptr(d.ENSName)
+			alias = d.ENSName
+		}
+
+		delegates = append(delegates, dao.Delegate{
+			User: common.User{
+				Address:      common.UserAddress(d.Address),
+				ResolvedName: ensName,
+				Avatars:      common.GenerateProfileAvatars(alias),
+			},
+			DelegatorCount:        d.DelegatorCount,
+			PercentOfDelegators:   d.PercentOfDelegators,
+			VotingPower:           d.VotingPower,
+			PercentOfVotingPower:  d.PercentOfVotingPower,
+			About:                 d.About,
+			Statement:             d.Statement,
+			VotesCount:            d.VotesCount,
+			CreatedProposalsCount: d.CreatedProposalsCount,
+			Muted:                 false,
+			UserDelegationInfo: dao.UserDelegationInfo{
+				PercentOfDelegated: delegatesWeights[d.Address],
+			},
+		})
+	}
+
+	return delegates, nil
+}
+
+func (s *Service) getUserAddress(userID auth.UserID) *string {
+	profileInfo, err := s.authService.GetProfileInfo(userID)
+	if err != nil || profileInfo.Account == nil {
+		return nil
+	}
+
+	ad := profileInfo.Account.Address
+	if ad == "" {
+		return nil
+	}
+
+	return &ad
 }

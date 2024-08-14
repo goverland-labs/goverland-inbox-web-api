@@ -3,6 +3,7 @@ package dao
 import (
 	"github.com/google/uuid"
 
+	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 )
 
@@ -41,6 +42,10 @@ type DAO struct {
 	ActiveVotes      int                `json:"active_votes"`
 	Verified         bool               `json:"verified"`
 	PopularityIndex  float64            `json:"popularity_index"`
+	Delegation       *Delegation        `json:"delegation,omitempty"`
+}
+
+type Delegation struct {
 }
 
 type ShortDAO struct {
@@ -109,4 +114,32 @@ type Top struct {
 
 type ListTop struct {
 	Categories map[common.Category]Top
+}
+
+type GetDelegatesRequest struct {
+	UserID auth.UserID
+	Query  string
+	By     string
+	Limit  int
+	Offset int
+}
+
+type Delegates []Delegate
+
+type Delegate struct {
+	User                  common.User        `json:"user"`
+	DelegatorCount        int32              `json:"delegator_count"`
+	PercentOfDelegators   float64            `json:"percent_of_delegators"`
+	VotingPower           float64            `json:"voting_power"`
+	PercentOfVotingPower  float64            `json:"percent_of_voting_power"`
+	VotesCount            int32              `json:"votes_count"`
+	CreatedProposalsCount int32              `json:"created_proposals_count"`
+	About                 string             `json:"about"`
+	Statement             string             `json:"statement"`
+	UserDelegationInfo    UserDelegationInfo `json:"user_delegation_info"`
+	Muted                 bool               `json:"muted"`
+}
+
+type UserDelegationInfo struct {
+	PercentOfDelegated float64 `json:"percent_of_delegated"`
 }

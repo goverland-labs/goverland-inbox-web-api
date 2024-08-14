@@ -262,6 +262,40 @@ func (s *Server) recentDao(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &list)
 }
 
+func (s *Server) getDelegates(w http.ResponseWriter, r *http.Request) {
+	session, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.SendEmpty(w, http.StatusForbidden)
+	}
+
+	f, verr := daoform.NewGetDelegatesForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	delegatesResult, err := s.daoService.GetDelegates(r.Context(), f.ID, session.UserID, dao.GetDelegatesRequest{
+		UserID: session.UserID,
+		Offset: f.Offset,
+		Limit:  f.Limit,
+		Query:  f.Query,
+		By:     f.By,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get delegates")
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	log.Info().
+		Str("route", mux.CurrentRoute(r).GetName()).
+		Msg("route execution")
+
+	response.AddPaginationHeaders(w, r, f.Offset, f.Limit, len(delegatesResult))
+	response.SendJSON(w, http.StatusOK, &delegatesResult)
+}
+
 func enrichSubscriptionInfo(session auth.Session, list []*dao.DAO) []*dao.DAO {
 	if session == auth.EmptySession {
 		return list

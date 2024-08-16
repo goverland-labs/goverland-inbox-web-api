@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Proposal AI summary endpoint
+
 ## [0.2.2] - 2024-08-13
 
 ### Changed

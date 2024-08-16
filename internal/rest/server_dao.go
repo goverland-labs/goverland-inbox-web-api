@@ -296,6 +296,34 @@ func (s *Server) getDelegates(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &delegatesResult)
 }
 
+func (s *Server) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
+	session, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.SendEmpty(w, http.StatusForbidden)
+	}
+
+	daoIDStr := mux.Vars(r)["id"]
+	daoID, err := uuid.Parse(daoIDStr)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, "invalid dao id")
+		return
+	}
+
+	delegateProfileResult, err := s.daoService.GetDelegateProfile(r.Context(), daoID, session.UserID)
+	if err != nil {
+		log.Error().Err(err).Msg("get delegate profile")
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	log.Info().
+		Str("route", mux.CurrentRoute(r).GetName()).
+		Msg("route execution")
+
+	response.SendJSON(w, http.StatusOK, &delegateProfileResult)
+}
+
 func enrichSubscriptionInfo(session auth.Session, list []*dao.DAO) []*dao.DAO {
 	if session == auth.EmptySession {
 		return list

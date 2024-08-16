@@ -131,6 +131,7 @@ func NewServer(
 	handler.HandleFunc("/dao/{id}/feed", srv.getDAOFeed).Methods(http.MethodGet).Name("get_dao_feed")
 	handler.HandleFunc("/dao/{id}", srv.getDAO).Methods(http.MethodGet).Name("get_dao_item")
 	handler.HandleFunc("/dao/{id}/delegates", srv.getDelegates).Methods(http.MethodGet).Name("get_dao_delegates")
+	handler.HandleFunc("/dao/{id}/delegate-profile", srv.getDelegateProfile).Methods(http.MethodGet).Name("get_dao_delegate_profile")
 
 	handler.HandleFunc("/proposals", srv.listProposals).Methods(http.MethodGet).Name("get_proposal_list")
 	handler.HandleFunc("/proposals/top", srv.proposalsTop).Methods(http.MethodGet).Name("get_proposal_top")

@@ -202,6 +202,70 @@ func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.Us
 	return delegates, nil
 }
 
+func (s *Service) GetDelegateProfile(ctx context.Context, id uuid.UUID, userID auth.UserID) (dao.DelegateProfile, error) {
+	userAddress := s.getUserAddress(userID)
+	if userAddress == nil {
+		return dao.DelegateProfile{}, fmt.Errorf("guest user has not delegate profile")
+	}
+
+	daoInternalFull, err := s.GetDao(ctx, id)
+	if err != nil {
+		return dao.DelegateProfile{}, fmt.Errorf("get dao: %s: %w", id, err)
+	}
+
+	profileResp, err := s.dp.GetDelegateProfile(ctx, id, *userAddress)
+	if err != nil {
+		return dao.DelegateProfile{}, fmt.Errorf("get delegate profile: %w", err)
+	}
+
+	delegatesProfile := make([]dao.DelegateInProfile, 0, len(profileResp.Delegates))
+	for _, d := range profileResp.Delegates {
+		alias := d.Address
+		var ensName *string
+		if d.ENSName != "" {
+			ensName = helpers.Ptr(d.ENSName)
+			alias = d.ENSName
+		}
+
+		delegatesProfile = append(delegatesProfile, dao.DelegateInProfile{
+			User: common.User{
+				Address:      common.UserAddress(d.Address),
+				ResolvedName: ensName,
+				Avatars:      common.GenerateProfileAvatars(alias),
+			},
+			PercentOfDelegated: d.Weight,
+			Weight:             d.Weight,
+		})
+	}
+
+	return dao.DelegateProfile{
+		Dao: ConvertDaoToShort(daoInternalFull),
+		VotingPower: dao.VotingPowerInProfile{
+			Symbol: daoInternalFull.Symbol,
+			Power:  profileResp.VotingPower,
+		},
+		Chains: map[string]dao.Chain{
+			"eth": {
+				ID:               1,
+				Name:             "Ethereum",
+				Balance:          0.1,
+				Symbol:           "eth",
+				FeeApproximation: 0.01,
+				TxScanTemplate:   "https://etherscan.io/tx/:id",
+			},
+			"gnosis": {
+				ID:               100,
+				Name:             "Gnosis Chain",
+				Balance:          10.1,
+				Symbol:           "xDai",
+				FeeApproximation: 0.001,
+				TxScanTemplate:   "https://gnosisscan.io/tx/:id",
+			},
+		},
+		Delegates: delegatesProfile,
+	}, nil
+}
+
 func (s *Service) getUserAddress(userID auth.UserID) *string {
 	profileInfo, err := s.authService.GetProfileInfo(userID)
 	if err != nil || profileInfo.Account == nil {

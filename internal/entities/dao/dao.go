@@ -143,3 +143,30 @@ type Delegate struct {
 type UserDelegationInfo struct {
 	PercentOfDelegated float64 `json:"percent_of_delegated"`
 }
+
+type DelegateProfile struct {
+	Dao         ShortDAO             `json:"dao"`
+	VotingPower VotingPowerInProfile `json:"voting_power"`
+	Chains      map[string]Chain     `json:"chains"`
+	Delegates   []DelegateInProfile  `json:"delegates"`
+}
+
+type VotingPowerInProfile struct {
+	Symbol string  `json:"symbol"`
+	Power  float64 `json:"power"`
+}
+
+type DelegateInProfile struct {
+	User               common.User `json:"user"`
+	PercentOfDelegated float64     `json:"percent_of_delegated"`
+	Weight             float64     `json:"weight"`
+}
+
+type Chain struct {
+	ID               int     `json:"id"`
+	Name             string  `json:"name"`
+	Balance          float64 `json:"balance"`
+	Symbol           string  `json:"symbol"`
+	FeeApproximation float64 `json:"fee_approximation"`
+	TxScanTemplate   string  `json:"tx_scan_template"`
+}

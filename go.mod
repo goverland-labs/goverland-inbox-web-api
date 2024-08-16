@@ -14,7 +14,7 @@ require (
 	github.com/goverland-labs/analytics-api v0.0.14
 	github.com/goverland-labs/goverland-core-sdk-go v0.1.8
 	github.com/goverland-labs/goverland-platform-events v0.2.7
-	github.com/goverland-labs/inbox-api v0.0.29-0.20240814141740-6e594c3f36df
+	github.com/goverland-labs/inbox-api v0.1.0
 	github.com/goverland-labs/lib-rest-helpers v0.1.0
 	github.com/nats-io/nats.go v1.31.0
 	github.com/prometheus/client_golang v1.18.0

@@ -10,6 +10,7 @@ import (
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"google.golang.org/grpc"
 
+	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
 )
@@ -100,9 +101,9 @@ func (s *Service) GetList(ctx context.Context, ids ...string) ([]*proposal.Propo
 }
 
 // GetAISummary request AI summary from storage and wrap to MD format
-func (s *Service) GetAISummary(ctx context.Context, userID string, proposalID string) (string, error) {
+func (s *Service) GetAISummary(ctx context.Context, sess auth.Session, proposalID string) (string, error) {
 	summary, err := s.aip.GetAISummary(ctx, &inboxapi.GetAISummaryRequest{
-		UserId:     userID,
+		UserId:     sess.UserID.String(),
 		ProposalId: proposalID,
 	})
 	if err != nil {

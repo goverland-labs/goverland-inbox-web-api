@@ -58,7 +58,7 @@ func (s *Server) getProposalSummary(w http.ResponseWriter, r *http.Request) {
 	session, _ := appctx.ExtractUserSession(r.Context())
 	id := mux.Vars(r)["id"]
 
-	summary, err := s.prService.GetAISummary(r.Context(), session.UserID.String(), id)
+	summary, err := s.prService.GetAISummary(r.Context(), session, id)
 	if err != nil {
 		response.HandleError(response.ResolveError(err), w)
 		return

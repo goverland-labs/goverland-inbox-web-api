@@ -54,6 +54,21 @@ func (s *Server) getProposal(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &item)
 }
 
+func (s *Server) getProposalSummary(w http.ResponseWriter, r *http.Request) {
+	session, _ := appctx.ExtractUserSession(r.Context())
+	id := mux.Vars(r)["id"]
+
+	summary, err := s.prService.GetAISummary(r.Context(), session.UserID.String(), id)
+	if err != nil {
+		response.HandleError(response.ResolveError(err), w)
+		return
+	}
+
+	response.SendJSON(w, http.StatusOK, &proposal.AISummary{
+		SummaryMarkdown: summary,
+	})
+}
+
 func (s *Server) getProposalVotes(w http.ResponseWriter, r *http.Request) {
 	f, verr := proposals.NewGetVotesForm().ParseAndValidate(r)
 	if verr != nil {

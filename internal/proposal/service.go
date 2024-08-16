@@ -7,6 +7,8 @@ import (
 	"github.com/google/uuid"
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
+	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"google.golang.org/grpc"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
@@ -17,6 +19,10 @@ type DataProvider interface {
 	GetProposalList(ctx context.Context, params coresdk.GetProposalListRequest) (*coreproposal.List, error)
 }
 
+type AIProvider interface {
+	GetAISummary(ctx context.Context, in *inboxapi.GetAISummaryRequest, opts ...grpc.CallOption) (*inboxapi.GetAISummaryResponse, error)
+}
+
 type DaoProvider interface {
 	GetDaoByIDs(ctx context.Context, ids ...uuid.UUID) (map[uuid.UUID]*dao.DAO, error)
 }
@@ -25,13 +31,15 @@ type Service struct {
 	cache *Cache
 	dp    DataProvider
 	dao   DaoProvider
+	aip   AIProvider
 }
 
-func NewService(cache *Cache, dp DataProvider, dao DaoProvider) *Service {
+func NewService(cache *Cache, dp DataProvider, dao DaoProvider, aip AIProvider) *Service {
 	return &Service{
 		cache: cache,
 		dp:    dp,
 		dao:   dao,
+		aip:   aip,
 	}
 }
 
@@ -89,4 +97,17 @@ func (s *Service) GetList(ctx context.Context, ids ...string) ([]*proposal.Propo
 	}
 
 	return hits, nil
+}
+
+// GetAISummary request AI summary from storage and wrap to MD format
+func (s *Service) GetAISummary(ctx context.Context, userID string, proposalID string) (string, error) {
+	summary, err := s.aip.GetAISummary(ctx, &inboxapi.GetAISummaryRequest{
+		UserId:     userID,
+		ProposalId: proposalID,
+	})
+	if err != nil {
+		return "", fmt.Errorf("get ai summary: %w", err)
+	}
+
+	return fmt.Sprintf("# AI summary\n\n%s", summary.GetSummary()), nil
 }

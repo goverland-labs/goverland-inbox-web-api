@@ -43,3 +43,7 @@ type Proposal struct {
 func (p *Proposal) IsActive() bool {
 	return p.State != nil && *p.State == ActiveState
 }
+
+type AISummary struct {
+	SummaryMarkdown string `json:"summary_markdown"`
+}

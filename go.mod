@@ -14,7 +14,7 @@ require (
 	github.com/goverland-labs/analytics-api v0.0.14
 	github.com/goverland-labs/goverland-core-sdk-go v0.1.8
 	github.com/goverland-labs/goverland-platform-events v0.2.7
-	github.com/goverland-labs/inbox-api v0.0.28
+	github.com/goverland-labs/inbox-api v0.0.29-0.20240814141740-6e594c3f36df
 	github.com/goverland-labs/lib-rest-helpers v0.1.0
 	github.com/nats-io/nats.go v1.31.0
 	github.com/prometheus/client_golang v1.18.0
@@ -26,14 +26,14 @@ require (
 	github.com/spruceid/siwe-go v0.2.1
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4
-	google.golang.org/grpc v1.64.0
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/grpc v1.65.0
+	google.golang.org/protobuf v1.34.1
 )
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dchest/uniuri v1.2.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
@@ -51,8 +51,8 @@ require (
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/relvacode/iso8601 v1.1.1-0.20210511065120-b30b151cc433 // indirect
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
-	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/net v0.22.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 )

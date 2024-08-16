@@ -68,7 +68,7 @@ func NewServer(
 	siweTTL time.Duration,
 ) *Server {
 	ds := internaldao.NewService(internaldao.NewCache(), cl)
-	ps := internalproposal.NewService(internalproposal.NewCache(), cl, ds)
+	ps := internalproposal.NewService(internalproposal.NewCache(), cl, ds, ibxProposalClient)
 	srv := &Server{
 		authService:       authService,
 		coreclient:        cl,
@@ -131,6 +131,7 @@ func NewServer(
 	handler.HandleFunc("/proposals", srv.listProposals).Methods(http.MethodGet).Name("get_proposal_list")
 	handler.HandleFunc("/proposals/top", srv.proposalsTop).Methods(http.MethodGet).Name("get_proposal_top")
 	handler.HandleFunc("/proposals/{id}", srv.getProposal).Methods(http.MethodGet).Name("get_proposal_item")
+	handler.HandleFunc("/proposals/{id}/summary", srv.getProposalSummary).Methods(http.MethodGet).Name("get_proposal_summary")
 	handler.HandleFunc("/proposals/{id}/votes", srv.getProposalVotes).Methods(http.MethodGet).Name("get_proposal_votes")
 	handler.HandleFunc("/proposals/{id}/votes/validate", srv.validateVote).Methods(http.MethodPost).Name("proposal_vote_validate")
 	handler.HandleFunc("/proposals/{id}/votes/prepare", srv.prepareVote).Methods(http.MethodPost).Name("proposal_vote_prepare")

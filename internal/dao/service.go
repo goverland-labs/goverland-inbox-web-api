@@ -14,7 +14,7 @@ import (
 )
 
 type DaoProvider interface {
-	GetDao(ctx context.Context, id uuid.UUID) (*coredao.Dao, error)
+	GetDao(ctx context.Context, id string) (*coredao.Dao, error)
 	GetDaoList(ctx context.Context, params coresdk.GetDaoListRequest) (*coredao.List, error)
 	GetDaoTop(ctx context.Context, params coresdk.GetDaoTopRequest) (*coredao.TopCategories, error)
 	GetDaoFeed(ctx context.Context, id uuid.UUID, params coresdk.GetDaoFeedRequest) (*corefeed.Feed, error)
@@ -32,7 +32,7 @@ func NewService(cache *Cache, dp DaoProvider) *Service {
 	}
 }
 
-func (s *Service) GetDao(ctx context.Context, id uuid.UUID) (*dao.DAO, error) {
+func (s *Service) GetDao(ctx context.Context, id string) (*dao.DAO, error) {
 	item, ok := s.cache.GetByID(id)
 	if ok {
 		return item, nil
@@ -49,7 +49,7 @@ func (s *Service) GetDao(ctx context.Context, id uuid.UUID) (*dao.DAO, error) {
 	return internal, nil
 }
 
-func (s *Service) GetDaoByIDs(ctx context.Context, ids ...uuid.UUID) (map[uuid.UUID]*dao.DAO, error) {
+func (s *Service) GetDaoByIDs(ctx context.Context, ids ...string) (map[string]*dao.DAO, error) {
 	hits, missed := s.cache.GetDaoByIDs(ids...)
 	if len(missed) == 0 {
 		return hits, nil
@@ -57,7 +57,7 @@ func (s *Service) GetDaoByIDs(ctx context.Context, ids ...uuid.UUID) (map[uuid.U
 
 	search := make([]string, len(missed))
 	for i := range missed {
-		search[i] = missed[i].String()
+		search[i] = missed[i]
 	}
 
 	resp, err := s.dp.GetDaoList(ctx, coresdk.GetDaoListRequest{
@@ -70,7 +70,7 @@ func (s *Service) GetDaoByIDs(ctx context.Context, ids ...uuid.UUID) (map[uuid.U
 
 	for i := range resp.Items {
 		internal := ConvertCoreDaoToInternal(&resp.Items[i])
-		hits[internal.ID] = internal
+		hits[internal.ID.String()] = internal
 
 		s.cache.AddToCache(internal)
 	}

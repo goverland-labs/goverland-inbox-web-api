@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
@@ -251,9 +250,9 @@ func (s *Server) getMutualDaos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mutualDaosList := resp.DaoVotersParticipateIn
-	daoIds := make([]uuid.UUID, 0, len(mutualDaosList))
+	daoIds := make([]string, 0, len(mutualDaosList))
 	for _, info := range mutualDaosList {
-		daoIds = append(daoIds, uuid.MustParse(info.DaoId))
+		daoIds = append(daoIds, info.DaoId)
 	}
 	daos, err := s.fetchDAOsByIds(r.Context(), daoIds)
 	if err != nil {
@@ -263,7 +262,7 @@ func (s *Server) getMutualDaos(w http.ResponseWriter, r *http.Request) {
 
 	list := make([]entity.MutualDao, 0)
 	for _, md := range resp.DaoVotersParticipateIn {
-		d, ok := daos[uuid.MustParse(md.DaoId)]
+		d, ok := daos[md.DaoId]
 		if ok {
 			list = append(list, convertMutualDaoToInternal(session, md, d))
 		}

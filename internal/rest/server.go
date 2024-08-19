@@ -182,7 +182,7 @@ func (s *Server) GetHTTPServer() *http.Server {
 	return s.httpServer
 }
 
-func (s *Server) fetchDAOsByIds(ctx context.Context, daoIds []uuid.UUID) (map[uuid.UUID]*dao.DAO, error) {
+func (s *Server) fetchDAOsByIds(ctx context.Context, daoIds []string) (map[string]*dao.DAO, error) {
 	list, err := s.daoService.GetDaoByIDs(ctx, daoIds...)
 	if err != nil {
 		return nil, fmt.Errorf("daoService.GetDaoByIDs: %w", err)

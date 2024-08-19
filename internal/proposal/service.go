@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
@@ -25,7 +24,7 @@ type AIProvider interface {
 }
 
 type DaoProvider interface {
-	GetDaoByIDs(ctx context.Context, ids ...uuid.UUID) (map[uuid.UUID]*dao.DAO, error)
+	GetDaoByIDs(ctx context.Context, ids ...string) (map[string]*dao.DAO, error)
 }
 
 type Service struct {
@@ -55,12 +54,12 @@ func (s *Service) GetByID(ctx context.Context, id string) (*proposal.Proposal, e
 		return nil, fmt.Errorf("get proposal: %s: %w", id, err)
 	}
 
-	list, err := s.dao.GetDaoByIDs(ctx, pr.DaoID)
+	list, err := s.dao.GetDaoByIDs(ctx, pr.DaoID.String())
 	if err != nil {
 		return nil, fmt.Errorf("get dao: %s: %w", pr.DaoID, err)
 	}
 
-	converted := ConvertProposalToInternal(pr, list[pr.DaoID])
+	converted := ConvertProposalToInternal(pr, list[pr.DaoID.String()])
 	s.cache.AddToCache(converted)
 
 	return converted, nil
@@ -80,9 +79,9 @@ func (s *Service) GetList(ctx context.Context, ids ...string) ([]*proposal.Propo
 		return nil, fmt.Errorf("get proposals list: %w", err)
 	}
 
-	daoIds := make([]uuid.UUID, 0, len(ids))
+	daoIds := make([]string, 0, len(ids))
 	for i := range resp.Items {
-		daoIds = append(daoIds, resp.Items[i].DaoID)
+		daoIds = append(daoIds, resp.Items[i].DaoID.String())
 	}
 
 	list, err := s.dao.GetDaoByIDs(ctx, daoIds...)
@@ -91,7 +90,7 @@ func (s *Service) GetList(ctx context.Context, ids ...string) ([]*proposal.Propo
 	}
 
 	for _, info := range resp.Items {
-		converted := ConvertProposalToInternal(&info, list[info.DaoID])
+		converted := ConvertProposalToInternal(&info, list[info.DaoID.String()])
 		hits = append(hits, converted)
 
 		s.cache.AddToCache(converted)

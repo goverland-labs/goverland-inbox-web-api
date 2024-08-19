@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/google/uuid"
-
 	"github.com/goverland-labs/inbox-web-api/internal/helpers"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 )
@@ -15,7 +13,7 @@ type daoRequest struct {
 }
 
 type DAOForm struct {
-	DAO uuid.UUID
+	DAO string
 }
 
 func NewDAOForm() *DAOForm {
@@ -49,12 +47,5 @@ func (f *DAOForm) validateAndSetDAO(req *daoRequest, errors map[string]response.
 		return
 	}
 
-	parsed, err := uuid.Parse(daoID)
-	if err != nil {
-		errors["dao"] = response.WrongValueError("wrong value")
-
-		return
-	}
-
-	f.DAO = parsed
+	f.DAO = daoID
 }

@@ -109,5 +109,5 @@ func (s *Service) GetAISummary(ctx context.Context, sess auth.Session, proposalI
 		return "", fmt.Errorf("get ai summary: %w", err)
 	}
 
-	return fmt.Sprintf("# AI summary\n\n%s", summary.GetSummary()), nil
+	return fmt.Sprintf("# AI summary\n%s", summary.GetSummary()), nil
 }

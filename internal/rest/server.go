@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
+	"github.com/goverland-labs/inbox-web-api/internal/chain"
 	"github.com/goverland-labs/inbox-web-api/internal/config"
 	internaldao "github.com/goverland-labs/inbox-web-api/internal/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
@@ -46,9 +47,10 @@ type Server struct {
 	userClient        inboxapi.UserClient
 	ibxProposalClient inboxapi.ProposalClient
 
-	daoService *internaldao.Service
-	prService  *internalproposal.Service
-	publisher  *natsclient.Publisher
+	daoService   *internaldao.Service
+	prService    *internalproposal.Service
+	publisher    *natsclient.Publisher
+	chainService *chain.Service
 
 	siweTTL time.Duration
 }
@@ -68,8 +70,12 @@ func NewServer(
 	userActivityService *tracking.UserActivityService,
 	pb *natsclient.Publisher,
 	siweTTL time.Duration,
-) *Server {
-	ds := internaldao.NewService(internaldao.NewCache(), cl, authService)
+) (*Server, error) {
+	chainService, err := chain.NewService()
+	if err != nil {
+		return nil, fmt.Errorf("chain.NewService: %w", err)
+	}
+	ds := internaldao.NewService(internaldao.NewCache(), cl, authService, chainService)
 	ps := internalproposal.NewService(internalproposal.NewCache(), cl, ds, ibxProposalClient)
 	srv := &Server{
 		authService:       authService,
@@ -86,6 +92,7 @@ func NewServer(
 		prService:         ps,
 		publisher:         pb,
 		siweTTL:           siweTTL,
+		chainService:      chainService,
 	}
 
 	handler := mux.NewRouter()
@@ -131,7 +138,10 @@ func NewServer(
 	handler.HandleFunc("/dao/{id}/feed", srv.getDAOFeed).Methods(http.MethodGet).Name("get_dao_feed")
 	handler.HandleFunc("/dao/{id}", srv.getDAO).Methods(http.MethodGet).Name("get_dao_item")
 	handler.HandleFunc("/dao/{id}/delegates", srv.getDelegates).Methods(http.MethodGet).Name("get_dao_delegates")
-	handler.HandleFunc("/dao/{id}/delegate-profile", srv.getDelegateProfile).Methods(http.MethodGet).Name("get_dao_delegate_profile")
+	handler.HandleFunc("/dao/{id}/user-delegation", srv.getDelegateProfile).Methods(http.MethodGet).Name("get_dao_user_delegation")
+	handler.HandleFunc("/dao/{id}/prepare-split-delegation", srv.prepareSplitDelegation).Methods(http.MethodPost).Name("post_dao_prepare_split_delegation")
+
+	handler.HandleFunc("/chain/{id}/{tx_hash}", srv.getTxStatus).Methods(http.MethodGet).Name("get_chain_tx_status")
 
 	handler.HandleFunc("/proposals", srv.listProposals).Methods(http.MethodGet).Name("get_proposal_list")
 	handler.HandleFunc("/proposals/top", srv.proposalsTop).Methods(http.MethodGet).Name("get_proposal_top")
@@ -183,7 +193,7 @@ func NewServer(
 	handler.HandleFunc("/analytics/monthly-totals/voters", srv.getMonthlyVoters).Methods(http.MethodGet).Name("monthly_voters")
 	handler.HandleFunc("/analytics/avg-vps/{id}", srv.getDaoAvgVpList).Methods(http.MethodGet).Name("dao_avg_vps")
 
-	return srv
+	return srv, nil
 }
 
 func (s *Server) GetHTTPServer() *http.Server {

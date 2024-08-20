@@ -131,7 +131,10 @@ func (a *Application) initRESTWorker() error {
 	uas := tracking.NewUserActivityService(ic)
 	a.manager.AddWorker(process.NewCallbackWorker("user-activity", uas.Start))
 
-	srv := rest.NewServer(a.cfg.REST, authService, cs, sc, settings, versions, a.feedClient, a.achievementClient, ac, ic, pc, uas, a.pb, a.cfg.SiweTTL)
+	srv, err := rest.NewServer(a.cfg.REST, authService, cs, sc, settings, versions, a.feedClient, a.achievementClient, ac, ic, pc, uas, a.pb, a.cfg.SiweTTL)
+	if err != nil {
+		return fmt.Errorf("create REST server: %v", err)
+	}
 	a.manager.AddWorker(process.NewServerWorker("rest", srv.GetHTTPServer()))
 
 	return nil

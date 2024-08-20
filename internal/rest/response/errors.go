@@ -196,15 +196,23 @@ type RateLimitedError struct {
 
 	// time in seconds
 	RetryAfter int
+
+	// public message to display to the client
+	Message string
 }
 
-func NewRateLimitedError(retryAfter int) *RateLimitedError {
+func NewRateLimitedError(retryAfter int, msg string) *RateLimitedError {
 	return &RateLimitedError{
 		RetryAfter: retryAfter,
+		Message:    msg,
 	}
 }
 
 func (e *RateLimitedError) PublicMessage() string {
+	if e.Message != "" {
+		return e.Message
+	}
+
 	return "too many requests"
 }
 

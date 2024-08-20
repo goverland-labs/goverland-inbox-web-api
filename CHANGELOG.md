@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Get RateLimit error details from QuotaFailure message
+
 ## [0.3.2] - 2024-08-20
 
 ### Fixed

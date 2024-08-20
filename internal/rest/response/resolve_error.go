@@ -45,13 +45,22 @@ func ResolveError(err error) Error {
 
 	case codes.ResourceExhausted:
 		retryAfter := 0
+		msg := ""
 		for _, d := range details.Details() {
 			if info, ok := d.(*errdetails.RetryInfo); ok {
 				delay := info.GetRetryDelay().AsDuration()
 				retryAfter = int(math.Ceil(delay.Seconds()))
 			}
+
+			if info, ok := d.(*errdetails.QuotaFailure); ok {
+				for _, v := range info.GetViolations() {
+					msg = v.GetDescription()
+					break
+				}
+			}
 		}
-		return NewRateLimitedError(retryAfter)
+
+		return NewRateLimitedError(retryAfter, msg)
 	}
 
 	return NewInternalError()

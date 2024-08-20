@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"

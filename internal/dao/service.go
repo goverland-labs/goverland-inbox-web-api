@@ -220,7 +220,7 @@ func (s *Service) GetDelegateProfile(ctx context.Context, id uuid.UUID, userID a
 		return dao.DelegateProfile{}, fmt.Errorf("guest user has not delegate profile")
 	}
 
-	daoInternalFull, err := s.GetDao(ctx, id)
+	daoInternalFull, err := s.GetDao(ctx, id.String())
 	if err != nil {
 		return dao.DelegateProfile{}, fmt.Errorf("get dao: %s: %w", id, err)
 	}

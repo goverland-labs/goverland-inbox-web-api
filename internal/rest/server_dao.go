@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
+	"github.com/goverland-labs/inbox-web-api/internal/chain"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/feed"
@@ -322,6 +324,81 @@ func (s *Server) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
 		Msg("route execution")
 
 	response.SendJSON(w, http.StatusOK, &delegateProfileResult)
+}
+
+func (s *Server) prepareSplitDelegation(w http.ResponseWriter, r *http.Request) {
+	_, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.SendEmpty(w, http.StatusForbidden)
+	}
+
+	daoIDStr := mux.Vars(r)["id"]
+	daoID, err := uuid.Parse(daoIDStr)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, "invalid dao id")
+		return
+	}
+
+	params, verr := daoform.NewPrepareSplitDelegation().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	preparedDelegates := make([]dao.PreparedDelegate, 0, len(params.Delegates))
+	for _, d := range params.Delegates {
+		preparedDelegates = append(preparedDelegates, dao.PreparedDelegate{
+			Address:            d.Address,
+			PercentOfDelegated: d.PercentOfDelegated,
+		})
+	}
+
+	preparedDelegation, err := s.daoService.PrepareSplitDelegation(r.Context(), daoID, dao.PrepareSplitDelegationRequest{
+		ChainID:    params.ChainID,
+		Delegates:  preparedDelegates,
+		Expiration: params.ExpirationDate,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("prepare split delegation")
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	log.Info().
+		Str("route", mux.CurrentRoute(r).GetName()).
+		Msg("route execution")
+
+	response.SendJSON(w, http.StatusOK, &preparedDelegation)
+}
+
+func (s *Server) getTxStatus(w http.ResponseWriter, r *http.Request) {
+	_, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.SendEmpty(w, http.StatusForbidden)
+	}
+
+	chainIDStr := mux.Vars(r)["id"]
+	chainID, err := strconv.Atoi(chainIDStr)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, "invalid chain id")
+		return
+	}
+	txHashHex := mux.Vars(r)["tx_hash"]
+
+	txStatus, err := s.chainService.GetTxStatus(r.Context(), chain.ChainID(chainID), txHashHex)
+	if err != nil {
+		log.Error().Err(err).Msg("get tx status")
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	log.Info().
+		Str("route", mux.CurrentRoute(r).GetName()).
+		Msg("route execution")
+
+	response.SendJSON(w, http.StatusOK, &txStatus)
 }
 
 func enrichSubscriptionInfo(session auth.Session, list []*dao.DAO) []*dao.DAO {

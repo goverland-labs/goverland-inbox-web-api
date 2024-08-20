@@ -1,9 +1,12 @@
 package dao
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
+	"github.com/goverland-labs/inbox-web-api/internal/chain"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 )
 
@@ -145,10 +148,10 @@ type UserDelegationInfo struct {
 }
 
 type DelegateProfile struct {
-	Dao         ShortDAO             `json:"dao"`
-	VotingPower VotingPowerInProfile `json:"voting_power"`
-	Chains      map[string]Chain     `json:"chains"`
-	Delegates   []DelegateInProfile  `json:"delegates"`
+	Dao         ShortDAO                   `json:"dao"`
+	VotingPower VotingPowerInProfile       `json:"voting_power"`
+	Chains      map[chain.Chain]chain.Info `json:"chains"`
+	Delegates   []DelegateInProfile        `json:"delegates"`
 }
 
 type VotingPowerInProfile struct {
@@ -162,11 +165,20 @@ type DelegateInProfile struct {
 	Weight             float64     `json:"weight"`
 }
 
-type Chain struct {
-	ID               int     `json:"id"`
-	Name             string  `json:"name"`
-	Balance          float64 `json:"balance"`
-	Symbol           string  `json:"symbol"`
-	FeeApproximation float64 `json:"fee_approximation"`
-	TxScanTemplate   string  `json:"tx_scan_template"`
+type PrepareSplitDelegationRequest struct {
+	ChainID    chain.ChainID      `json:"chain_id"`
+	Delegates  []PreparedDelegate `json:"delegates"`
+	Expiration time.Time          `json:"expiration_date"`
+}
+
+type PreparedDelegate struct {
+	Address            string  `json:"address"`
+	PercentOfDelegated float64 `json:"percent_of_delegated"`
+}
+
+type PreparedSplitDelegation struct {
+	To       string `json:"to"`
+	Data     string `json:"data"`
+	GasPrice string `json:"gas_price"`
+	Gas      string `json:"gas"`
 }

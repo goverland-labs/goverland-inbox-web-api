@@ -9,7 +9,10 @@ import (
 	coredao "github.com/goverland-labs/goverland-core-sdk-go/dao"
 	corefeed "github.com/goverland-labs/goverland-core-sdk-go/feed"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
+	"github.com/goverland-labs/inbox-web-api/internal/chain"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/profile"
@@ -29,17 +32,26 @@ type AuthService interface {
 	GetProfileInfo(userID auth.UserID) (profile.Profile, error)
 }
 
-type Service struct {
-	cache       *Cache
-	dp          DaoProvider
-	authService AuthService
+type ChainService interface {
+	GetChainsInfo(address ethcommon.Address) (map[chain.Chain]chain.Info, error)
+	GetDelegatesContractAddress(chainID chain.ChainID) string
+	GetGasPriceHex(chainID chain.ChainID) (string, error)
+	GetGasLimitForSetDelegatesHex() (string, error)
 }
 
-func NewService(cache *Cache, dp DaoProvider, authService AuthService) *Service {
+type Service struct {
+	cache        *Cache
+	dp           DaoProvider
+	authService  AuthService
+	chainService ChainService
+}
+
+func NewService(cache *Cache, dp DaoProvider, authService AuthService, chainService ChainService) *Service {
 	return &Service{
-		cache:       cache,
-		dp:          dp,
-		authService: authService,
+		cache:        cache,
+		dp:           dp,
+		authService:  authService,
+		chainService: chainService,
 	}
 }
 
@@ -238,30 +250,18 @@ func (s *Service) GetDelegateProfile(ctx context.Context, id uuid.UUID, userID a
 		})
 	}
 
+	chainsInfo, err := s.chainService.GetChainsInfo(ethcommon.HexToAddress(*userAddress))
+	if err != nil {
+		return dao.DelegateProfile{}, fmt.Errorf("get chains info: %w", err)
+	}
+
 	return dao.DelegateProfile{
 		Dao: ConvertDaoToShort(daoInternalFull),
 		VotingPower: dao.VotingPowerInProfile{
 			Symbol: daoInternalFull.Symbol,
 			Power:  profileResp.VotingPower,
 		},
-		Chains: map[string]dao.Chain{
-			"eth": {
-				ID:               1,
-				Name:             "Ethereum",
-				Balance:          0.1,
-				Symbol:           "eth",
-				FeeApproximation: 0.01,
-				TxScanTemplate:   "https://etherscan.io/tx/:id",
-			},
-			"gnosis": {
-				ID:               100,
-				Name:             "Gnosis Chain",
-				Balance:          10.1,
-				Symbol:           "xDai",
-				FeeApproximation: 0.001,
-				TxScanTemplate:   "https://gnosisscan.io/tx/:id",
-			},
-		},
+		Chains:    chainsInfo,
 		Delegates: delegatesProfile,
 	}, nil
 }
@@ -278,4 +278,36 @@ func (s *Service) getUserAddress(userID auth.UserID) *string {
 	}
 
 	return &ad
+}
+
+func (s *Service) PrepareSplitDelegation(ctx context.Context, daoID uuid.UUID, params dao.PrepareSplitDelegationRequest) (dao.PreparedSplitDelegation, error) {
+	//daoInternalFull, err := s.GetDao(ctx, daoID)
+	//if err != nil {
+	//	return dao.PreparedSplitDelegation{}, fmt.Errorf("get dao: %s: %w", daoID, err)
+	//}
+	//
+	//prepared := make([]dao.PreparedDelegate, 0, len(params.Delegates))
+	//for _, d := range params.Delegates {
+	//	prepared = append(prepared, dao.PreparedDelegate{
+	//		Address:            d.Address,
+	//		PercentOfDelegated: d.PercentOfDelegated,
+	//	})
+	//}
+
+	gasPriceHex, err := s.chainService.GetGasPriceHex(params.ChainID)
+	if err != nil {
+		return dao.PreparedSplitDelegation{}, fmt.Errorf("get gas price: %w", err)
+	}
+
+	gasLimitHex, err := s.chainService.GetGasLimitForSetDelegatesHex()
+	if err != nil {
+		return dao.PreparedSplitDelegation{}, fmt.Errorf("get gas limit: %w", err)
+	}
+
+	return dao.PreparedSplitDelegation{
+		To:       s.chainService.GetDelegatesContractAddress(params.ChainID),
+		Data:     "TODO",
+		GasPrice: gasPriceHex,
+		Gas:      gasLimitHex,
+	}, nil
 }

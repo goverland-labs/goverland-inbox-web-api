@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
@@ -42,7 +41,7 @@ func (s *Server) getDAO(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Error().Err(err).Msgf("get dao by id: %s", f.ID.String())
+		log.Error().Err(err).Msgf("get dao by id: %s", f.ID)
 
 		response.SendEmpty(w, http.StatusInternalServerError)
 		return
@@ -53,10 +52,10 @@ func (s *Server) getDAO(w http.ResponseWriter, r *http.Request) {
 			_, err := s.userClient.AddView(context.TODO(), &inboxapi.UserViewRequest{
 				UserId: session.UserID.String(),
 				Type:   inboxapi.RecentlyViewedType_RECENTLY_VIEWED_TYPE_DAO,
-				TypeId: f.ID.String(),
+				TypeId: f.ID,
 			})
 			if err != nil {
-				log.Error().Err(err).Msgf("add dao view: %s to user %s", session.UserID.String(), f.ID.String())
+				log.Error().Err(err).Msgf("add dao view: %s to user %s", session.UserID.String(), f.ID)
 			}
 		}()
 	}
@@ -155,9 +154,9 @@ func (s *Server) getDAOFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	daoIDs := make([]uuid.UUID, 0, len(resp.Items))
+	daoIDs := make([]string, 0, len(resp.Items))
 	for _, info := range resp.Items {
-		daoIDs = append(daoIDs, info.DaoID)
+		daoIDs = append(daoIDs, info.DaoID.String())
 	}
 
 	daoList, err := s.daoService.GetDaoByIDs(r.Context(), daoIDs...)
@@ -181,7 +180,7 @@ func (s *Server) getDAOFeed(w http.ResponseWriter, r *http.Request) {
 
 	list := make([]feed.Item, len(resp.Items))
 	for i, info := range resp.Items {
-		list[i] = s.convertFeedToInternal(r.Context(), session, &info, pl[info.ProposalID], daoList[info.DaoID])
+		list[i] = s.convertFeedToInternal(r.Context(), session, &info, pl[info.ProposalID], daoList[info.DaoID.String()])
 	}
 
 	log.Info().

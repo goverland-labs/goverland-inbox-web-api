@@ -4,8 +4,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 )
 
@@ -25,7 +23,7 @@ func (i cachedItem) expired() bool {
 
 type Cache struct {
 	mu    sync.RWMutex
-	cache map[uuid.UUID]cachedItem
+	cache map[string]cachedItem
 }
 
 func (r *Cache) clean() {
@@ -43,7 +41,7 @@ func (r *Cache) clean() {
 
 func NewCache() *Cache {
 	repo := &Cache{
-		cache: make(map[uuid.UUID]cachedItem),
+		cache: make(map[string]cachedItem),
 	}
 
 	go func() {
@@ -57,14 +55,14 @@ func NewCache() *Cache {
 	return repo
 }
 
-func (r *Cache) GetDaoByIDs(ids ...uuid.UUID) (map[uuid.UUID]*dao.DAO, []uuid.UUID) {
-	hits := make(map[uuid.UUID]*dao.DAO, len(ids))
-	missed := make([]uuid.UUID, 0, len(ids))
+func (r *Cache) GetDaoByIDs(ids ...string) (map[string]*dao.DAO, []string) {
+	hits := make(map[string]*dao.DAO, len(ids))
+	missed := make([]string, 0, len(ids))
 	r.mu.RLock()
 	for _, id := range ids {
 		item, ok := r.cache[id]
 		if ok && !item.expired() {
-			hits[item.value.ID] = item.value
+			hits[item.value.ID.String()] = item.value
 		} else {
 			missed = append(missed, id)
 		}
@@ -84,11 +82,14 @@ func (r *Cache) AddToCache(list ...*dao.DAO) {
 			expiresAt: expiresAt,
 			value:     list[i],
 		}
-		r.cache[list[i].ID] = ci
+
+		// add to cache by alias and internal IDs
+		r.cache[list[i].ID.String()] = ci
+		r.cache[list[i].Alias] = ci
 	}
 }
 
-func (r *Cache) GetByID(id uuid.UUID) (*dao.DAO, bool) {
+func (r *Cache) GetByID(id string) (*dao.DAO, bool) {
 	r.mu.RLock()
 	item, ok := r.cache[id]
 	r.mu.RUnlock()

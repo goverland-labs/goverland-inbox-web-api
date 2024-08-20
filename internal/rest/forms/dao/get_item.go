@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
@@ -15,7 +14,7 @@ type getItemRequest struct {
 }
 
 type GetItemForm struct {
-	ID uuid.UUID
+	ID string
 }
 
 func NewGetItemForm() *GetItemForm {
@@ -45,12 +44,5 @@ func (f *GetItemForm) validateAndSetID(req *getItemRequest, errors map[string]re
 		return
 	}
 
-	parsed, err := uuid.Parse(id)
-	if err != nil {
-		errors["id"] = response.WrongValueError("wrong id format")
-
-		return
-	}
-
-	f.ID = parsed
+	f.ID = id
 }

@@ -11,7 +11,6 @@ import (
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
@@ -450,9 +449,9 @@ func (s *Server) getRecommendedDao(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	daoIDs := make([]uuid.UUID, 0, len(available.DaoUuids))
+	daoIDs := make([]string, 0, len(available.DaoUuids))
 	for i := range available.DaoUuids {
-		daoIDs = append(daoIDs, uuid.MustParse(available.DaoUuids[i]))
+		daoIDs = append(daoIDs, available.DaoUuids[i])
 	}
 
 	daoList, err := s.daoService.GetDaoByIDs(r.Context(), daoIDs...)

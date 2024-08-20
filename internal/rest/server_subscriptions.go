@@ -195,10 +195,10 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 
 	res, err := s.subclient.Subscribe(r.Context(), &inboxapi.SubscribeRequest{
 		SubscriberId: session.UserID.String(),
-		DaoId:        f.DAO.String(),
+		DaoId:        f.DAO,
 	})
 	if err != nil {
-		log.Error().Err(err).Msgf("subscribe on dao: %s", f.DAO.String())
+		log.Error().Err(err).Msgf("subscribe on dao: %s", f.DAO)
 
 		response.SendEmpty(w, http.StatusInternalServerError)
 	}

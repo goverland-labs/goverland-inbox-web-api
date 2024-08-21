@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Implement app versions endpoint
+
 ## [0.3.3] - 2024-08-20
 
 ### Added

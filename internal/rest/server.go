@@ -39,6 +39,7 @@ type Server struct {
 	coreclient        *coresdk.Client
 	subclient         inboxapi.SubscriptionClient
 	settings          inboxapi.SettingsClient
+	versions          inboxapi.AppVersionsClient
 	feedClient        inboxapi.FeedClient
 	achievementClient inboxapi.AchievementClient
 	analyticsClient   internalapi.AnalyticsClient
@@ -58,6 +59,7 @@ func NewServer(
 	cl *coresdk.Client,
 	sc inboxapi.SubscriptionClient,
 	settings inboxapi.SettingsClient,
+	versions inboxapi.AppVersionsClient,
 	feedClient inboxapi.FeedClient,
 	achievementClient inboxapi.AchievementClient,
 	analyticsClient internalapi.AnalyticsClient,
@@ -74,6 +76,7 @@ func NewServer(
 		coreclient:        cl,
 		subclient:         sc,
 		settings:          settings,
+		versions:          versions,
 		feedClient:        feedClient,
 		achievementClient: achievementClient,
 		analyticsClient:   analyticsClient,
@@ -161,6 +164,7 @@ func NewServer(
 	handler.HandleFunc("/notifications/settings/details", srv.getSettings).Methods(http.MethodGet).Name("get_settings_details")
 
 	handler.HandleFunc("/stats/totals", srv.getStatsTotals).Methods(http.MethodGet).Name("get_stats_totals")
+	handler.HandleFunc("/versions", srv.appVersions).Methods(http.MethodGet).Name("get_app_versions")
 
 	handler.HandleFunc("/analytics/monthly-active-users/{id}", srv.getMonthlyActiveUsers).Methods(http.MethodGet).Name("monthly_active_user")
 	handler.HandleFunc("/analytics/voter-buckets/{id}", srv.getVoterBuckets).Methods(http.MethodGet).Name("voter_buckets")

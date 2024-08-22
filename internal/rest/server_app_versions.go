@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/appversions"
 	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/auth"
@@ -15,6 +16,8 @@ func (s *Server) appVersions(w http.ResponseWriter, r *http.Request) {
 		Platform: r.Header.Get(auth.AppPlatformHeader),
 	})
 	if err != nil {
+		log.Error().Err(err).Msg("get app versions")
+
 		response.SendEmpty(w, http.StatusInternalServerError)
 		return
 	}

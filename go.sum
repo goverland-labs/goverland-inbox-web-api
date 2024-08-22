@@ -40,8 +40,8 @@ github.com/goverland-labs/goverland-core-sdk-go v0.1.9 h1:wUU5yPKZguhumUVI64Ln98
 github.com/goverland-labs/goverland-core-sdk-go v0.1.9/go.mod h1:8OPh3hODfwLE4ckzY3DRJ4Shs6RXdUGB/KN8o+L6kT4=
 github.com/goverland-labs/goverland-platform-events v0.2.7 h1:U9EjJ1b8PcHXjrxFuseVRsG2lzdSgmRkn/CHK1WPEuE=
 github.com/goverland-labs/goverland-platform-events v0.2.7/go.mod h1:0/131HTR3cue1cDBVIoJ/iwgA+8f5MDQC8mUiqnouzE=
-github.com/goverland-labs/inbox-api v0.1.0 h1:xmIP2uQCAtHrztPQaYXLWJtulFinclkVjf/z/wdkvyQ=
-github.com/goverland-labs/inbox-api v0.1.0/go.mod h1:nrtBYetycesTZoQNdAd9NdmSRLj+gfkrAr3mKGDOdp4=
+github.com/goverland-labs/inbox-api v0.2.1 h1:zDYGZyuBlKJWaEw2kTNJV0fYqwJdlVNuZkaNZXOJqHw=
+github.com/goverland-labs/inbox-api v0.2.1/go.mod h1:nrtBYetycesTZoQNdAd9NdmSRLj+gfkrAr3mKGDOdp4=
 github.com/goverland-labs/lib-rest-helpers v0.1.0 h1:aZ/YIiA6gDDCf5EgFuhBFESl+N3cv0F0vr4Y7PwiUA0=
 github.com/goverland-labs/lib-rest-helpers v0.1.0/go.mod h1:mpNPY29842jR0U991Wib8UgHcTLT3PTWBH9E98Voy9U=
 github.com/holiman/uint256 v1.2.3 h1:K8UWO1HUJpRMXBxbmaY1Y8IAMZC/RsKB+ArEnnK4l5o=

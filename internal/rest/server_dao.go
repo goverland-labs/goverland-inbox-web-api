@@ -242,6 +242,10 @@ func (s *Server) recentDao(w http.ResponseWriter, r *http.Request) {
 			di = daoList.Items[j]
 		}
 
+		if di == nil {
+			continue
+		}
+
 		list = append(list, di)
 	}
 

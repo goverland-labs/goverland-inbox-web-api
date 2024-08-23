@@ -26,7 +26,7 @@ func SendJSON[T any](w http.ResponseWriter, status int, data *T) {
 
 func SendError(w http.ResponseWriter, status int, message string) {
 	SendJSON(w, status, &map[string]interface{}{
-		"error": message,
+		"message": message,
 	})
 }
 

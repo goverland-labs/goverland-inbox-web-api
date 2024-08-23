@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 
@@ -235,7 +236,8 @@ func (s *Server) recentDao(w http.ResponseWriter, r *http.Request) {
 	for i := range resp.List {
 		var di *dao.DAO
 		for j := range daoList.Items {
-			if resp.List[i].TypeId != daoList.Items[j].ID.String() {
+			if strings.ToLower(resp.List[i].TypeId) != strings.ToLower(daoList.Items[j].ID.String()) &&
+				strings.ToLower(resp.List[i].TypeId) != strings.ToLower(daoList.Items[j].Alias) {
 				continue
 			}
 

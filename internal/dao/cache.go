@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"strings"
 	"sync"
 	"time"
 
@@ -60,11 +61,12 @@ func (r *Cache) GetDaoByIDs(ids ...string) (map[string]*dao.DAO, []string) {
 	missed := make([]string, 0, len(ids))
 	r.mu.RLock()
 	for _, id := range ids {
-		item, ok := r.cache[id]
+		lowered := strings.ToLower(id)
+		item, ok := r.cache[lowered]
 		if ok && !item.expired() {
-			hits[item.value.ID.String()] = item.value
+			hits[strings.ToLower(item.value.ID.String())] = item.value
 		} else {
-			missed = append(missed, id)
+			missed = append(missed, lowered)
 		}
 	}
 	r.mu.RUnlock()
@@ -84,14 +86,14 @@ func (r *Cache) AddToCache(list ...*dao.DAO) {
 		}
 
 		// add to cache by alias and internal IDs
-		r.cache[list[i].ID.String()] = ci
-		r.cache[list[i].Alias] = ci
+		r.cache[strings.ToLower(list[i].ID.String())] = ci
+		r.cache[strings.ToLower(list[i].Alias)] = ci
 	}
 }
 
 func (r *Cache) GetByID(id string) (*dao.DAO, bool) {
 	r.mu.RLock()
-	item, ok := r.cache[id]
+	item, ok := r.cache[strings.ToLower(id)]
 	r.mu.RUnlock()
 
 	if ok && !item.expired() {

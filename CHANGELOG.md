@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.2] - 2024-08-23
+
+### Fixed
+- Error message field
+- Getting dao by lowercase notation
+
 ## [0.4.1] - 2024-08-23
 
 ### Fixed

@@ -3,6 +3,7 @@ package dao
 import (
 	"context"
 	"fmt"
+	"math/big"
 
 	"github.com/google/uuid"
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
@@ -37,6 +38,7 @@ type ChainService interface {
 	GetDelegatesContractAddress(chainID chain.ChainID) string
 	GetGasPriceHex(chainID chain.ChainID) (string, error)
 	GetGasLimitForSetDelegatesHex() (string, error)
+	SetDelegationABIPack(dao string, delegation []chain.Delegation, expirationTimestamp *big.Int) (string, error)
 }
 
 type Service struct {
@@ -281,18 +283,10 @@ func (s *Service) getUserAddress(userID auth.UserID) *string {
 }
 
 func (s *Service) PrepareSplitDelegation(ctx context.Context, daoID uuid.UUID, params dao.PrepareSplitDelegationRequest) (dao.PreparedSplitDelegation, error) {
-	//daoInternalFull, err := s.GetDao(ctx, daoID)
-	//if err != nil {
-	//	return dao.PreparedSplitDelegation{}, fmt.Errorf("get dao: %s: %w", daoID, err)
-	//}
-	//
-	//prepared := make([]dao.PreparedDelegate, 0, len(params.Delegates))
-	//for _, d := range params.Delegates {
-	//	prepared = append(prepared, dao.PreparedDelegate{
-	//		Address:            d.Address,
-	//		PercentOfDelegated: d.PercentOfDelegated,
-	//	})
-	//}
+	daoInternalFull, err := s.GetDao(ctx, daoID.String())
+	if err != nil {
+		return dao.PreparedSplitDelegation{}, fmt.Errorf("get dao: %s: %w", daoID, err)
+	}
 
 	gasPriceHex, err := s.chainService.GetGasPriceHex(params.ChainID)
 	if err != nil {
@@ -304,9 +298,22 @@ func (s *Service) PrepareSplitDelegation(ctx context.Context, daoID uuid.UUID, p
 		return dao.PreparedSplitDelegation{}, fmt.Errorf("get gas limit: %w", err)
 	}
 
+	delegation := make([]chain.Delegation, 0, len(params.Delegates))
+	for _, d := range params.Delegates {
+		converted := ethcommon.LeftPadBytes(ethcommon.Hex2Bytes(d.Address), 32)
+		delegation = append(delegation, chain.Delegation{
+			Delegate: ([32]byte)(converted),
+			Ratio:    big.NewInt(int64(d.PercentOfDelegated)),
+		})
+	}
+
+	expirationTs := big.NewInt(params.Expiration.Unix())
+
+	abiData, err := s.chainService.SetDelegationABIPack(daoInternalFull.Alias, delegation, expirationTs)
+
 	return dao.PreparedSplitDelegation{
 		To:       s.chainService.GetDelegatesContractAddress(params.ChainID),
-		Data:     "TODO",
+		Data:     abiData,
 		GasPrice: gasPriceHex,
 		Gas:      gasLimitHex,
 	}, nil

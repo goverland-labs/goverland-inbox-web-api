@@ -3,7 +3,9 @@ package chain
 import (
 	"context"
 	"fmt"
+	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -53,7 +55,8 @@ type TxStatusWrapper struct {
 }
 
 type Service struct {
-	chains map[ChainID]chainInstance
+	splitDelegationABI *abi.ABI
+	chains             map[ChainID]chainInstance
 }
 
 func NewService() (*Service, error) {
@@ -88,8 +91,14 @@ func NewService() (*Service, error) {
 		decimals:       18,
 	}
 
+	sdABI, err := getSplitDelegationAbi()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Service{
-		chains: chains,
+		chains:             chains,
+		splitDelegationABI: sdABI,
 	}, nil
 }
 
@@ -179,4 +188,13 @@ func (s *Service) GetGasPriceHex(chainID ChainID) (string, error) {
 
 func (s *Service) GetGasLimitForSetDelegatesHex() (string, error) {
 	return fmt.Sprintf("0x%x", 50000), nil
+}
+
+func (s *Service) SetDelegationABIPack(dao string, delegation []Delegation, expirationTimestamp *big.Int) (string, error) {
+	input, err := s.splitDelegationABI.Pack("setDelegation", dao, delegation, expirationTimestamp)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("0x%x", input), nil
 }

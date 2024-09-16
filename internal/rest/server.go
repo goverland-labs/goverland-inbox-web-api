@@ -136,6 +136,7 @@ func NewServer(
 	handler.HandleFunc("/proposals/{id}", srv.getProposal).Methods(http.MethodGet).Name("get_proposal_item")
 	handler.HandleFunc("/proposals/{id}/summary", srv.getProposalSummary).Methods(http.MethodGet).Name("get_proposal_summary")
 	handler.HandleFunc("/proposals/{id}/votes", srv.getProposalVotes).Methods(http.MethodGet).Name("get_proposal_votes")
+	handler.HandleFunc("/proposals/{id}/vps", srv.getProposalVpList).Methods(http.MethodGet).Name("get_proposal_vps")
 	handler.HandleFunc("/proposals/{id}/votes/validate", srv.validateVote).Methods(http.MethodPost).Name("proposal_vote_validate")
 	handler.HandleFunc("/proposals/{id}/votes/prepare", srv.prepareVote).Methods(http.MethodPost).Name("proposal_vote_prepare")
 	handler.HandleFunc("/proposals/votes", srv.vote).Methods(http.MethodPost).Name("proposal_vote")
@@ -178,6 +179,7 @@ func NewServer(
 	handler.HandleFunc("/analytics/monthly-totals/daos", srv.getMonthlyDaos).Methods(http.MethodGet).Name("monthly_daos")
 	handler.HandleFunc("/analytics/monthly-totals/proposals", srv.getMonthlyProposals).Methods(http.MethodGet).Name("monthly_proposals")
 	handler.HandleFunc("/analytics/monthly-totals/voters", srv.getMonthlyVoters).Methods(http.MethodGet).Name("monthly_voters")
+	handler.HandleFunc("/analytics/avg-vps/{id}", srv.getDaoAvgVpList).Methods(http.MethodGet).Name("dao_avg_vps")
 
 	return srv
 }

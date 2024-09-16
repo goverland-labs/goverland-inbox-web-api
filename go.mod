@@ -11,8 +11,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
-	github.com/goverland-labs/analytics-api v0.0.14
-	github.com/goverland-labs/goverland-core-sdk-go v0.1.9
+	github.com/goverland-labs/analytics-api v0.0.15
+	github.com/goverland-labs/goverland-core-sdk-go v0.1.11
 	github.com/goverland-labs/goverland-platform-events v0.2.7
 	github.com/goverland-labs/inbox-api v0.2.1
 	github.com/goverland-labs/lib-rest-helpers v0.1.0

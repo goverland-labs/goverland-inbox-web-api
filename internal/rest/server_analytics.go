@@ -314,6 +314,27 @@ func (s *Server) getMonthlyVoters(w http.ResponseWriter, _ *http.Request) {
 	s.sendMonthlyTotals(w, internalapi.ObjectType_OBJECT_TYPE_VOTER)
 }
 
+func (s *Server) getDaoAvgVpList(w http.ResponseWriter, r *http.Request) {
+	f, verr := analytics.NewMonthlyForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	resp, err := s.analyticsClient.GetAvgVpList(context.TODO(), &internalapi.GetAvgVpListRequest{
+		DaoId: f.ID.String(), PeriodInMonths: f.Period,
+	})
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if resp.AvgVp == nil {
+		response.SendJSON(w, http.StatusOK, helpers.Ptr([]float32{}))
+	} else {
+		response.SendJSON(w, http.StatusOK, helpers.Ptr(resp.AvgVp))
+	}
+}
+
 func (s *Server) sendMonthlyTotals(w http.ResponseWriter, t internalapi.ObjectType) {
 	resp, err := s.analyticsClient.GetMonthlyActive(context.TODO(), &internalapi.MonthlyActiveRequest{
 		Type: t,

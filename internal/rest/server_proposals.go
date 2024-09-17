@@ -119,6 +119,19 @@ func (s *Server) getProposalVotes(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &list)
 }
 
+func (s *Server) getProposalVpList(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	resp, err := s.coreclient.GetProposalVpList(r.Context(), id)
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if resp == nil {
+		resp = []float32{}
+	}
+	response.SendJSON(w, http.StatusOK, helpers.Ptr(resp))
+}
+
 func (s *Server) listProposals(w http.ResponseWriter, r *http.Request) {
 	session, _ := appctx.ExtractUserSession(r.Context())
 

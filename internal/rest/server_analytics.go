@@ -315,14 +315,14 @@ func (s *Server) getMonthlyVoters(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *Server) getDaoAvgVpList(w http.ResponseWriter, r *http.Request) {
-	f, verr := analytics.NewGetForm().ParseAndValidate(r)
+	f, verr := analytics.NewMonthlyForm().ParseAndValidate(r)
 	if verr != nil {
 		response.HandleError(verr, w)
 		return
 	}
 
 	resp, err := s.analyticsClient.GetAvgVpList(context.TODO(), &internalapi.GetAvgVpListRequest{
-		DaoId: f.ID.String(),
+		DaoId: f.ID.String(), PeriodInMonths: f.Period,
 	})
 	if err != nil {
 		response.SendError(w, http.StatusInternalServerError, err.Error())

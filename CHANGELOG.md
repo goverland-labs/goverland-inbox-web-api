@@ -7,7 +7,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.4.3] - 2024-09-216
+## [0.4.3] - 2024-09-17
 
 ### Added
 - vp list for dao, proposal

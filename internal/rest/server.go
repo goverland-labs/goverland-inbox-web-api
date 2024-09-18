@@ -57,6 +57,7 @@ type Server struct {
 
 func NewServer(
 	cfg config.REST,
+	cfgChain config.Chain,
 	authService *auth.Service,
 	cl *coresdk.Client,
 	sc inboxapi.SubscriptionClient,
@@ -67,15 +68,16 @@ func NewServer(
 	analyticsClient internalapi.AnalyticsClient,
 	userClient inboxapi.UserClient,
 	ibxProposalClient inboxapi.ProposalClient,
+	delegateClient inboxapi.DelegateClient,
 	userActivityService *tracking.UserActivityService,
 	pb *natsclient.Publisher,
 	siweTTL time.Duration,
 ) (*Server, error) {
-	chainService, err := chain.NewService()
+	chainService, err := chain.NewService(cfgChain)
 	if err != nil {
 		return nil, fmt.Errorf("chain.NewService: %w", err)
 	}
-	ds := internaldao.NewService(internaldao.NewCache(), cl, authService, chainService)
+	ds := internaldao.NewService(internaldao.NewCache(), cl, authService, chainService, delegateClient)
 	ps := internalproposal.NewService(internalproposal.NewCache(), cl, ds, ibxProposalClient)
 	srv := &Server{
 		authService:       authService,
@@ -138,8 +140,10 @@ func NewServer(
 	handler.HandleFunc("/dao/{id}/feed", srv.getDAOFeed).Methods(http.MethodGet).Name("get_dao_feed")
 	handler.HandleFunc("/dao/{id}", srv.getDAO).Methods(http.MethodGet).Name("get_dao_item")
 	handler.HandleFunc("/dao/{id}/delegates", srv.getDelegates).Methods(http.MethodGet).Name("get_dao_delegates")
+	handler.HandleFunc("/dao/{id}/delegate/{address}", srv.getSpecificDelegate).Methods(http.MethodGet).Name("get_dao_delegates")
 	handler.HandleFunc("/dao/{id}/user-delegation", srv.getDelegateProfile).Methods(http.MethodGet).Name("get_dao_user_delegation")
 	handler.HandleFunc("/dao/{id}/prepare-split-delegation", srv.prepareSplitDelegation).Methods(http.MethodPost).Name("post_dao_prepare_split_delegation")
+	handler.HandleFunc("/dao/{id}/success-delegated", srv.prepareSplitDelegation).Methods(http.MethodPost).Name("post_dao_success_delegated")
 
 	handler.HandleFunc("/chain/{id}/{tx_hash}", srv.getTxStatus).Methods(http.MethodGet).Name("get_chain_tx_status")
 

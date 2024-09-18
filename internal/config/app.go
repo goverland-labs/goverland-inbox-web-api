@@ -11,6 +11,7 @@ type App struct {
 	Inbox      Inbox
 	Analytics  Analytics
 	Nats       Nats
+	Chain      Chain
 
 	SiweTTL time.Duration `env:"SIWE_TTL" envDefault:"1h"`
 }

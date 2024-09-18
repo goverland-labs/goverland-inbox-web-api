@@ -22,7 +22,9 @@ func ConvertCoreDaoToInternal(i *coredao.Dao) *dao.DAO {
 	var delegation *dao.Delegation
 	for _, d := range i.Strategies {
 		if d.Name == delegationStrategyName {
-			delegation = &dao.Delegation{}
+			delegation = &dao.Delegation{
+				Type: dao.SplitDelegationType,
+			}
 			break
 		}
 	}

@@ -5,26 +5,20 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/shopspring/decimal"
+
+	"github.com/goverland-labs/inbox-web-api/internal/config"
 )
 
-const (
-	Eth    Chain = "eth"
-	Gnosis Chain = "gnosis"
-
-	EthChainID    ChainID = 1
-	GnosisChainID ChainID = 100
-)
-
-type Chain string
 type ChainID int
 
 type Info struct {
-	ID               int     `json:"id"`
+	ID               ChainID `json:"id"`
 	Name             string  `json:"name"`
 	Balance          float64 `json:"balance"`
 	Symbol           string  `json:"symbol"`
@@ -33,9 +27,9 @@ type Info struct {
 }
 
 type chainInstance struct {
-	chain          Chain
+	chain          string
 	client         *ethclient.Client
-	chainID        int
+	chainID        ChainID
 	publicName     string
 	symbol         string
 	txScanTemplate string
@@ -59,36 +53,35 @@ type Service struct {
 	chains             map[ChainID]chainInstance
 }
 
-func NewService() (*Service, error) {
-	ethClient, err := ethclient.Dial("https://ethereum-rpc.publicnode.com")
-	if err != nil {
-		return nil, err
+type EstimateParams struct {
+	From common.Address
+	To   *common.Address
+	Data []byte
+}
+
+func NewService(cfg config.Chain) (*Service, error) {
+	chainInstances := []config.ChainInstance{
+		cfg.Eth,
+		cfg.Gnosis,
 	}
 
-	chains := make(map[ChainID]chainInstance, 0)
-	chains[EthChainID] = chainInstance{
-		chain:          Eth,
-		chainID:        1,
-		client:         ethClient,
-		publicName:     "Ethereum",
-		symbol:         "eth",
-		txScanTemplate: "https://etherscan.io/tx/:id",
-		decimals:       18,
-	}
+	chains := make(map[ChainID]chainInstance)
+	for _, ci := range chainInstances {
+		chClient, err := ethclient.Dial(ci.PublicNode)
+		if err != nil {
+			return nil, err
+		}
+		chainID := ChainID(ci.ID)
 
-	gnosisClient, err := ethclient.Dial("https://gnosis-rpc.publicnode.com")
-	if err != nil {
-		return nil, err
-	}
-
-	chains[GnosisChainID] = chainInstance{
-		chain:          Gnosis,
-		client:         gnosisClient,
-		chainID:        100,
-		publicName:     "Gnosis Chain",
-		symbol:         "xDai",
-		txScanTemplate: "https://gnosisscan.io/tx/:id",
-		decimals:       18,
+		chains[chainID] = chainInstance{
+			chain:          ci.InternalName,
+			chainID:        chainID,
+			client:         chClient,
+			publicName:     ci.PublicName,
+			symbol:         ci.Symbol,
+			txScanTemplate: ci.TxScanTemplate,
+			decimals:       int32(ci.Decimals),
+		}
 	}
 
 	sdABI, err := getSplitDelegationAbi()
@@ -102,8 +95,8 @@ func NewService() (*Service, error) {
 	}, nil
 }
 
-func (s *Service) GetChainsInfo(address common.Address) (map[Chain]Info, error) {
-	info := make(map[Chain]Info)
+func (s *Service) GetChainsInfo(address common.Address) (map[string]Info, error) {
+	info := make(map[string]Info)
 
 	for _, chain := range s.chains {
 		balance, err := chain.client.BalanceAt(context.Background(), address, nil)
@@ -118,7 +111,7 @@ func (s *Service) GetChainsInfo(address common.Address) (map[Chain]Info, error) 
 			return nil, err
 		}
 
-		fee := decimal.NewFromBigInt(gasPrice, -chain.decimals).Mul(decimal.NewFromInt(50000))
+		fee := decimal.NewFromBigInt(gasPrice, -chain.decimals).Mul(decimal.NewFromInt(250000))
 
 		info[chain.chain] = Info{
 			ID:               chain.chainID,
@@ -169,6 +162,7 @@ func (s *Service) GetTxStatus(ctx context.Context, chainID ChainID, txHashHex st
 }
 
 func (s *Service) GetDelegatesContractAddress(_ ChainID) string {
+	// TODO: config?
 	return "0xDE1e8A7E184Babd9F0E3af18f40634e9Ed6F0905"
 }
 
@@ -186,15 +180,43 @@ func (s *Service) GetGasPriceHex(chainID ChainID) (string, error) {
 	return fmt.Sprintf("0x%x", gasPrice), nil
 }
 
-func (s *Service) GetGasLimitForSetDelegatesHex() (string, error) {
-	return fmt.Sprintf("0x%x", 50000), nil
-}
+func (s *Service) GetMaxPriorityFeePerGasHex(chainID ChainID) (string, error) {
+	chain, ok := s.chains[chainID]
+	if !ok {
+		return "", fmt.Errorf("chain with id %d not found", chainID)
+	}
 
-func (s *Service) SetDelegationABIPack(dao string, delegation []Delegation, expirationTimestamp *big.Int) (string, error) {
-	input, err := s.splitDelegationABI.Pack("setDelegation", dao, delegation, expirationTimestamp)
+	gasTipCap, err := chain.client.SuggestGasTipCap(context.Background())
 	if err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("0x%x", input), nil
+	return fmt.Sprintf("0x%x", gasTipCap), nil
+}
+
+func (s *Service) GetGasLimitForSetDelegatesHex(chainID ChainID, params EstimateParams) (string, error) {
+	chain, ok := s.chains[chainID]
+	if !ok {
+		return "", fmt.Errorf("chain with id %d not found", chainID)
+	}
+
+	gasLimit, err := chain.client.EstimateGas(context.Background(), ethereum.CallMsg{
+		From: params.From,
+		To:   params.To,
+		Data: params.Data,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("0x%x", gasLimit), nil
+}
+
+func (s *Service) SetDelegationABIPack(dao string, delegation []Delegation, expirationTimestamp *big.Int) ([]byte, error) {
+	input, err := s.splitDelegationABI.Pack("setDelegation", dao, delegation, expirationTimestamp)
+	if err != nil {
+		return nil, err
+	}
+
+	return input, nil
 }

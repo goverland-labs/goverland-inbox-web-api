@@ -2,13 +2,20 @@ package dao
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/big"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	coredao "github.com/goverland-labs/goverland-core-sdk-go/dao"
 	corefeed "github.com/goverland-labs/goverland-core-sdk-go/feed"
+	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/slices"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
@@ -18,6 +25,12 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/profile"
 	"github.com/goverland-labs/inbox-web-api/internal/helpers"
+)
+
+var (
+	defaultExpiration               = time.Unix(18618595200, 0) // 2560 year
+	lastDelegatesExpiration         = 10 * time.Minute
+	percentMultiplier       float64 = 100
 )
 
 type DaoProvider interface {
@@ -34,26 +47,29 @@ type AuthService interface {
 }
 
 type ChainService interface {
-	GetChainsInfo(address ethcommon.Address) (map[chain.Chain]chain.Info, error)
+	GetChainsInfo(address ethcommon.Address) (map[string]chain.Info, error)
 	GetDelegatesContractAddress(chainID chain.ChainID) string
 	GetGasPriceHex(chainID chain.ChainID) (string, error)
-	GetGasLimitForSetDelegatesHex() (string, error)
-	SetDelegationABIPack(dao string, delegation []chain.Delegation, expirationTimestamp *big.Int) (string, error)
+	GetMaxPriorityFeePerGasHex(chainID chain.ChainID) (string, error)
+	GetGasLimitForSetDelegatesHex(chainID chain.ChainID, params chain.EstimateParams) (string, error)
+	SetDelegationABIPack(dao string, delegation []chain.Delegation, expirationTimestamp *big.Int) ([]byte, error)
 }
 
 type Service struct {
-	cache        *Cache
-	dp           DaoProvider
-	authService  AuthService
-	chainService ChainService
+	cache          *Cache
+	dp             DaoProvider
+	authService    AuthService
+	chainService   ChainService
+	delegateClient inboxapi.DelegateClient
 }
 
-func NewService(cache *Cache, dp DaoProvider, authService AuthService, chainService ChainService) *Service {
+func NewService(cache *Cache, dp DaoProvider, authService AuthService, chainService ChainService, delegateClient inboxapi.DelegateClient) *Service {
 	return &Service{
-		cache:        cache,
-		dp:           dp,
-		authService:  authService,
-		chainService: chainService,
+		cache:          cache,
+		dp:             dp,
+		authService:    authService,
+		chainService:   chainService,
+		delegateClient: delegateClient,
 	}
 }
 
@@ -179,7 +195,7 @@ func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.Us
 		}
 
 		for _, delegateItem := range profileResp.Delegates {
-			delegatesWeights[delegateItem.Address] = delegateItem.Weight
+			delegatesWeights[delegateItem.Address] = delegateItem.Weight / 100
 		}
 	}
 
@@ -216,6 +232,32 @@ func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.Us
 	return delegates, nil
 }
 
+func (s *Service) GetSpecificDelegate(ctx context.Context, id uuid.UUID, userID auth.UserID, address string) (dao.DelegateWithDao, error) {
+	daoInternalFull, err := s.GetDao(ctx, id.String())
+	if err != nil {
+		return dao.DelegateWithDao{}, fmt.Errorf("get dao: %s: %w", id, err)
+	}
+
+	delegates, err := s.GetDelegates(ctx, id, userID, dao.GetDelegatesRequest{
+		UserID: userID,
+		Query:  address,
+		Limit:  1,
+		Offset: 0,
+	})
+	if err != nil {
+		return dao.DelegateWithDao{}, fmt.Errorf("get delegates: %w", err)
+	}
+
+	if len(delegates) == 0 {
+		return dao.DelegateWithDao{}, fmt.Errorf("delegate not found")
+	}
+
+	return dao.DelegateWithDao{
+		Delegate: delegates[0],
+		Dao:      *daoInternalFull,
+	}, nil
+}
+
 func (s *Service) GetDelegateProfile(ctx context.Context, id uuid.UUID, userID auth.UserID) (dao.DelegateProfile, error) {
 	userAddress := s.getUserAddress(userID)
 	if userAddress == nil {
@@ -232,8 +274,88 @@ func (s *Service) GetDelegateProfile(ctx context.Context, id uuid.UUID, userID a
 		return dao.DelegateProfile{}, fmt.Errorf("get delegate profile: %w", err)
 	}
 
-	delegatesProfile := make([]dao.DelegateInProfile, 0, len(profileResp.Delegates))
-	for _, d := range profileResp.Delegates {
+	chainsInfo, err := s.chainService.GetChainsInfo(ethcommon.HexToAddress(*userAddress))
+	if err != nil {
+		return dao.DelegateProfile{}, fmt.Errorf("get chains info: %w", err)
+	}
+
+	delegatesProfile, err := s.getDelegatesForProfile(ctx, id, userID, *userAddress, profileResp.Delegates)
+	if err != nil {
+		return dao.DelegateProfile{}, fmt.Errorf("get delegates profile: %w", err)
+	}
+
+	return dao.DelegateProfile{
+		Dao: ConvertDaoToShort(daoInternalFull),
+		VotingPower: dao.VotingPowerInProfile{
+			Symbol: daoInternalFull.Symbol,
+			Power:  profileResp.VotingPower,
+		},
+		Chains:         chainsInfo,
+		Delegates:      delegatesProfile,
+		ExpirationDate: profileResp.Expiration,
+	}, nil
+}
+
+func (s *Service) getDelegatesForProfile(ctx context.Context, id uuid.UUID, userID auth.UserID, userAddress string, delegates []coredao.ProfileDelegateItem) ([]dao.DelegateInProfile, error) {
+	lastDelegation, err := s.delegateClient.GetLastDelegation(ctx, &inboxapi.GetLastDelegationRequest{
+		UserId: userID.String(),
+		DaoId:  id.String(),
+	})
+	if err != nil {
+		log.Warn().Err(err).Msg("get last delegation")
+	}
+	if err == nil && time.Since(lastDelegation.GetCreatedAt().AsTime()) < lastDelegatesExpiration {
+		var lastDelegates []dao.PreparedDelegate
+		err := json.Unmarshal([]byte(lastDelegation.Delegates), &lastDelegates)
+		if err != nil {
+			return nil, fmt.Errorf("unmarshal last delegates: %w", err)
+		}
+
+		dForFraction := make([]delegatesForFraction, 0, len(lastDelegates))
+		for _, d := range lastDelegates {
+			if d.Address == userAddress {
+				continue
+			}
+
+			dForFraction = append(dForFraction, delegatesForFraction{
+				address: d.Address,
+				percent: int(d.PercentOfDelegated * percentMultiplier),
+			})
+		}
+
+		delegatesRatio := calculateRatio(dForFraction)
+
+		delegatesProfile := make([]dao.DelegateInProfile, 0, len(lastDelegates))
+		for _, d := range lastDelegates {
+			delegatesProfile = append(delegatesProfile, dao.DelegateInProfile{
+				User: common.User{
+					Address: common.UserAddress(d.Address),
+					Avatars: common.GenerateProfileAvatars(d.Address),
+				},
+				PercentOfDelegated: d.PercentOfDelegated,
+				Ratio:              delegatesRatio[d.Address],
+			})
+		}
+
+		return delegatesProfile, nil
+	}
+
+	dForFraction := make([]delegatesForFraction, 0, len(delegates))
+	for _, d := range delegates {
+		if d.Address == userAddress {
+			continue
+		}
+
+		dForFraction = append(dForFraction, delegatesForFraction{
+			address: d.Address,
+			percent: int(d.Weight),
+		})
+	}
+
+	delegatesRatio := calculateRatio(dForFraction)
+
+	delegatesProfile := make([]dao.DelegateInProfile, 0, len(delegates))
+	for _, d := range delegates {
 		alias := d.Address
 		var ensName *string
 		if d.ENSName != "" {
@@ -247,25 +369,12 @@ func (s *Service) GetDelegateProfile(ctx context.Context, id uuid.UUID, userID a
 				ResolvedName: ensName,
 				Avatars:      common.GenerateProfileAvatars(alias),
 			},
-			PercentOfDelegated: d.Weight,
-			Weight:             d.Weight,
+			PercentOfDelegated: d.Weight / percentMultiplier,
+			Ratio:              delegatesRatio[d.Address],
 		})
 	}
 
-	chainsInfo, err := s.chainService.GetChainsInfo(ethcommon.HexToAddress(*userAddress))
-	if err != nil {
-		return dao.DelegateProfile{}, fmt.Errorf("get chains info: %w", err)
-	}
-
-	return dao.DelegateProfile{
-		Dao: ConvertDaoToShort(daoInternalFull),
-		VotingPower: dao.VotingPowerInProfile{
-			Symbol: daoInternalFull.Symbol,
-			Power:  profileResp.VotingPower,
-		},
-		Chains:    chainsInfo,
-		Delegates: delegatesProfile,
-	}, nil
+	return delegatesProfile, nil
 }
 
 func (s *Service) getUserAddress(userID auth.UserID) *string {
@@ -282,39 +391,93 @@ func (s *Service) getUserAddress(userID auth.UserID) *string {
 	return &ad
 }
 
-func (s *Service) PrepareSplitDelegation(ctx context.Context, daoID uuid.UUID, params dao.PrepareSplitDelegationRequest) (dao.PreparedSplitDelegation, error) {
+func (s *Service) PrepareSplitDelegation(ctx context.Context, userID auth.UserID, daoID uuid.UUID, params dao.PrepareSplitDelegationRequest) (dao.PreparedSplitDelegation, error) {
 	daoInternalFull, err := s.GetDao(ctx, daoID.String())
 	if err != nil {
 		return dao.PreparedSplitDelegation{}, fmt.Errorf("get dao: %s: %w", daoID, err)
 	}
 
+	userAddress := s.getUserAddress(userID)
+	if userAddress == nil {
+		return dao.PreparedSplitDelegation{}, fmt.Errorf("guest user has not delegate profile")
+	}
+	contractAddress := s.chainService.GetDelegatesContractAddress(params.ChainID)
+
 	gasPriceHex, err := s.chainService.GetGasPriceHex(params.ChainID)
 	if err != nil {
 		return dao.PreparedSplitDelegation{}, fmt.Errorf("get gas price: %w", err)
 	}
+	maxPriorityFeePerGasHex, err := s.chainService.GetMaxPriorityFeePerGasHex(params.ChainID)
+	if err != nil {
+		return dao.PreparedSplitDelegation{}, fmt.Errorf("get max priority fee per gas: %w", err)
+	}
 
-	gasLimitHex, err := s.chainService.GetGasLimitForSetDelegatesHex()
+	sortedDelegates := make([]dao.PreparedDelegate, len(params.Delegates))
+	copy(sortedDelegates, params.Delegates)
+	slices.SortFunc(sortedDelegates, func(a, b dao.PreparedDelegate) int {
+		return strings.Compare(a.Address, b.Address)
+	})
+
+	delegation := make([]chain.Delegation, 0, len(sortedDelegates))
+	for _, d := range sortedDelegates {
+		converted := ethcommon.LeftPadBytes(ethcommon.Hex2Bytes(strings.TrimPrefix(d.Address, "0x")), 32)
+		delegation = append(delegation, chain.Delegation{
+			Delegate: ([32]byte)(converted),
+			Ratio:    big.NewInt(int64(d.PercentOfDelegated * percentMultiplier)),
+		})
+	}
+
+	expiration := params.Expiration
+	if params.Expiration == (time.Time{}) {
+		expiration = defaultExpiration
+	}
+	expirationTs := big.NewInt(expiration.Unix())
+
+	abiData, err := s.chainService.SetDelegationABIPack(daoInternalFull.Alias, delegation, expirationTs)
+	if err != nil {
+		return dao.PreparedSplitDelegation{}, fmt.Errorf("set delegation abi pack: %w", err)
+	}
+
+	gasLimitHex, err := s.chainService.GetGasLimitForSetDelegatesHex(params.ChainID, chain.EstimateParams{
+		From: ethcommon.HexToAddress(*userAddress),
+		To:   helpers.Ptr(ethcommon.HexToAddress(contractAddress)),
+		Data: abiData,
+	})
 	if err != nil {
 		return dao.PreparedSplitDelegation{}, fmt.Errorf("get gas limit: %w", err)
 	}
 
-	delegation := make([]chain.Delegation, 0, len(params.Delegates))
-	for _, d := range params.Delegates {
-		converted := ethcommon.LeftPadBytes(ethcommon.Hex2Bytes(d.Address), 32)
-		delegation = append(delegation, chain.Delegation{
-			Delegate: ([32]byte)(converted),
-			Ratio:    big.NewInt(int64(d.PercentOfDelegated)),
-		})
+	return dao.PreparedSplitDelegation{
+		To:                   contractAddress,
+		Data:                 fmt.Sprintf("0x%x", abiData),
+		GasPrice:             gasPriceHex,
+		MaxPriorityFeePerGas: maxPriorityFeePerGasHex,
+		MaxFeePerGas:         gasPriceHex,
+		Gas:                  gasLimitHex,
+	}, nil
+}
+
+func (s *Service) SuccessDelegated(ctx context.Context, userID auth.UserID, daoID uuid.UUID, params dao.SuccessDelegationRequest) error {
+	jsonDelegates, err := json.Marshal(params.Delegates)
+	if err != nil {
+		return fmt.Errorf("marshal delegates: %w", err)
 	}
 
-	expirationTs := big.NewInt(params.Expiration.Unix())
+	var exp *timestamppb.Timestamp
+	if params.Expiration != nil {
+		exp = timestamppb.New(*params.Expiration)
+	}
 
-	abiData, err := s.chainService.SetDelegationABIPack(daoInternalFull.Alias, delegation, expirationTs)
+	_, err = s.delegateClient.StoreDelegated(ctx, &inboxapi.StoreDelegatedRequest{
+		UserId:     userID.String(),
+		DaoId:      daoID.String(),
+		TxHash:     params.TxHash,
+		Delegates:  string(jsonDelegates),
+		Expiration: exp,
+	})
+	if err != nil {
+		return fmt.Errorf("success delegated: %w", err)
+	}
 
-	return dao.PreparedSplitDelegation{
-		To:       s.chainService.GetDelegatesContractAddress(params.ChainID),
-		Data:     abiData,
-		GasPrice: gasPriceHex,
-		Gas:      gasLimitHex,
-	}, nil
+	return nil
 }

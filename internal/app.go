@@ -120,6 +120,7 @@ func (a *Application) initRESTWorker() error {
 	sc := inboxapi.NewSubscriptionClient(strageConn)
 	settings := inboxapi.NewSettingsClient(strageConn)
 	versions := inboxapi.NewAppVersionsClient(strageConn)
+	dc := inboxapi.NewDelegateClient(strageConn)
 	cs := coresdk.NewClient(a.cfg.Core.CoreURL)
 	ac := internalapi.NewAnalyticsClient(anConn)
 	a.achievementClient = inboxapi.NewAchievementClient(strageConn)
@@ -131,7 +132,7 @@ func (a *Application) initRESTWorker() error {
 	uas := tracking.NewUserActivityService(ic)
 	a.manager.AddWorker(process.NewCallbackWorker("user-activity", uas.Start))
 
-	srv, err := rest.NewServer(a.cfg.REST, authService, cs, sc, settings, versions, a.feedClient, a.achievementClient, ac, ic, pc, uas, a.pb, a.cfg.SiweTTL)
+	srv, err := rest.NewServer(a.cfg.REST, a.cfg.Chain, authService, cs, sc, settings, versions, a.feedClient, a.achievementClient, ac, ic, pc, dc, uas, a.pb, a.cfg.SiweTTL)
 	if err != nil {
 		return fmt.Errorf("create REST server: %v", err)
 	}

@@ -10,6 +10,12 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 )
 
+const (
+	SplitDelegationType DelegationType = "split-delegation"
+)
+
+type DelegationType string
+
 type DAO struct {
 	ID               uuid.UUID          `json:"id"`
 	Alias            string             `json:"alias"`
@@ -49,6 +55,7 @@ type DAO struct {
 }
 
 type Delegation struct {
+	Type DelegationType `json:"type"`
 }
 
 type ShortDAO struct {
@@ -143,15 +150,21 @@ type Delegate struct {
 	Muted                 bool               `json:"muted"`
 }
 
+type DelegateWithDao struct {
+	Delegate Delegate `json:"delegate"`
+	Dao      DAO      `json:"dao"`
+}
+
 type UserDelegationInfo struct {
 	PercentOfDelegated float64 `json:"percent_of_delegated"`
 }
 
 type DelegateProfile struct {
-	Dao         ShortDAO                   `json:"dao"`
-	VotingPower VotingPowerInProfile       `json:"voting_power"`
-	Chains      map[chain.Chain]chain.Info `json:"chains"`
-	Delegates   []DelegateInProfile        `json:"delegates"`
+	Dao            ShortDAO              `json:"dao"`
+	VotingPower    VotingPowerInProfile  `json:"voting_power"`
+	Chains         map[string]chain.Info `json:"chains"`
+	Delegates      []DelegateInProfile   `json:"delegates"`
+	ExpirationDate *time.Time            `json:"expiration_date,omitempty"`
 }
 
 type VotingPowerInProfile struct {
@@ -162,7 +175,7 @@ type VotingPowerInProfile struct {
 type DelegateInProfile struct {
 	User               common.User `json:"user"`
 	PercentOfDelegated float64     `json:"percent_of_delegated"`
-	Weight             float64     `json:"weight"`
+	Ratio              int         `json:"ratio"`
 }
 
 type PrepareSplitDelegationRequest struct {
@@ -171,14 +184,23 @@ type PrepareSplitDelegationRequest struct {
 	Expiration time.Time          `json:"expiration_date"`
 }
 
+type SuccessDelegationRequest struct {
+	ChainID    chain.ChainID      `json:"chain_id"`
+	TxHash     string             `json:"tx_hash"`
+	Delegates  []PreparedDelegate `json:"delegates"`
+	Expiration *time.Time         `json:"expiration_date"`
+}
+
 type PreparedDelegate struct {
 	Address            string  `json:"address"`
 	PercentOfDelegated float64 `json:"percent_of_delegated"`
 }
 
 type PreparedSplitDelegation struct {
-	To       string `json:"to"`
-	Data     string `json:"data"`
-	GasPrice string `json:"gas_price"`
-	Gas      string `json:"gas"`
+	To                   string `json:"to"`
+	Data                 string `json:"data"`
+	GasPrice             string `json:"gas_price"`
+	MaxPriorityFeePerGas string `json:"max_priority_fee_per_gas"`
+	MaxFeePerGas         string `json:"max_fee_per_gas"`
+	Gas                  string `json:"gas"`
 }

@@ -299,6 +299,33 @@ func (s *Server) getDelegates(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &delegatesResult)
 }
 
+func (s *Server) getSpecificDelegate(w http.ResponseWriter, r *http.Request) {
+	session, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.SendEmpty(w, http.StatusForbidden)
+	}
+
+	f, verr := daoform.NewGetSpecificDelegateForm().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	delegatesResult, err := s.daoService.GetSpecificDelegate(r.Context(), f.ID, session.UserID, f.Address)
+	if err != nil {
+		log.Error().Err(err).Msg("get specific delegate")
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	log.Info().
+		Str("route", mux.CurrentRoute(r).GetName()).
+		Msg("route execution")
+
+	response.SendJSON(w, http.StatusOK, &delegatesResult)
+}
+
 func (s *Server) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
 	session, exists := appctx.ExtractUserSession(r.Context())
 	if !exists {
@@ -328,7 +355,7 @@ func (s *Server) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) prepareSplitDelegation(w http.ResponseWriter, r *http.Request) {
-	_, exists := appctx.ExtractUserSession(r.Context())
+	user, exists := appctx.ExtractUserSession(r.Context())
 	if !exists {
 		response.SendEmpty(w, http.StatusForbidden)
 	}
@@ -354,7 +381,7 @@ func (s *Server) prepareSplitDelegation(w http.ResponseWriter, r *http.Request) 
 		})
 	}
 
-	preparedDelegation, err := s.daoService.PrepareSplitDelegation(r.Context(), daoID, dao.PrepareSplitDelegationRequest{
+	preparedDelegation, err := s.daoService.PrepareSplitDelegation(r.Context(), user.UserID, daoID, dao.PrepareSplitDelegationRequest{
 		ChainID:    params.ChainID,
 		Delegates:  preparedDelegates,
 		Expiration: params.ExpirationDate,
@@ -371,6 +398,53 @@ func (s *Server) prepareSplitDelegation(w http.ResponseWriter, r *http.Request) 
 		Msg("route execution")
 
 	response.SendJSON(w, http.StatusOK, &preparedDelegation)
+}
+
+func (s *Server) successDelegated(w http.ResponseWriter, r *http.Request) {
+	session, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.SendEmpty(w, http.StatusForbidden)
+	}
+
+	daoIDStr := mux.Vars(r)["id"]
+	daoID, err := uuid.Parse(daoIDStr)
+	if err != nil {
+		response.SendError(w, http.StatusBadRequest, "invalid dao id")
+		return
+	}
+
+	params, verr := daoform.NewSuccessDelegated().ParseAndValidate(r)
+	if verr != nil {
+		response.HandleError(verr, w)
+		return
+	}
+
+	preparedDelegates := make([]dao.PreparedDelegate, 0, len(params.Delegates))
+	for _, d := range params.Delegates {
+		preparedDelegates = append(preparedDelegates, dao.PreparedDelegate{
+			Address:            d.Address,
+			PercentOfDelegated: d.PercentOfDelegated,
+		})
+	}
+
+	err = s.daoService.SuccessDelegated(r.Context(), session.UserID, daoID, dao.SuccessDelegationRequest{
+		ChainID:    params.ChainID,
+		TxHash:     params.TxHash,
+		Delegates:  preparedDelegates,
+		Expiration: params.ExpirationDate,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("invoke success delegated")
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	log.Info().
+		Str("route", mux.CurrentRoute(r).GetName()).
+		Msg("route execution")
+
+	response.SendEmpty(w, http.StatusOK)
 }
 
 func (s *Server) getTxStatus(w http.ResponseWriter, r *http.Request) {

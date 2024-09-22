@@ -33,6 +33,17 @@ type Profile struct {
 	LastSessions       []Session `json:"last_sessions"`
 }
 
+func (p *Profile) GetAddress() *string {
+	if p.Account == nil {
+		return nil
+	}
+	if p.Account.Address == "" {
+		return nil
+	}
+
+	return &p.Account.Address
+}
+
 type Account struct {
 	Address      string             `json:"address,omitempty"`
 	Avatars      common.UserAvatars `json:"avatars"`

@@ -166,19 +166,19 @@ func NewValidationError(details ...map[string]ErrorMessage) *ValidationError {
 	return err
 }
 
-type UnprocessableEntityError struct {
+type UnprocessableEntityValidationError struct {
 	ValidationError
 }
 
-func (e *UnprocessableEntityError) PublicMessage() string {
+func (e *UnprocessableEntityValidationError) PublicMessage() string {
 	return "not processable"
 }
 
-func (e *UnprocessableEntityError) GetHTTPStatus() int {
+func (e *UnprocessableEntityValidationError) GetHTTPStatus() int {
 	return http.StatusUnprocessableEntity
 }
 
-func NewNotAcceptableError(details ...map[string]ErrorMessage) *UnprocessableEntityError {
+func NewNotAcceptableError(details ...map[string]ErrorMessage) *UnprocessableEntityValidationError {
 	list := make(map[string]ErrorMessage)
 	if len(details) > 0 {
 		for name, description := range details[0] {
@@ -186,9 +186,29 @@ func NewNotAcceptableError(details ...map[string]ErrorMessage) *UnprocessableEnt
 		}
 	}
 
-	err := &UnprocessableEntityError{ValidationError{details: list}}
+	err := &UnprocessableEntityValidationError{ValidationError{details: list}}
 
 	return err
+}
+
+type UnprocessableEntityError struct {
+	PubMessage    string
+	OriginalError error
+}
+
+func (e *UnprocessableEntityError) PublicMessage() string {
+	return e.PubMessage
+}
+
+func (e *UnprocessableEntityError) GetHTTPStatus() int {
+	return http.StatusUnprocessableEntity
+}
+
+func NewUnprocessableError(err error, publicMessage string) *UnprocessableEntityError {
+	return &UnprocessableEntityError{
+		OriginalError: err,
+		PubMessage:    publicMessage,
+	}
 }
 
 type RateLimitedError struct {

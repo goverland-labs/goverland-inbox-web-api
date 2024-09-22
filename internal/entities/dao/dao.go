@@ -178,6 +178,13 @@ type DelegateInProfile struct {
 	Ratio              int         `json:"ratio"`
 }
 
+type CalculatedDelegatesInProfile struct {
+	Delegates      []DelegateInProfile `json:"delegates"`
+	ExpirationDate *time.Time          `json:"expiration_date,omitempty"`
+	VotingPower    float64             `json:"power"`
+	FromCache      bool                `json:"from_cache"`
+}
+
 type PrepareSplitDelegationRequest struct {
 	ChainID    chain.ChainID      `json:"chain_id"`
 	Delegates  []PreparedDelegate `json:"delegates"`
@@ -193,6 +200,7 @@ type SuccessDelegationRequest struct {
 
 type PreparedDelegate struct {
 	Address            string  `json:"address"`
+	ResolvedName       string  `json:"resolved_name,omitempty"`
 	PercentOfDelegated float64 `json:"percent_of_delegated"`
 }
 

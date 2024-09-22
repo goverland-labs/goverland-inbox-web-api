@@ -101,14 +101,14 @@ func (s *Service) GetChainsInfo(address common.Address) (map[string]Info, error)
 	for _, chain := range s.chains {
 		balance, err := chain.client.BalanceAt(context.Background(), address, nil)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: failed to get balance for chain %s: %w", ErrChainRequestUnreachable, chain.chain, err)
 		}
 
 		balanceDec := decimal.NewFromBigInt(balance, -chain.decimals)
 
 		gasPrice, err := chain.client.SuggestGasPrice(context.Background())
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: failed to get gas price for chain %s: %w", ErrChainRequestUnreachable, chain.chain, err)
 		}
 
 		fee := decimal.NewFromBigInt(gasPrice, -chain.decimals).Mul(decimal.NewFromInt(250000))
@@ -136,7 +136,7 @@ func (s *Service) GetTxStatus(ctx context.Context, chainID ChainID, txHashHex st
 
 	_, isPending, err := chain.client.TransactionByHash(ctx, txHash)
 	if err != nil {
-		return TxStatusWrapper{}, err
+		return TxStatusWrapper{}, fmt.Errorf("%w: failed to get transaction by hash: %w", ErrChainRequestUnreachable, err)
 	}
 
 	if isPending {
@@ -147,7 +147,7 @@ func (s *Service) GetTxStatus(ctx context.Context, chainID ChainID, txHashHex st
 
 	receipt, err := chain.client.TransactionReceipt(ctx, txHash)
 	if err != nil {
-		return TxStatusWrapper{}, err
+		return TxStatusWrapper{}, fmt.Errorf("%w: failed to get transaction receipt: %w", ErrChainRequestUnreachable, err)
 	}
 
 	if receipt.Status == types.ReceiptStatusSuccessful {
@@ -174,7 +174,7 @@ func (s *Service) GetGasPriceHex(chainID ChainID) (string, error) {
 
 	gasPrice, err := chain.client.SuggestGasPrice(context.Background())
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%w: failed to get gas price for chain %s: %w", ErrChainRequestUnreachable, chain.chain, err)
 	}
 
 	return fmt.Sprintf("0x%x", gasPrice), nil
@@ -188,7 +188,7 @@ func (s *Service) GetMaxPriorityFeePerGasHex(chainID ChainID) (string, error) {
 
 	gasTipCap, err := chain.client.SuggestGasTipCap(context.Background())
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%w: failed to get gas tip cap for chain %s: %w", ErrChainRequestUnreachable, chain.chain, err)
 	}
 
 	return fmt.Sprintf("0x%x", gasTipCap), nil
@@ -206,7 +206,7 @@ func (s *Service) GetGasLimitForSetDelegatesHex(chainID ChainID, params Estimate
 		Data: params.Data,
 	})
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%w: failed to estimate gas for chain %s: %w", ErrChainRequestUnreachable, chain.chain, err)
 	}
 
 	return fmt.Sprintf("0x%x", gasLimit), nil

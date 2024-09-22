@@ -287,7 +287,7 @@ func (s *Server) getDelegates(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().Err(err).Msg("get delegates")
 
-		response.SendEmpty(w, http.StatusInternalServerError)
+		response.HandleError(response.ResolveError(err, chainResponseErrors), w)
 		return
 	}
 
@@ -315,7 +315,7 @@ func (s *Server) getSpecificDelegate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().Err(err).Msg("get specific delegate")
 
-		response.SendEmpty(w, http.StatusInternalServerError)
+		response.HandleError(response.ResolveError(err, chainResponseErrors), w)
 		return
 	}
 
@@ -343,7 +343,7 @@ func (s *Server) getDelegateProfile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().Err(err).Msg("get delegate profile")
 
-		response.SendEmpty(w, http.StatusInternalServerError)
+		response.HandleError(response.ResolveError(err, chainResponseErrors), w)
 		return
 	}
 
@@ -389,7 +389,7 @@ func (s *Server) prepareSplitDelegation(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		log.Error().Err(err).Msg("prepare split delegation")
 
-		response.SendEmpty(w, http.StatusInternalServerError)
+		response.HandleError(response.ResolveError(err, chainResponseErrors), w)
 		return
 	}
 
@@ -436,7 +436,7 @@ func (s *Server) successDelegated(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().Err(err).Msg("invoke success delegated")
 
-		response.SendEmpty(w, http.StatusInternalServerError)
+		response.HandleError(response.ResolveError(err, chainResponseErrors), w)
 		return
 	}
 
@@ -465,7 +465,7 @@ func (s *Server) getTxStatus(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().Err(err).Msg("get tx status")
 
-		response.SendEmpty(w, http.StatusInternalServerError)
+		response.HandleError(response.ResolveError(err, chainResponseErrors), w)
 		return
 	}
 

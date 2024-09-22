@@ -1,6 +1,7 @@
 package response
 
 import (
+	"errors"
 	"math"
 
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -12,7 +13,15 @@ type parametrizedError interface {
 	SetError(key string, code ErrCode, message string)
 }
 
-func ResolveError(err error) Error {
+func ResolveError(err error, mappings ...map[error]func(err error) Error) Error {
+	for _, m := range mappings {
+		for k, v := range m {
+			if errors.Is(err, k) {
+				return v(err)
+			}
+		}
+	}
+
 	details, ok := status.FromError(err)
 	if !ok {
 		return NewInternalError()

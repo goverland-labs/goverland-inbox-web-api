@@ -143,7 +143,7 @@ func NewServer(
 	handler.HandleFunc("/dao/{id}/delegate/{address}", srv.getSpecificDelegate).Methods(http.MethodGet).Name("get_dao_delegates")
 	handler.HandleFunc("/dao/{id}/user-delegation", srv.getDelegateProfile).Methods(http.MethodGet).Name("get_dao_user_delegation")
 	handler.HandleFunc("/dao/{id}/prepare-split-delegation", srv.prepareSplitDelegation).Methods(http.MethodPost).Name("post_dao_prepare_split_delegation")
-	handler.HandleFunc("/dao/{id}/success-delegated", srv.prepareSplitDelegation).Methods(http.MethodPost).Name("post_dao_success_delegated")
+	handler.HandleFunc("/dao/{id}/success-delegated", srv.successDelegated).Methods(http.MethodPost).Name("post_dao_success_delegated")
 
 	handler.HandleFunc("/chain/{id}/{tx_hash}", srv.getTxStatus).Methods(http.MethodGet).Name("get_chain_tx_status")
 

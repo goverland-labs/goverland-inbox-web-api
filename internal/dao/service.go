@@ -28,9 +28,10 @@ import (
 )
 
 var (
-	defaultExpiration               = time.Unix(18618595200, 0) // 2560 year
-	lastDelegatesExpiration         = 10 * time.Minute
-	percentMultiplier       float64 = 100
+	defaultExpiration                  = time.Unix(18618595200, 0) // 2560 year
+	lastDelegatesExpiration            = 10 * time.Minute
+	percentMultiplier          float64 = 100
+	totalPercentsInBasisPoints         = 100 * percentMultiplier
 )
 
 type DaoProvider interface {
@@ -187,15 +188,20 @@ func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.Us
 		return nil, fmt.Errorf("get delegates: %w", err)
 	}
 
-	delegatesWeights := make(map[string]float64)
-	if userAddress := s.getUserAddress(userID); userAddress != nil {
-		profileResp, err := s.dp.GetDelegateProfile(ctx, id, *userAddress)
+	userProfile, err := s.authService.GetProfileInfo(userID)
+	if err != nil {
+		return nil, fmt.Errorf("get profile info: %w", err)
+	}
+
+	delegatesWeights := make(map[common.UserAddress]float64)
+	if userAddress := userProfile.GetAddress(); userAddress != nil {
+		profileResp, err := s.calculateDelegateProfile(ctx, id, userID, userProfile)
 		if err != nil {
-			return nil, fmt.Errorf("get delegate profile: %w", err)
+			return nil, fmt.Errorf("calculate delegate profile: %w", err)
 		}
 
 		for _, delegateItem := range profileResp.Delegates {
-			delegatesWeights[delegateItem.Address] = delegateItem.Weight / 100
+			delegatesWeights[delegateItem.User.Address] = delegateItem.PercentOfDelegated
 		}
 	}
 
@@ -224,7 +230,7 @@ func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.Us
 			CreatedProposalsCount: d.CreatedProposalsCount,
 			Muted:                 false,
 			UserDelegationInfo: dao.UserDelegationInfo{
-				PercentOfDelegated: delegatesWeights[d.Address],
+				PercentOfDelegated: delegatesWeights[common.UserAddress(d.Address)],
 			},
 		})
 	}
@@ -259,9 +265,12 @@ func (s *Service) GetSpecificDelegate(ctx context.Context, id uuid.UUID, userID 
 }
 
 func (s *Service) GetDelegateProfile(ctx context.Context, id uuid.UUID, userID auth.UserID) (dao.DelegateProfile, error) {
-	userAddress := s.getUserAddress(userID)
-	if userAddress == nil {
-		return dao.DelegateProfile{}, fmt.Errorf("guest user has not delegate profile")
+	userProfile, err := s.authService.GetProfileInfo(userID)
+	if err != nil {
+		return dao.DelegateProfile{}, fmt.Errorf("get profile info: %w", err)
+	}
+	if userProfile.GetAddress() == nil {
+		return dao.DelegateProfile{}, fmt.Errorf("user has not delegate profile")
 	}
 
 	daoInternalFull, err := s.GetDao(ctx, id.String())
@@ -269,34 +278,87 @@ func (s *Service) GetDelegateProfile(ctx context.Context, id uuid.UUID, userID a
 		return dao.DelegateProfile{}, fmt.Errorf("get dao: %s: %w", id, err)
 	}
 
-	profileResp, err := s.dp.GetDelegateProfile(ctx, id, *userAddress)
-	if err != nil {
-		return dao.DelegateProfile{}, fmt.Errorf("get delegate profile: %w", err)
-	}
-
-	chainsInfo, err := s.chainService.GetChainsInfo(ethcommon.HexToAddress(*userAddress))
+	chainsInfo, err := s.chainService.GetChainsInfo(ethcommon.HexToAddress(*userProfile.GetAddress()))
 	if err != nil {
 		return dao.DelegateProfile{}, fmt.Errorf("get chains info: %w", err)
 	}
 
-	delegatesProfile, err := s.getDelegatesForProfile(ctx, id, userID, *userAddress, profileResp.Delegates)
+	delegatesProfile, err := s.calculateDelegateProfile(ctx, id, userID, userProfile)
 	if err != nil {
-		return dao.DelegateProfile{}, fmt.Errorf("get delegates profile: %w", err)
+		return dao.DelegateProfile{}, fmt.Errorf("calculate delegates profile: %w", err)
 	}
 
 	return dao.DelegateProfile{
 		Dao: ConvertDaoToShort(daoInternalFull),
 		VotingPower: dao.VotingPowerInProfile{
 			Symbol: daoInternalFull.Symbol,
-			Power:  profileResp.VotingPower,
+			Power:  delegatesProfile.VotingPower,
 		},
 		Chains:         chainsInfo,
-		Delegates:      delegatesProfile,
-		ExpirationDate: profileResp.Expiration,
+		Delegates:      delegatesProfile.Delegates,
+		ExpirationDate: delegatesProfile.ExpirationDate,
 	}, nil
 }
 
-func (s *Service) getDelegatesForProfile(ctx context.Context, id uuid.UUID, userID auth.UserID, userAddress string, delegates []coredao.ProfileDelegateItem) ([]dao.DelegateInProfile, error) {
+func (s *Service) calculateDelegateProfile(ctx context.Context, id uuid.UUID, userID auth.UserID, userProfile profile.Profile) (dao.CalculatedDelegatesInProfile, error) {
+	userAddress := *userProfile.GetAddress()
+	buildDelegateInProfileFunc := func(delegates []coredao.ProfileDelegateItem) []dao.DelegateInProfile {
+		dForFraction := make([]delegatesForFraction, 0, len(delegates))
+		for _, d := range delegates {
+			dForFraction = append(dForFraction, delegatesForFraction{
+				address: d.Address,
+				percent: int(d.Weight),
+			})
+		}
+		delegatesRatio := calculateRatio(dForFraction)
+
+		var allPercents float64
+		for _, d := range delegates {
+			allPercents += d.Weight
+		}
+
+		cpyDelegates := make([]coredao.ProfileDelegateItem, len(delegates))
+		copy(cpyDelegates, delegates)
+
+		if allPercents < totalPercentsInBasisPoints {
+			cpyDelegates = append(cpyDelegates, coredao.ProfileDelegateItem{
+				Address: userAddress,
+				ENSName: userProfile.Account.ResolvedName,
+				Weight:  totalPercentsInBasisPoints - allPercents,
+			})
+		}
+
+		delegatesProfile := make([]dao.DelegateInProfile, 0, len(cpyDelegates))
+		for _, d := range cpyDelegates {
+			alias := d.Address
+			var ensName *string
+			if d.ENSName != "" {
+				ensName = helpers.Ptr(d.ENSName)
+				alias = d.ENSName
+			}
+
+			delegatesProfile = append(delegatesProfile, dao.DelegateInProfile{
+				User: common.User{
+					Address:      common.UserAddress(d.Address),
+					ResolvedName: ensName,
+					Avatars:      common.GenerateProfileAvatars(alias),
+				},
+				PercentOfDelegated: d.Weight / percentMultiplier,
+				Ratio:              delegatesRatio[d.Address],
+			})
+		}
+
+		return delegatesProfile
+	}
+
+	profileResp, err := s.dp.GetDelegateProfile(ctx, id, userAddress)
+	if err != nil {
+		return dao.CalculatedDelegatesInProfile{}, fmt.Errorf("get delegate profile: %w", err)
+	}
+
+	delegatesForBuild := profileResp.Delegates
+	fromCache := false
+
 	lastDelegation, err := s.delegateClient.GetLastDelegation(ctx, &inboxapi.GetLastDelegationRequest{
 		UserId: userID.String(),
 		DaoId:  id.String(),
@@ -308,87 +370,27 @@ func (s *Service) getDelegatesForProfile(ctx context.Context, id uuid.UUID, user
 		var lastDelegates []dao.PreparedDelegate
 		err := json.Unmarshal([]byte(lastDelegation.Delegates), &lastDelegates)
 		if err != nil {
-			return nil, fmt.Errorf("unmarshal last delegates: %w", err)
+			return dao.CalculatedDelegatesInProfile{}, fmt.Errorf("unmarshal last delegates: %w", err)
 		}
 
-		dForFraction := make([]delegatesForFraction, 0, len(lastDelegates))
+		delegatesForBuild = make([]coredao.ProfileDelegateItem, 0, len(lastDelegates))
 		for _, d := range lastDelegates {
-			if d.Address == userAddress {
-				continue
-			}
-
-			dForFraction = append(dForFraction, delegatesForFraction{
-				address: d.Address,
-				percent: int(d.PercentOfDelegated * percentMultiplier),
+			delegatesForBuild = append(delegatesForBuild, coredao.ProfileDelegateItem{
+				Address: d.Address,
+				ENSName: d.ResolvedName,
+				Weight:  d.PercentOfDelegated * percentMultiplier,
 			})
 		}
 
-		delegatesRatio := calculateRatio(dForFraction)
-
-		delegatesProfile := make([]dao.DelegateInProfile, 0, len(lastDelegates))
-		for _, d := range lastDelegates {
-			delegatesProfile = append(delegatesProfile, dao.DelegateInProfile{
-				User: common.User{
-					Address: common.UserAddress(d.Address),
-					Avatars: common.GenerateProfileAvatars(d.Address),
-				},
-				PercentOfDelegated: d.PercentOfDelegated,
-				Ratio:              delegatesRatio[d.Address],
-			})
-		}
-
-		return delegatesProfile, nil
+		fromCache = true
 	}
 
-	dForFraction := make([]delegatesForFraction, 0, len(delegates))
-	for _, d := range delegates {
-		if d.Address == userAddress {
-			continue
-		}
-
-		dForFraction = append(dForFraction, delegatesForFraction{
-			address: d.Address,
-			percent: int(d.Weight),
-		})
-	}
-
-	delegatesRatio := calculateRatio(dForFraction)
-
-	delegatesProfile := make([]dao.DelegateInProfile, 0, len(delegates))
-	for _, d := range delegates {
-		alias := d.Address
-		var ensName *string
-		if d.ENSName != "" {
-			ensName = helpers.Ptr(d.ENSName)
-			alias = d.ENSName
-		}
-
-		delegatesProfile = append(delegatesProfile, dao.DelegateInProfile{
-			User: common.User{
-				Address:      common.UserAddress(d.Address),
-				ResolvedName: ensName,
-				Avatars:      common.GenerateProfileAvatars(alias),
-			},
-			PercentOfDelegated: d.Weight / percentMultiplier,
-			Ratio:              delegatesRatio[d.Address],
-		})
-	}
-
-	return delegatesProfile, nil
-}
-
-func (s *Service) getUserAddress(userID auth.UserID) *string {
-	profileInfo, err := s.authService.GetProfileInfo(userID)
-	if err != nil || profileInfo.Account == nil {
-		return nil
-	}
-
-	ad := profileInfo.Account.Address
-	if ad == "" {
-		return nil
-	}
-
-	return &ad
+	return dao.CalculatedDelegatesInProfile{
+		Delegates:      buildDelegateInProfileFunc(delegatesForBuild),
+		ExpirationDate: profileResp.Expiration,
+		VotingPower:    profileResp.VotingPower - profileResp.IncomingPower + profileResp.OutgoingPower,
+		FromCache:      fromCache,
+	}, nil
 }
 
 func (s *Service) PrepareSplitDelegation(ctx context.Context, userID auth.UserID, daoID uuid.UUID, params dao.PrepareSplitDelegationRequest) (dao.PreparedSplitDelegation, error) {
@@ -397,7 +399,12 @@ func (s *Service) PrepareSplitDelegation(ctx context.Context, userID auth.UserID
 		return dao.PreparedSplitDelegation{}, fmt.Errorf("get dao: %s: %w", daoID, err)
 	}
 
-	userAddress := s.getUserAddress(userID)
+	userProfile, err := s.authService.GetProfileInfo(userID)
+	if err != nil {
+		return dao.PreparedSplitDelegation{}, fmt.Errorf("get profile info: %w", err)
+	}
+	userAddress := userProfile.GetAddress()
+
 	if userAddress == nil {
 		return dao.PreparedSplitDelegation{}, fmt.Errorf("guest user has not delegate profile")
 	}

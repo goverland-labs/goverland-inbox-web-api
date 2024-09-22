@@ -32,7 +32,7 @@ func ParseError(err Error) map[string]interface{} {
 			"message": e.PublicMessage(),
 		}
 
-	case *UnprocessableEntityError:
+	case *UnprocessableEntityValidationError:
 		return map[string]interface{}{
 			"errors":  e.Errors(),
 			"message": e.PublicMessage(),

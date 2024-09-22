@@ -11,6 +11,7 @@ import (
 
 type PreparedDelegate struct {
 	Address            string  `json:"address"`
+	ResolvedName       string  `json:"resolved_name"`
 	PercentOfDelegated float64 `json:"percent_of_delegated"`
 }
 

@@ -423,6 +423,7 @@ func (s *Server) successDelegated(w http.ResponseWriter, r *http.Request) {
 	for _, d := range params.Delegates {
 		preparedDelegates = append(preparedDelegates, dao.PreparedDelegate{
 			Address:            d.Address,
+			ResolvedName:       d.ResolvedName,
 			PercentOfDelegated: d.PercentOfDelegated,
 		})
 	}

@@ -303,33 +303,34 @@ func (s *Service) GetDelegateProfile(ctx context.Context, id uuid.UUID, userID a
 func (s *Service) calculateDelegateProfile(ctx context.Context, id uuid.UUID, userID auth.UserID, userProfile profile.Profile) (dao.CalculatedDelegatesInProfile, error) {
 	userAddress := *userProfile.GetAddress()
 	buildDelegateInProfileFunc := func(delegates []coredao.ProfileDelegateItem) []dao.DelegateInProfile {
+		hasSelfInDelegates := false
+		var allPercents float64
 		dForFraction := make([]delegatesForFraction, 0, len(delegates))
 		for _, d := range delegates {
+			if strings.EqualFold(d.Address, userAddress) {
+				hasSelfInDelegates = true
+				continue
+			}
+
 			dForFraction = append(dForFraction, delegatesForFraction{
 				address: d.Address,
 				percent: int(d.Weight),
 			})
-		}
-		delegatesRatio := calculateRatio(dForFraction)
-
-		var allPercents float64
-		for _, d := range delegates {
 			allPercents += d.Weight
 		}
 
-		cpyDelegates := make([]coredao.ProfileDelegateItem, len(delegates))
-		copy(cpyDelegates, delegates)
+		delegatesRatio := calculateRatio(dForFraction)
 
-		if allPercents < totalPercentsInBasisPoints {
-			cpyDelegates = append(cpyDelegates, coredao.ProfileDelegateItem{
+		if !hasSelfInDelegates && allPercents < totalPercentsInBasisPoints {
+			delegates = append(delegates, coredao.ProfileDelegateItem{
 				Address: userAddress,
 				ENSName: userProfile.Account.ResolvedName,
 				Weight:  totalPercentsInBasisPoints - allPercents,
 			})
 		}
 
-		delegatesProfile := make([]dao.DelegateInProfile, 0, len(cpyDelegates))
-		for _, d := range cpyDelegates {
+		delegatesProfile := make([]dao.DelegateInProfile, 0, len(delegates))
+		for _, d := range delegates {
 			alias := d.Address
 			var ensName *string
 			if d.ENSName != "" {
@@ -358,6 +359,7 @@ func (s *Service) calculateDelegateProfile(ctx context.Context, id uuid.UUID, us
 
 	delegatesForBuild := profileResp.Delegates
 	fromCache := false
+	expiration := profileResp.Expiration
 
 	lastDelegation, err := s.delegateClient.GetLastDelegation(ctx, &inboxapi.GetLastDelegationRequest{
 		UserId: userID.String(),
@@ -383,11 +385,14 @@ func (s *Service) calculateDelegateProfile(ctx context.Context, id uuid.UUID, us
 		}
 
 		fromCache = true
+		if lastDelegation.GetExpiration() != nil {
+			expiration = helpers.Ptr(lastDelegation.GetExpiration().AsTime())
+		}
 	}
 
 	return dao.CalculatedDelegatesInProfile{
 		Delegates:      buildDelegateInProfileFunc(delegatesForBuild),
-		ExpirationDate: profileResp.Expiration,
+		ExpirationDate: expiration,
 		VotingPower:    profileResp.VotingPower - profileResp.IncomingPower + profileResp.OutgoingPower,
 		FromCache:      fromCache,
 	}, nil

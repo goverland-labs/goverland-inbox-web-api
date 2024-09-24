@@ -328,10 +328,13 @@ func (s *Server) getDaoAvgVpList(w http.ResponseWriter, r *http.Request) {
 		response.SendError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	if resp.AvgVp == nil {
-		response.SendJSON(w, http.StatusOK, helpers.Ptr([]float32{}))
+	if resp.VpValue == 0 {
+		response.SendEmpty(w, http.StatusNotFound)
 	} else {
-		response.SendJSON(w, http.StatusOK, helpers.Ptr(resp.AvgVp))
+		response.SendJSON(w, http.StatusOK, helpers.Ptr(entity.Histogram{VpValue: resp.VpValue,
+			VotersTotal:  resp.VotersTotal,
+			VotersCutted: resp.VotersCutted,
+			Bins:         convertBinsToInternal(resp.Bins)}))
 	}
 }
 
@@ -409,4 +412,16 @@ func convertMonthlyNewProposalsToInternal(pm *internalapi.ProposalsByMonth) enti
 		ProposalsCount: pm.ProposalsCount,
 		SpamCount:      pm.SpamCount,
 	}
+}
+
+func convertBinsToInternal(bins []*internalapi.Bin) []*entity.Bin {
+	res := make([]*entity.Bin, len(bins))
+	for i, t := range bins {
+		res[i] = &entity.Bin{
+			UpperBound: t.UpperBound,
+			Count:      t.Count,
+		}
+	}
+
+	return res
 }

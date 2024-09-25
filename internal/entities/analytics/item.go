@@ -61,3 +61,15 @@ type MonthlyTotals struct {
 	Total         uint64      `json:"total"`
 	TotalOfNew    uint64      `json:"total_of_new,omitempty"`
 }
+
+type Histogram struct {
+	VpValue      float32 `json:"vp_usd_value"`
+	VotersCutted uint32  `json:"voters_cutted"`
+	VotersTotal  uint32  `json:"voters_total"`
+	Bins         []*Bin  `json:"bins"`
+}
+
+type Bin struct {
+	UpperBound float32 `json:"upper_bound"`
+	Count      uint32  `json:"count"`
+}

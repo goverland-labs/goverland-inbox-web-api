@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.5] - 2024-09-26
+
+### Added
+- Avp totals for Histogram
+
 ## [0.4.4] - 2024-09-24
 
 ### Added

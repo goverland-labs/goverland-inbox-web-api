@@ -334,6 +334,7 @@ func (s *Server) getDaoAvgVpList(w http.ResponseWriter, r *http.Request) {
 		response.SendJSON(w, http.StatusOK, helpers.Ptr(entity.Histogram{VpValue: resp.VpValue,
 			VotersTotal:  resp.VotersTotal,
 			VotersCutted: resp.VotersCutted,
+			AvpTotal:     resp.AvpTotal,
 			Bins:         convertBinsToInternal(resp.Bins)}))
 	}
 }
@@ -420,6 +421,7 @@ func convertBinsToInternal(bins []*internalapi.Bin) []*entity.Bin {
 		res[i] = &entity.Bin{
 			UpperBound: t.UpperBound,
 			Count:      t.Count,
+			TotalAvp:   t.TotalAvp,
 		}
 	}
 

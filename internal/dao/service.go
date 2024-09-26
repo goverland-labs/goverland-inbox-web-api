@@ -39,7 +39,7 @@ type DaoProvider interface {
 	GetDaoList(ctx context.Context, params coresdk.GetDaoListRequest) (*coredao.List, error)
 	GetDaoTop(ctx context.Context, params coresdk.GetDaoTopRequest) (*coredao.TopCategories, error)
 	GetDaoFeed(ctx context.Context, id uuid.UUID, params coresdk.GetDaoFeedRequest) (*corefeed.Feed, error)
-	GetDelegates(ctx context.Context, id uuid.UUID, params coresdk.GetDelegatesRequest) (coredao.Delegates, error)
+	GetDelegates(ctx context.Context, id uuid.UUID, params coresdk.GetDelegatesRequest) (coredao.DelegatesResponse, error)
 	GetDelegateProfile(ctx context.Context, id uuid.UUID, address string) (coredao.DelegateProfile, error)
 }
 
@@ -177,7 +177,7 @@ func (s *Service) GetTop(ctx context.Context, limit int) (*dao.ListTop, error) {
 	return list, nil
 }
 
-func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.UserID, req dao.GetDelegatesRequest) (dao.Delegates, error) {
+func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.UserID, req dao.GetDelegatesRequest) (dao.DelegatesWrapper, error) {
 	resp, err := s.dp.GetDelegates(ctx, id, coresdk.GetDelegatesRequest{
 		Query:  req.Query,
 		By:     req.By,
@@ -185,19 +185,24 @@ func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.Us
 		Limit:  req.Limit,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("get delegates: %w", err)
+		return dao.DelegatesWrapper{}, fmt.Errorf("get delegates: %w", err)
 	}
 
 	userProfile, err := s.authService.GetProfileInfo(userID)
 	if err != nil {
-		return nil, fmt.Errorf("get profile info: %w", err)
+		return dao.DelegatesWrapper{}, fmt.Errorf("get profile info: %w", err)
+	}
+
+	daoInternalFull, err := s.GetDao(ctx, id.String())
+	if err != nil {
+		return dao.DelegatesWrapper{}, fmt.Errorf("get dao: %s: %w", id, err)
 	}
 
 	delegatesWeights := make(map[common.UserAddress]float64)
 	if userAddress := userProfile.GetAddress(); userAddress != nil {
 		profileResp, err := s.calculateDelegateProfile(ctx, id, userID, userProfile)
 		if err != nil {
-			return nil, fmt.Errorf("calculate delegate profile: %w", err)
+			return dao.DelegatesWrapper{}, fmt.Errorf("calculate delegate profile: %w", err)
 		}
 
 		for _, delegateItem := range profileResp.Delegates {
@@ -205,8 +210,8 @@ func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.Us
 		}
 	}
 
-	delegates := make(dao.Delegates, 0, len(resp))
-	for _, d := range resp {
+	delegates := make([]dao.Delegate, 0, len(resp.Delegates))
+	for _, d := range resp.Delegates {
 		alias := d.Address
 		var ensName *string
 		if d.ENSName != "" {
@@ -220,9 +225,12 @@ func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.Us
 				ResolvedName: ensName,
 				Avatars:      common.GenerateProfileAvatars(alias),
 			},
-			DelegatorCount:        d.DelegatorCount,
-			PercentOfDelegators:   d.PercentOfDelegators,
-			VotingPower:           d.VotingPower,
+			DelegatorCount:      d.DelegatorCount,
+			PercentOfDelegators: d.PercentOfDelegators,
+			VotingPower: dao.VotingPowerInProfile{
+				Symbol: daoInternalFull.Symbol,
+				Power:  d.VotingPower,
+			},
 			PercentOfVotingPower:  d.PercentOfVotingPower,
 			About:                 d.About,
 			Statement:             d.Statement,
@@ -235,7 +243,10 @@ func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.Us
 		})
 	}
 
-	return delegates, nil
+	return dao.DelegatesWrapper{
+		Delegates: delegates,
+		Total:     resp.Total,
+	}, nil
 }
 
 func (s *Service) GetSpecificDelegate(ctx context.Context, id uuid.UUID, userID auth.UserID, address string) (dao.DelegateWithDao, error) {
@@ -244,7 +255,7 @@ func (s *Service) GetSpecificDelegate(ctx context.Context, id uuid.UUID, userID 
 		return dao.DelegateWithDao{}, fmt.Errorf("get dao: %s: %w", id, err)
 	}
 
-	delegates, err := s.GetDelegates(ctx, id, userID, dao.GetDelegatesRequest{
+	delegatesWrapper, err := s.GetDelegates(ctx, id, userID, dao.GetDelegatesRequest{
 		UserID: userID,
 		Query:  address,
 		Limit:  1,
@@ -254,12 +265,12 @@ func (s *Service) GetSpecificDelegate(ctx context.Context, id uuid.UUID, userID 
 		return dao.DelegateWithDao{}, fmt.Errorf("get delegates: %w", err)
 	}
 
-	if len(delegates) == 0 {
+	if len(delegatesWrapper.Delegates) == 0 {
 		return dao.DelegateWithDao{}, fmt.Errorf("delegate not found")
 	}
 
 	return dao.DelegateWithDao{
-		Delegate: delegates[0],
+		Delegate: delegatesWrapper.Delegates[0],
 		Dao:      *daoInternalFull,
 	}, nil
 }

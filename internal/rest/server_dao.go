@@ -277,7 +277,7 @@ func (s *Server) getDelegates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	delegatesResult, err := s.daoService.GetDelegates(r.Context(), f.ID, session.UserID, dao.GetDelegatesRequest{
+	delegatesWrapper, err := s.daoService.GetDelegates(r.Context(), f.ID, session.UserID, dao.GetDelegatesRequest{
 		UserID: session.UserID,
 		Offset: f.Offset,
 		Limit:  f.Limit,
@@ -295,8 +295,8 @@ func (s *Server) getDelegates(w http.ResponseWriter, r *http.Request) {
 		Str("route", mux.CurrentRoute(r).GetName()).
 		Msg("route execution")
 
-	response.AddPaginationHeaders(w, r, f.Offset, f.Limit, len(delegatesResult))
-	response.SendJSON(w, http.StatusOK, &delegatesResult)
+	response.AddPaginationHeaders(w, r, f.Offset, f.Limit, int(delegatesWrapper.Total))
+	response.SendJSON(w, http.StatusOK, &delegatesWrapper.Delegates)
 }
 
 func (s *Server) getSpecificDelegate(w http.ResponseWriter, r *http.Request) {

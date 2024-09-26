@@ -134,20 +134,23 @@ type GetDelegatesRequest struct {
 	Offset int
 }
 
-type Delegates []Delegate
+type DelegatesWrapper struct {
+	Delegates []Delegate `json:"delegates"`
+	Total     int32      `json:"total"`
+}
 
 type Delegate struct {
-	User                  common.User        `json:"user"`
-	DelegatorCount        int32              `json:"delegator_count"`
-	PercentOfDelegators   float64            `json:"percent_of_delegators"`
-	VotingPower           float64            `json:"voting_power"`
-	PercentOfVotingPower  float64            `json:"percent_of_voting_power"`
-	VotesCount            int32              `json:"votes_count"`
-	CreatedProposalsCount int32              `json:"created_proposals_count"`
-	About                 string             `json:"about"`
-	Statement             string             `json:"statement"`
-	UserDelegationInfo    UserDelegationInfo `json:"user_delegation_info"`
-	Muted                 bool               `json:"muted"`
+	User                  common.User          `json:"user"`
+	DelegatorCount        int32                `json:"delegator_count"`
+	PercentOfDelegators   float64              `json:"percent_of_delegators"`
+	VotingPower           VotingPowerInProfile `json:"voting_power"`
+	PercentOfVotingPower  float64              `json:"percent_of_voting_power"`
+	VotesCount            int32                `json:"votes_count"`
+	CreatedProposalsCount int32                `json:"created_proposals_count"`
+	About                 string               `json:"about"`
+	Statement             string               `json:"statement"`
+	UserDelegationInfo    UserDelegationInfo   `json:"user_delegation_info"`
+	Muted                 bool                 `json:"muted"`
 }
 
 type DelegateWithDao struct {

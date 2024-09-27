@@ -63,11 +63,12 @@ type MonthlyTotals struct {
 }
 
 type Histogram struct {
-	VpValue      float32 `json:"vp_usd_value"`
-	VotersCutted uint32  `json:"voters_cutted"`
-	VotersTotal  uint32  `json:"voters_total"`
-	AvpTotal     float32 `json:"avp_usd_total"`
-	Bins         []*Bin  `json:"bins"`
+	VpValue        float32 `json:"vp_usd_value"`
+	VotersCutted   uint32  `json:"voters_cutted"`
+	VotersTotal    uint32  `json:"voters_total"`
+	AvpTotal       float32 `json:"avp_usd_total"`
+	AvpTotalCutted float32 `json:"avp_usd_total_cutted"`
+	Bins           []*Bin  `json:"bins"`
 }
 
 type Bin struct {

@@ -320,9 +320,15 @@ func (s *Server) getDaoAvgVpList(w http.ResponseWriter, r *http.Request) {
 		response.HandleError(verr, w)
 		return
 	}
+	var minBalance float32
+	if balance, err := strconv.ParseFloat(r.URL.Query().Get("min_avp_usd"), 32); err != nil {
+		minBalance = 0
+	} else {
+		minBalance = float32(balance)
+	}
 
 	resp, err := s.analyticsClient.GetAvgVpList(context.TODO(), &internalapi.GetAvgVpListRequest{
-		DaoId: f.ID.String(), PeriodInMonths: f.Period,
+		DaoId: f.ID.String(), PeriodInMonths: f.Period, MinBalance: minBalance,
 	})
 	if err != nil {
 		response.SendError(w, http.StatusInternalServerError, err.Error())
@@ -332,10 +338,11 @@ func (s *Server) getDaoAvgVpList(w http.ResponseWriter, r *http.Request) {
 		response.SendEmpty(w, http.StatusNotFound)
 	} else {
 		response.SendJSON(w, http.StatusOK, helpers.Ptr(entity.Histogram{VpValue: resp.VpValue,
-			VotersTotal:  resp.VotersTotal,
-			VotersCutted: resp.VotersCutted,
-			AvpTotal:     resp.AvpTotal,
-			Bins:         convertBinsToInternal(resp.Bins)}))
+			VotersTotal:    resp.VotersTotal,
+			VotersCutted:   resp.VotersCutted,
+			AvpTotal:       resp.AvpTotal,
+			AvpTotalCutted: resp.AvpTotalCutted,
+			Bins:           convertBinsToInternal(resp.Bins)}))
 	}
 }
 

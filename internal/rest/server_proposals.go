@@ -413,6 +413,8 @@ func (h *Server) vote(w http.ResponseWriter, r *http.Request) {
 		}); err != nil {
 			log.Error().Err(err).Msg("publish vote event")
 		}
+
+		h.getSubscriptions(session.UserID)
 	}()
 
 	response.SendJSON(w, http.StatusOK, &successfulVote)

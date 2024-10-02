@@ -124,6 +124,7 @@ func NewServer(
 	handler.HandleFunc("/me", srv.deleteMe).Methods(http.MethodDelete).Name("auth_delete_me")
 	handler.HandleFunc("/me/votes", srv.getUserVotes).Methods(http.MethodGet).Name("get_user_votes")
 	handler.HandleFunc("/me/can-vote", srv.getMeCanVote).Methods(http.MethodGet).Name("get_me_can_vote")
+	handler.HandleFunc("/me/vote-now", srv.getVoteNow).Methods(http.MethodGet).Name("get_vote_now")
 	handler.HandleFunc("/me/recommended-dao", srv.getRecommendedDao).Methods(http.MethodGet).Name("get_recommended_dao")
 	handler.HandleFunc("/user/{address}", srv.getUser).Methods(http.MethodGet).Name("get_user")
 	handler.HandleFunc("/user/{address}/votes", srv.getPublicUserVotes).Methods(http.MethodGet).Name("get_public_user_votes")

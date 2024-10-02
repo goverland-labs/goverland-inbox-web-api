@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 	"golang.org/x/exp/slices"
@@ -119,9 +120,16 @@ func (s *Server) getPublicUserVotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	address := mux.Vars(r)["address"]
+
+	var daoID *string
+	if daoIDStr := r.URL.Query().Get("dao"); daoIDStr != "" {
+		daoID = helpers.Ptr(daoIDStr)
+	}
+
 	resp, err := s.coreclient.GetUserVotes(r.Context(), address, coresdk.GetUserVotesRequest{
 		Offset: offset,
 		Limit:  limit,
+		DaoID:  daoID,
 	})
 	if err != nil {
 		log.Error().Err(err).Msgf("get user votes by address: %s", address)
@@ -406,6 +414,110 @@ func (s *Server) getMeCanVote(w http.ResponseWriter, r *http.Request) {
 		Int("count_filtered", len(proposalsWithoutVotes)).
 		Int("total", proposalList.TotalCnt).
 		Msg("me can vote")
+
+	response.SendJSON(w, http.StatusOK, &proposalsWithoutVotes)
+}
+
+func (s *Server) getVoteNow(w http.ResponseWriter, r *http.Request) {
+	session, ok := appctx.ExtractUserSession(r.Context())
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+
+		return
+	}
+
+	subscribtions, err := s.subclient.ListSubscriptions(r.Context(), &inboxapi.ListSubscriptionRequest{
+		SubscriberId: session.UserID.String(),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get user subscriptions")
+
+		response.SendEmpty(w, http.StatusInternalServerError)
+		return
+	}
+
+	if len(subscribtions.Items) == 0 {
+		log.Info().
+			Str("user_id", session.UserID.String()).
+			Int("count", 0).
+			Msg("vote now")
+
+		response.SendJSON(w, http.StatusOK, helpers.Ptr([]proposal.Proposal{}))
+		return
+	}
+
+	daoIdsForReq := make([]string, 0, len(subscribtions.GetItems()))
+	for _, info := range subscribtions.GetItems() {
+		daoIdsForReq = append(daoIdsForReq, info.DaoId)
+	}
+
+	proposalList, err := s.coreclient.GetProposalList(r.Context(), coresdk.GetProposalListRequest{
+		Dao:        strings.Join(daoIdsForReq, ","),
+		OnlyActive: true,
+		Offset:     0,
+		Limit:      1000,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get proposal list")
+
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// todo: use caching for getting dao
+	daoIds := make([]string, 0)
+	for _, info := range proposalList.Items {
+		daoIds = append(daoIds, info.DaoID.String())
+	}
+	daolist, err := s.daoService.GetDaoList(r.Context(), internaldao.DaoListRequest{
+		IDs:   daoIds,
+		Limit: len(daoIds),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("get dao list by IDs")
+
+		response.SendError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	daos := make(map[string]*internaldao.DAO)
+	for _, info := range daolist.Items {
+		daos[info.ID.String()] = info
+	}
+
+	list := make([]proposal.Proposal, len(proposalList.Items))
+	for i, info := range proposalList.Items {
+		di, ok := daos[info.DaoID.String()]
+		if !ok {
+			log.Error().Msg("dao not found")
+
+			response.SendError(w, http.StatusBadRequest, fmt.Sprintf("dao not found: %s", info.DaoID))
+			return
+		}
+		list[i] = convertProposalToInternal(&info, di)
+	}
+
+	list = s.enrichProposalsVotesInfo(r.Context(), session, list)
+	list = helpers.WrapProposalsIpfsLinks(list)
+
+	proposalsWithoutVotes := make([]proposal.Proposal, 0, len(list))
+	for _, p := range list {
+		if p.UserVote != nil {
+			continue
+		}
+
+		if !p.IsActive() {
+			continue
+		}
+
+		proposalsWithoutVotes = append(proposalsWithoutVotes, p)
+	}
+
+	log.Info().
+		Str("user_id", session.UserID.String()).
+		Int("count_filtered", len(proposalsWithoutVotes)).
+		Int("total", proposalList.TotalCnt).
+		Msg("vote now")
 
 	response.SendJSON(w, http.StatusOK, &proposalsWithoutVotes)
 }

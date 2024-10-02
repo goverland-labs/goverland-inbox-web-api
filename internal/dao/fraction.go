@@ -1,67 +1,98 @@
 package dao
 
-type fraction struct {
-	numerator, denominator int
-}
+import (
+	"math"
+)
 
 type delegatesForFraction struct {
 	address string
 	percent int
 }
 
-func (f fraction) Reduce() fraction {
-	gcd := gcdEuclidean(f.numerator, f.denominator)
-	f.numerator /= gcd
-	f.denominator /= gcd
+// Function to calculate the total weight and proportions
+func calculateProportions(weights []int) (int, []float64) {
+	total := 0
+	for _, w := range weights {
+		total += w
+	}
 
-	return f
+	proportions := make([]float64, len(weights))
+	for i, w := range weights {
+		proportions[i] = float64(w) / float64(total) * 100 // Convert to percentage
+	}
+
+	return total, proportions
 }
 
-func gcdEuclidean(a, b int) int {
-	for a != b {
-		if a > b {
-			a -= b
-		} else {
-			b -= a
+// Function to find approximate proportions with constraints
+func approximateProportions(weights []int) []int {
+	totalWeight, proportions := calculateProportions(weights)
+	minWeight := math.MaxInt
+	var bestWeights []int
+
+	// Try different total weights from the sum of the original weights down to a reasonable limit
+	for total := 1; total <= totalWeight; total++ {
+		newWeights := make([]int, len(weights))
+		for i := range weights {
+			newWeights[i] = int(math.Round(proportions[i] / 100 * float64(total)))
+		}
+
+		// Check if the new weights meet the 1% difference requirement
+		valid := true
+		for i := range weights {
+			if newWeights[i] > 0 {
+				originalProportion := float64(weights[i]) / float64(totalWeight) * 100
+				newProportion := float64(newWeights[i]) / float64(total) * 100
+				if math.Abs(originalProportion-newProportion) > 1 {
+					valid = false
+					break
+				}
+			} else {
+				valid = false
+				break
+			}
+		}
+
+		if valid {
+			// Check if the current new weights are lower than the previously found minimum
+			currentSum := sum(newWeights)
+			if currentSum < minWeight {
+				minWeight = currentSum
+				bestWeights = newWeights
+			}
+
+			if currentSum < len(weights)*10 {
+				break
+			}
 		}
 	}
 
-	return a
+	return bestWeights
 }
 
-func lcm(a, b int) int {
-	return a * b / gcdEuclidean(a, b)
+// Function to calculate the sum of elements in an array
+func sum(arr []int) int {
+	total := 0
+	for _, v := range arr {
+		total += v
+	}
+	return total
 }
 
 func calculateRatio(dPercents []delegatesForFraction) map[string]int {
-	total := 0
-	for _, d := range dPercents {
-		total += d.percent
+	// Create an array of percentages
+	percentages := make([]int, len(dPercents))
+	for i, d := range dPercents {
+		percentages[i] = d.percent
 	}
 
-	addressFractions := make(map[string]fraction)
-	for _, d := range dPercents {
-		addressFractions[d.address] = fraction{d.percent, total}
-	}
+	// Calculate proportional weights
+	weights := approximateProportions(percentages)
 
-	reducedFractions := make(map[string]fraction)
-	for address, f := range addressFractions {
-		reducedFractions[address] = f.Reduce()
-	}
-
-	lcmDenominator := 1
-	for _, f := range reducedFractions {
-		lcmDenominator = lcm(lcmDenominator, f.denominator)
-	}
-
-	resultFractions := make(map[string]fraction)
-	for address, f := range reducedFractions {
-		resultFractions[address] = fraction{f.numerator * (lcmDenominator / f.denominator), lcmDenominator}
-	}
-
+	// Create a map of addresses to weights
 	result := make(map[string]int)
-	for address, f := range resultFractions {
-		result[address] = f.numerator
+	for i, d := range dPercents {
+		result[d.address] = weights[i]
 	}
 
 	return result

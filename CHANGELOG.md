@@ -7,6 +7,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.8] - 2024-10-02
+
+### Fixed
+- Chain error message
+- Fraction calculation
+- 
+### Added
+- Added vote now endpoint
+
 ## [0.4.7] - 2024-09-27
 
 ### Added

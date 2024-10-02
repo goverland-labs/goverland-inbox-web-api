@@ -7,6 +7,6 @@ import (
 
 var chainResponseErrors = map[error]func(err error) response.Error{
 	chain.ErrChainRequestUnreachable: func(err error) response.Error {
-		return response.NewUnprocessableError(err, "Sorry, we couldn't request delegation data. Please try again later.")
+		return response.NewUnprocessableError(err, "Sorry, we couldn't estimate the transaction. Please try again in a moment.")
 	},
 }

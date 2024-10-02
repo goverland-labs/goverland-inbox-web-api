@@ -6,14 +6,13 @@ toolchain go1.21.6
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/davecgh/go-spew v1.1.1
 	github.com/ethereum/go-ethereum v1.14.8
 	github.com/gomarkdown/markdown v0.0.0-20230322041520-c84983bdbf2a
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/analytics-api v0.0.20
-	github.com/goverland-labs/goverland-core-sdk-go v0.1.12
+	github.com/goverland-labs/goverland-core-sdk-go v0.1.13
 	github.com/goverland-labs/goverland-platform-events v0.2.7
 	github.com/goverland-labs/inbox-api v0.2.2
 	github.com/goverland-labs/lib-rest-helpers v0.1.0
@@ -42,6 +41,7 @@ require (
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
 	github.com/crate-crypto/go-kzg-4844 v1.0.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/uniuri v1.2.0 // indirect
 	github.com/deckarep/golang-set/v2 v2.6.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect

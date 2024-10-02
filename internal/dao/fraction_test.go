@@ -82,6 +82,30 @@ func Test_calculateRatio(t *testing.T) {
 				"0x2": 2,
 			},
 		},
+		{
+			name: "Test 4",
+			args: args{
+				dPercents: []delegatesForFraction{
+					{
+						address: "0x1",
+						percent: 3333,
+					},
+					{
+						address: "0x2",
+						percent: 1667,
+					},
+					{
+						address: "0x3",
+						percent: 5000,
+					},
+				},
+			},
+			want: map[string]int{
+				"0x1": 2,
+				"0x2": 1,
+				"0x3": 3,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

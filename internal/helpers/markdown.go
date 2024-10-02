@@ -19,5 +19,5 @@ func CompileMarkdown(md string) string {
 }
 
 func ReplaceInlineImages(text string) string {
-	return inlineImage.ReplaceAllString(text, "\n\n$1\n\n")
+	return inlineImage.ReplaceAllString(text, "\n\n\n$1\n\n\n")
 }

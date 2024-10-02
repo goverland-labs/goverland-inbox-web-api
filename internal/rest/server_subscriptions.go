@@ -210,6 +210,8 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 		log.Error().Err(err).Msgf("subscribe on dao: %s", f.DAO)
 
 		response.SendEmpty(w, http.StatusInternalServerError)
+
+		return
 	}
 
 	newCnt := initialCount + 1
@@ -223,7 +225,11 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 		Str("subscription", res.SubscriptionId).
 		Msg("route execution")
 
-	response.SendJSON(w, http.StatusCreated, helpers.Ptr(wrapSubscriptionIpfsLinks(*sub)))
+	response.SendJSON(w, http.StatusCreated, helpers.Ptr(wrapSubscriptionIpfsLinks(Subscription{
+		ID:        uuid.MustParse(res.SubscriptionId),
+		CreatedAt: *common.NewTime(res.CreatedAt.AsTime()),
+		DAO:       dao.NewShortDAO(d),
+	})))
 }
 
 func (s *Server) unsubscribe(w http.ResponseWriter, r *http.Request) {

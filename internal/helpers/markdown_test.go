@@ -42,16 +42,12 @@ Game Maker
 
 ## Solution Proposed
 
-
 ![image](ipfs://bafkreidexhqro3q22nnsvzm7svxotoemvp4xyzydbrny2tcgwl54jdk2ea)
-
 
 Game Maker
 * Allow Window Resizing, both horizontal and vertical
 
-
 ![banner-GJ.jpg](ipfs://bafybeigo4xzgfoyb7quofhs7zx7yfxlnqagsyuyi7owznrqrsj2dunqa44)
-
 
 * Allow Resolution Sizes that match 420p,720p, 1080p, 2K, 4K`,
 		},

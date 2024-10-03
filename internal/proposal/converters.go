@@ -40,7 +40,7 @@ func ConvertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) *
 		Body: []common.Content{
 			{
 				Type: common.Markdown,
-				Body: ipfs.ReplaceLinksInText(pr.Body),
+				Body: helpers.ReplaceInlineImages(ipfs.ReplaceLinksInText(pr.Body)),
 			},
 		},
 		Discussion:    pr.Discussion,

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"sort"
 	"strings"
 	"time"
 
@@ -177,7 +178,7 @@ func (s *Service) GetTop(ctx context.Context, limit int) (*dao.ListTop, error) {
 	return list, nil
 }
 
-func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.UserID, req dao.GetDelegatesRequest) (dao.DelegatesWrapper, error) {
+func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID *auth.UserID, req dao.GetDelegatesRequest) (dao.DelegatesWrapper, error) {
 	resp, err := s.dp.GetDelegates(ctx, id, coresdk.GetDelegatesRequest{
 		Query:  req.Query,
 		By:     req.By,
@@ -188,25 +189,27 @@ func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.Us
 		return dao.DelegatesWrapper{}, fmt.Errorf("get delegates: %w", err)
 	}
 
-	userProfile, err := s.authService.GetProfileInfo(userID)
-	if err != nil {
-		return dao.DelegatesWrapper{}, fmt.Errorf("get profile info: %w", err)
-	}
-
 	daoInternalFull, err := s.GetDao(ctx, id.String())
 	if err != nil {
 		return dao.DelegatesWrapper{}, fmt.Errorf("get dao: %s: %w", id, err)
 	}
 
 	delegatesWeights := make(map[common.UserAddress]float64)
-	if userAddress := userProfile.GetAddress(); userAddress != nil {
-		profileResp, err := s.calculateDelegateProfile(ctx, id, userID, userProfile)
+	if userID != nil {
+		userProfile, err := s.authService.GetProfileInfo(*userID)
 		if err != nil {
-			return dao.DelegatesWrapper{}, fmt.Errorf("calculate delegate profile: %w", err)
+			return dao.DelegatesWrapper{}, fmt.Errorf("get profile info: %w", err)
 		}
 
-		for _, delegateItem := range profileResp.Delegates {
-			delegatesWeights[delegateItem.User.Address] = delegateItem.PercentOfDelegated
+		if userAddress := userProfile.GetAddress(); userAddress != nil {
+			profileResp, err := s.calculateDelegateProfile(ctx, id, *userID, userProfile)
+			if err != nil {
+				return dao.DelegatesWrapper{}, fmt.Errorf("calculate delegate profile: %w", err)
+			}
+
+			for _, delegateItem := range profileResp.Delegates {
+				delegatesWeights[delegateItem.User.Address] = delegateItem.PercentOfDelegated
+			}
 		}
 	}
 
@@ -243,20 +246,23 @@ func (s *Service) GetDelegates(ctx context.Context, id uuid.UUID, userID auth.Us
 		})
 	}
 
+	sort.SliceStable(delegates, func(i, j int) bool {
+		return delegates[i].UserDelegationInfo.PercentOfDelegated > delegates[j].UserDelegationInfo.PercentOfDelegated
+	})
+
 	return dao.DelegatesWrapper{
 		Delegates: delegates,
 		Total:     resp.Total,
 	}, nil
 }
 
-func (s *Service) GetSpecificDelegate(ctx context.Context, id uuid.UUID, userID auth.UserID, address string) (dao.DelegateWithDao, error) {
+func (s *Service) GetSpecificDelegate(ctx context.Context, id uuid.UUID, userID *auth.UserID, address string) (dao.DelegateWithDao, error) {
 	daoInternalFull, err := s.GetDao(ctx, id.String())
 	if err != nil {
 		return dao.DelegateWithDao{}, fmt.Errorf("get dao: %s: %w", id, err)
 	}
 
 	delegatesWrapper, err := s.GetDelegates(ctx, id, userID, dao.GetDelegatesRequest{
-		UserID: userID,
 		Query:  address,
 		Limit:  1,
 		Offset: 0,

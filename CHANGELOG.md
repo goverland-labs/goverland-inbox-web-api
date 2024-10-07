@@ -7,12 +7,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- No auth for delegates
+- Sorting delegates
+
 ## [0.4.8] - 2024-10-02
 
 ### Fixed
 - Chain error message
 - Fraction calculation
-- 
+
 ### Added
 - Added vote now endpoint
 

@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/goverland-labs/inbox-web-api/internal/auth"
 	"github.com/goverland-labs/inbox-web-api/internal/chain"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 )
@@ -127,7 +126,6 @@ type ListTop struct {
 }
 
 type GetDelegatesRequest struct {
-	UserID auth.UserID
 	Query  string
 	By     string
 	Limit  int

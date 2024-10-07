@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.9] - 2024-10-07
+
 ### Fixed
 - No auth for delegates
 - Sorting delegates

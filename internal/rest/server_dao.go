@@ -266,9 +266,10 @@ func (s *Server) recentDao(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getDelegates(w http.ResponseWriter, r *http.Request) {
+	var userID *auth.UserID
 	session, exists := appctx.ExtractUserSession(r.Context())
-	if !exists {
-		response.SendEmpty(w, http.StatusForbidden)
+	if exists {
+		userID = &session.UserID
 	}
 
 	f, verr := daoform.NewGetDelegatesForm().ParseAndValidate(r)
@@ -277,8 +278,7 @@ func (s *Server) getDelegates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	delegatesWrapper, err := s.daoService.GetDelegates(r.Context(), f.ID, session.UserID, dao.GetDelegatesRequest{
-		UserID: session.UserID,
+	delegatesWrapper, err := s.daoService.GetDelegates(r.Context(), f.ID, userID, dao.GetDelegatesRequest{
 		Offset: f.Offset,
 		Limit:  f.Limit,
 		Query:  f.Query,
@@ -300,9 +300,10 @@ func (s *Server) getDelegates(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getSpecificDelegate(w http.ResponseWriter, r *http.Request) {
+	var userID *auth.UserID
 	session, exists := appctx.ExtractUserSession(r.Context())
 	if !exists {
-		response.SendEmpty(w, http.StatusForbidden)
+		userID = &session.UserID
 	}
 
 	f, verr := daoform.NewGetSpecificDelegateForm().ParseAndValidate(r)
@@ -311,7 +312,7 @@ func (s *Server) getSpecificDelegate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	delegatesResult, err := s.daoService.GetSpecificDelegate(r.Context(), f.ID, session.UserID, f.Address)
+	delegatesResult, err := s.daoService.GetSpecificDelegate(r.Context(), f.ID, userID, f.Address)
 	if err != nil {
 		log.Error().Err(err).Msg("get specific delegate")
 

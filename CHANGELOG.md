@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.10] - 2024-10-08
+
 ### Added
 - Implemented custom subscriptions sorting
 - Extend short DAO object with active_proposals_unvoted field for subscriptions endpoint

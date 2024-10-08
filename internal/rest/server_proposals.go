@@ -413,6 +413,8 @@ func (h *Server) vote(w http.ResponseWriter, r *http.Request) {
 		}); err != nil {
 			log.Error().Err(err).Msg("publish vote event")
 		}
+
+		h.getSubscriptions(session.UserID)
 	}()
 
 	response.SendJSON(w, http.StatusOK, &successfulVote)
@@ -444,7 +446,7 @@ func convertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) p
 		Body: []common.Content{
 			{
 				Type: common.Markdown,
-				Body: ipfs.ReplaceLinksInText(pr.Body),
+				Body: helpers.ReplaceInlineImages(ipfs.ReplaceLinksInText(pr.Body)),
 			},
 		},
 		Discussion:    pr.Discussion,

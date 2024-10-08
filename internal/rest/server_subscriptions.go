@@ -3,11 +3,13 @@ package rest
 import (
 	"context"
 	"net/http"
+	"slices"
 	"sort"
 	"sync"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
@@ -22,31 +24,22 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
 )
 
+type SubscriptionSortingWeights struct {
+	UnVotedCnt         int
+	ActiveProposalsCnt int
+	PopularityIdx      float64
+}
+
 type Subscription struct {
-	ID        uuid.UUID     `json:"id"`
-	CreatedAt common.Time   `json:"created_at"`
-	DAO       *dao.ShortDAO `json:"dao,omitempty"`
+	ID        uuid.UUID                  `json:"id"`
+	CreatedAt common.Time                `json:"created_at"`
+	DAO       *dao.ShortDAO              `json:"dao,omitempty"`
+	Sorting   SubscriptionSortingWeights `json:"-"`
 }
 
 type subStorage struct {
 	mu   sync.RWMutex
 	subs map[auth.UserID][]Subscription
-}
-
-// TODO: Remove or use it
-// nolint:unused
-func (s *subStorage) add(id auth.UserID, subs ...Subscription) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	data, ok := s.subs[id]
-	if !ok {
-		data = []Subscription{}
-	}
-
-	data = append(data, subs...)
-
-	s.subs[id] = data
 }
 
 func (s *subStorage) set(id auth.UserID, subs ...Subscription) {
@@ -100,7 +93,23 @@ func (s *Server) listSubscriptions(w http.ResponseWriter, r *http.Request) {
 	if list == nil {
 		list = []Subscription{}
 	}
-	sort.Slice(list, func(i, j int) bool { return list[i].CreatedAt.AsTime().After(*list[j].CreatedAt.AsTime()) })
+
+	// sorting by: UnVotedCnt desc, ActiveProposalsCnt desc, PopularityIndex desc, CreatedAt desc
+	sort.Slice(list, func(i, j int) bool {
+		if list[i].Sorting.UnVotedCnt != list[j].Sorting.UnVotedCnt {
+			return list[i].Sorting.UnVotedCnt > list[j].Sorting.UnVotedCnt
+		}
+
+		if list[i].Sorting.ActiveProposalsCnt != list[j].Sorting.ActiveProposalsCnt {
+			return list[i].Sorting.ActiveProposalsCnt > list[j].Sorting.ActiveProposalsCnt
+		}
+
+		if list[i].Sorting.PopularityIdx != list[j].Sorting.PopularityIdx {
+			return list[i].Sorting.PopularityIdx > list[j].Sorting.PopularityIdx
+		}
+
+		return list[i].CreatedAt.AsTime().After(*list[j].CreatedAt.AsTime())
+	})
 
 	offset, limit, err := request.ExtractPagination(r)
 	if err != nil {
@@ -201,25 +210,26 @@ func (s *Server) subscribe(w http.ResponseWriter, r *http.Request) {
 		log.Error().Err(err).Msgf("subscribe on dao: %s", f.DAO)
 
 		response.SendEmpty(w, http.StatusInternalServerError)
+
+		return
 	}
 
-	sub = &Subscription{
-		ID:        uuid.MustParse(res.SubscriptionId),
-		CreatedAt: *common.NewTime(res.CreatedAt.AsTime()),
-		DAO:       dao.NewShortDAO(d),
-	}
+	newCnt := initialCount + 1
 
-	list = append(list, *sub)
-	subscriptionsStorage.set(session.UserID, list...)
+	go s.getSubscriptions(session.UserID)
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
 		Int("initial_count", initialCount).
-		Int("new_count", len(list)).
-		Str("subscription", sub.ID.String()).
+		Int("new_count", newCnt).
+		Str("subscription", res.SubscriptionId).
 		Msg("route execution")
 
-	response.SendJSON(w, http.StatusCreated, helpers.Ptr(wrapSubscriptionIpfsLinks(*sub)))
+	response.SendJSON(w, http.StatusCreated, helpers.Ptr(wrapSubscriptionIpfsLinks(Subscription{
+		ID:        uuid.MustParse(res.SubscriptionId),
+		CreatedAt: *common.NewTime(res.CreatedAt.AsTime()),
+		DAO:       dao.NewShortDAO(d),
+	})))
 }
 
 func (s *Server) unsubscribe(w http.ResponseWriter, r *http.Request) {
@@ -280,6 +290,8 @@ func getSubscription(session auth.Session, daoID uuid.UUID) *dao.SubscriptionInf
 func wrapSubscriptionIpfsLinks(sub Subscription) Subscription {
 	if sub.DAO != nil {
 		*sub.DAO = helpers.WrapShortDAOIpfsLinks(*sub.DAO)
+
+		sub.DAO.ActiveProposalsUnvoted = sub.Sorting.UnVotedCnt
 	}
 
 	return sub
@@ -305,7 +317,6 @@ func (s *Server) getSubscriptions(userID auth.UserID) {
 			Limit:        helpers.Ptr(uint64(limit)),
 			Offset:       helpers.Ptr(uint64(offset)),
 		})
-
 		if err != nil {
 			log.Error().Err(err).Msgf("get subscriptions: %s", userID)
 
@@ -341,12 +352,62 @@ func (s *Server) getSubscriptions(userID auth.UserID) {
 		return
 	}
 
+	// 5 - median active proposals in dao
+	activeProposalsList := make([]string, 0, len(daoIds)*5)
+	for _, di := range res.Items {
+		activeProposalsList = append(activeProposalsList, di.ActiveProposalsIDs...)
+	}
+
+	votedInProposals := s.getVotedIn(userID, activeProposalsList)
+
 	list := make([]Subscription, 0, len(subs))
 	for _, di := range res.Items {
 		sub := subs[di.ID.String()]
 		sub.DAO = dao.NewShortDAO(di)
+
+		unVotedCnt := di.ActiveVotes
+		for _, prID := range di.ActiveProposalsIDs {
+			if slices.Contains(votedInProposals, prID) {
+				unVotedCnt--
+			}
+		}
+
+		sub.Sorting = SubscriptionSortingWeights{
+			UnVotedCnt:         unVotedCnt,
+			ActiveProposalsCnt: di.ActiveVotes,
+			PopularityIdx:      di.PopularityIndex,
+		}
+
 		list = append(list, sub)
 	}
 
 	subscriptionsStorage.set(userID, list...)
+}
+
+// getVotedIn returns list of proposals identifiers
+func (s *Server) getVotedIn(userID auth.UserID, list []string) []string {
+	address, exists := s.getUserAddress(auth.Session{UserID: userID})
+	if !exists {
+		return nil
+	}
+
+	votedIn := make([]string, 0, len(list))
+	for chunk := range slices.Chunk(list, 50) {
+		resp, err := s.coreclient.GetUserVotes(context.TODO(), address, coresdk.GetUserVotesRequest{
+			ProposalIDs: chunk,
+			Limit:       len(chunk),
+		})
+
+		if err != nil {
+			log.Error().Err(err).Msgf("get user votes: %s", address)
+
+			return nil
+		}
+
+		for _, vote := range resp.Items {
+			votedIn = append(votedIn, vote.ProposalID)
+		}
+	}
+
+	return votedIn
 }

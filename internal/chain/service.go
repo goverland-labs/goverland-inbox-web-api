@@ -206,7 +206,7 @@ func (s *Service) GetGasLimitForSetDelegatesHex(chainID ChainID, params Estimate
 		Data: params.Data,
 	})
 	if err != nil {
-		return "", fmt.Errorf("%w: failed to estimate gas for chain %s: %w", ErrChainRequestUnreachable, chain.chain, err)
+		return "", fmt.Errorf("%w: failed to estimate gas for chain %s: %w", ErrEstimateFee, chain.chain, err)
 	}
 
 	return fmt.Sprintf("0x%x", gasLimit), nil

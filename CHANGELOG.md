@@ -7,6 +7,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Featured vote now
+
+### Fixed
+- Chain error messages
+- Filtering allowed daos for delegation
+
 ## [0.4.10] - 2024-10-08
 
 ### Added

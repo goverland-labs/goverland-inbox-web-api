@@ -16,6 +16,7 @@ import (
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -86,7 +87,12 @@ func (s *Service) GetDao(ctx context.Context, id string) (*dao.DAO, error) {
 		return nil, fmt.Errorf("get dao: %s: %w", id, err)
 	}
 
-	internal := ConvertCoreDaoToInternal(dao)
+	allowedDaos, err := s.delegateClient.GetAllowedDaos(ctx, &emptypb.Empty{})
+	if err != nil {
+		return nil, fmt.Errorf("get allowed daos: %w", err)
+	}
+
+	internal := ConvertCoreDaoToInternal(dao, allowedDaos.GetDaosNames())
 	s.cache.AddToCache(internal)
 
 	return internal, nil
@@ -111,8 +117,13 @@ func (s *Service) GetDaoByIDs(ctx context.Context, ids ...string) (map[string]*d
 		return nil, fmt.Errorf("get dao list: %w", err)
 	}
 
+	allowedDaos, err := s.delegateClient.GetAllowedDaos(ctx, &emptypb.Empty{})
+	if err != nil {
+		return nil, fmt.Errorf("get allowed daos: %w", err)
+	}
+
 	for i := range resp.Items {
-		internal := ConvertCoreDaoToInternal(&resp.Items[i])
+		internal := ConvertCoreDaoToInternal(&resp.Items[i], allowedDaos.GetDaosNames())
 		hits[internal.ID.String()] = internal
 
 		s.cache.AddToCache(internal)
@@ -139,8 +150,13 @@ func (s *Service) GetDaoList(ctx context.Context, req dao.DaoListRequest) (*dao.
 		TotalCnt: resp.TotalCnt,
 	}
 
+	allowedDaos, err := s.delegateClient.GetAllowedDaos(ctx, &emptypb.Empty{})
+	if err != nil {
+		return nil, fmt.Errorf("get allowed daos: %w", err)
+	}
+
 	for i := range resp.Items {
-		list.Items[i] = ConvertCoreDaoToInternal(&resp.Items[i])
+		list.Items[i] = ConvertCoreDaoToInternal(&resp.Items[i], allowedDaos.GetDaosNames())
 	}
 
 	s.cache.AddToCache(list.Items...)
@@ -160,11 +176,16 @@ func (s *Service) GetTop(ctx context.Context, limit int) (*dao.ListTop, error) {
 		Categories: make(map[common.Category]dao.Top),
 	}
 
+	allowedDaos, err := s.delegateClient.GetAllowedDaos(ctx, &emptypb.Empty{})
+	if err != nil {
+		return nil, fmt.Errorf("get allowed daos: %w", err)
+	}
+
 	grouped := make(map[common.Category]dao.Top)
 	for category, data := range *resp {
 		daos := make([]*dao.DAO, len(data.List))
 		for i, info := range data.List {
-			daos[i] = ConvertCoreDaoToInternal(&info)
+			daos[i] = ConvertCoreDaoToInternal(&info, allowedDaos.GetDaosNames())
 		}
 
 		grouped[common.Category(category)] = dao.Top{

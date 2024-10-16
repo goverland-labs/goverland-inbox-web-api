@@ -13,19 +13,26 @@ import (
 
 const delegationStrategyName = "split-delegation"
 
-func ConvertCoreDaoToInternal(i *coredao.Dao) *dao.DAO {
+func ConvertCoreDaoToInternal(i *coredao.Dao, allowedDaos []string) *dao.DAO {
 	var activitySince *common.Time
 	if i.ActivitySince > 0 {
 		activitySince = common.NewTime(time.Unix(int64(i.ActivitySince), 0))
 	}
 
+	allowedDaosMap := make(map[string]struct{}, len(allowedDaos))
+	for _, v := range allowedDaos {
+		allowedDaosMap[v] = struct{}{}
+	}
+
 	var delegation *dao.Delegation
-	for _, d := range i.Strategies {
-		if d.Name == delegationStrategyName {
-			delegation = &dao.Delegation{
-				Type: dao.SplitDelegationType,
+	if _, ok := allowedDaosMap[i.Alias]; ok {
+		for _, d := range i.Strategies {
+			if d.Name == delegationStrategyName {
+				delegation = &dao.Delegation{
+					Type: dao.SplitDelegationType,
+				}
+				break
 			}
-			break
 		}
 	}
 

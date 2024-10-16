@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/google/uuid"
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 	"golang.org/x/exp/slices"
 
@@ -426,6 +427,11 @@ func (s *Server) getVoteNow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var featured bool
+	if featuredStr := r.URL.Query().Get("featured"); featuredStr != "" {
+		featured = featuredStr == "true"
+	}
+
 	subscribtions, err := s.subclient.ListSubscriptions(r.Context(), &inboxapi.ListSubscriptionRequest{
 		SubscriberId: session.UserID.String(),
 	})
@@ -500,7 +506,7 @@ func (s *Server) getVoteNow(w http.ResponseWriter, r *http.Request) {
 	list = s.enrichProposalsVotesInfo(r.Context(), session, list)
 	list = helpers.WrapProposalsIpfsLinks(list)
 
-	proposalsWithoutVotes := make([]proposal.Proposal, 0, len(list))
+	resultProposals := make([]proposal.Proposal, 0, len(list))
 	for _, p := range list {
 		if p.UserVote != nil {
 			continue
@@ -510,16 +516,39 @@ func (s *Server) getVoteNow(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		proposalsWithoutVotes = append(proposalsWithoutVotes, p)
+		resultProposals = append(resultProposals, p)
+	}
+
+	total := proposalList.TotalCnt
+	if featured {
+		const maxFeaturedProposals = 3
+		usedDaos := make(map[uuid.UUID]struct{})
+
+		featuredProposals := make([]proposal.Proposal, 0, maxFeaturedProposals)
+		for _, p := range resultProposals {
+			if len(featuredProposals) >= maxFeaturedProposals {
+				break
+			}
+
+			if _, ok := usedDaos[p.DAO.ID]; ok {
+				continue
+			}
+
+			featuredProposals = append(featuredProposals, p)
+			usedDaos[p.DAO.ID] = struct{}{}
+		}
+
+		resultProposals = featuredProposals
+		total = len(resultProposals)
 	}
 
 	log.Info().
 		Str("user_id", session.UserID.String()).
-		Int("count_filtered", len(proposalsWithoutVotes)).
-		Int("total", proposalList.TotalCnt).
+		Int("count_filtered", len(resultProposals)).
+		Int("total", total).
 		Msg("vote now")
 
-	response.SendJSON(w, http.StatusOK, &proposalsWithoutVotes)
+	response.SendJSON(w, http.StatusOK, &resultProposals)
 }
 
 func (s *Server) getUserAddress(session auth.Session) (address string, exist bool) {

@@ -10,10 +10,10 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/goverland-labs/goverland-analytics-api-protocol v0.1.0
-	github.com/goverland-labs/goverland-core-sdk-go v0.1.14
+	github.com/goverland-labs/goverland-core-sdk-go v0.2.0
 	github.com/goverland-labs/goverland-inbox-api-protocol v0.3.0
 	github.com/goverland-labs/goverland-lib-rest-helpers v0.2.0
-	github.com/goverland-labs/goverland-platform-events v0.2.7
+	github.com/goverland-labs/goverland-platform-events v0.3.7
 	github.com/nats-io/nats.go v1.31.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/rs/zerolog v1.29.1

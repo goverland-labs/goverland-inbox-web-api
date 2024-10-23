@@ -8,17 +8,15 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	coredelegation "github.com/goverland-labs/goverland-core-sdk-go/delegate"
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 	"golang.org/x/exp/slices"
 
 	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
 
-	"github.com/gorilla/mux"
-	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
-	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
-	"github.com/rs/zerolog/log"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/delegations"
+	resthelpers "github.com/goverland-labs/goverland-inbox-web-api/internal/rest/forms/common"
 
 	"github.com/goverland-labs/goverland-inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/goverland-inbox-web-api/internal/auth"
@@ -29,6 +27,13 @@ import (
 	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/forms/tools"
 	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/request"
 	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
+
+	"github.com/gorilla/mux"
+	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
+	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
+	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
@@ -622,4 +627,135 @@ func (s *Server) getRecommendedDao(w http.ResponseWriter, r *http.Request) {
 		Msg("route execution")
 
 	response.SendJSON(w, http.StatusOK, &list)
+}
+
+// getAllDelegates returns top 5 delegates but we don't expect more than 2 delegates in the result list
+func (s *Server) getAllDelegates(w http.ResponseWriter, r *http.Request) {
+	_, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.HandleError(response.NewUnauthorizedError(), w)
+		return
+	}
+
+	address := mux.Vars(r)["address"]
+	resp, err := s.coreclient.GetTopDelegatesByAddress(r.Context(), address)
+	if err != nil {
+		response.HandleError(response.NewInternalError(), w)
+		return
+	}
+
+	list := make([]delegations.DelegatesList, 0, len(resp.List))
+	for _, info := range resp.List {
+		daoInfo, err := s.daoService.GetDao(r.Context(), info.Dao.ID.String())
+		if err != nil {
+			response.HandleError(response.NewInternalError(), w)
+			return
+		}
+
+		list = append(list, delegations.DelegatesList{
+			Dao:            dao.ConvertDaoToShort(daoInfo),
+			List:           convertToDelegatesSummary(info.List),
+			DelegationType: delegations.DelegationTypeSplitDelegation,
+		})
+	}
+
+	response.AddTotalCounterHeaders(w, resp.TotalCount)
+	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func (s *Server) getTopDelegators(w http.ResponseWriter, r *http.Request) {
+	_, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.HandleError(response.NewUnauthorizedError(), w)
+		return
+	}
+
+	address := mux.Vars(r)["address"]
+	resp, err := s.coreclient.GetTopDelegatorsByAddress(r.Context(), address)
+	if err != nil {
+		response.HandleError(response.NewInternalError(), w)
+		return
+	}
+
+	list := make([]delegations.DelegatorsList, 0, len(resp.List))
+	for _, info := range resp.List {
+		daoInfo, err := s.daoService.GetDao(r.Context(), info.Dao.ID.String())
+		if err != nil {
+			response.HandleError(response.NewInternalError(), w)
+			return
+		}
+
+		list = append(list, delegations.DelegatorsList{
+			Dao:            dao.ConvertDaoToShort(daoInfo),
+			List:           convertToDelegatesSummary(info.List),
+			TotalCount:     info.TotalCount,
+			DelegationType: delegations.DelegationTypeSplitDelegation,
+		})
+	}
+
+	response.AddTotalCounterHeaders(w, resp.TotalCount)
+	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func (s *Server) getDelegatorsList(w http.ResponseWriter, r *http.Request) {
+	_, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.HandleError(response.NewUnauthorizedError(), w)
+		return
+	}
+
+	address := mux.Vars(r)["address"]
+	daoID := mux.Vars(r)["dao_id"]
+	pagination, errV := resthelpers.NewPagination().ParseAndValidate(r)
+	if errV != nil {
+		response.HandleError(response.NewInternalError(), w)
+		return
+	}
+
+	resp, err := s.coreclient.GetDelegatorsList(r.Context(), coresdk.GetDelegatorsListRequest{
+		Address: address,
+		DaoID:   daoID,
+		Offset:  pagination.Offset,
+		Limit:   pagination.Limit,
+	})
+	if err != nil {
+		response.HandleError(response.NewInternalError(), w)
+		return
+	}
+
+	list := convertToDelegatesSummary(resp.List)
+
+	response.AddTotalCounterHeaders(w, resp.TotalCount)
+	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func convertToDelegatesSummary(details []coredelegation.DelegationDetails) []delegations.DelegationSummary {
+	delegates := make([]delegations.DelegationSummary, 0, len(details))
+
+	// todo: move converting user to separate function
+	for _, info := range details {
+		var ensName *string
+		alias := info.Address
+		if info.EnsName != "" {
+			alias = info.EnsName
+			ensName = &alias
+		}
+
+		ds := delegations.DelegationSummary{
+			User: common.User{
+				Address:      common.UserAddress(info.Address),
+				ResolvedName: ensName,
+				Avatars:      common.GenerateProfileAvatars(alias),
+			},
+			PercentOfDelegated: float64(info.PercentOfDelegators) / 100, // divide by 100 due to storing logic
+		}
+
+		if info.Expiration != nil {
+			ds.Expiration = common.NewTime(*info.Expiration)
+		}
+
+		delegates = append(delegates, ds)
+	}
+
+	return delegates
 }

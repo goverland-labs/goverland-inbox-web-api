@@ -8,17 +8,20 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
+	coredelegation "github.com/goverland-labs/goverland-core-sdk-go/delegate"
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 	"golang.org/x/exp/slices"
 
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-
 	"github.com/gorilla/mux"
-	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/goverland-labs/inbox-web-api/internal/dao"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/inbox-web-api/internal/entities/delegations"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
@@ -622,4 +625,133 @@ func (s *Server) getRecommendedDao(w http.ResponseWriter, r *http.Request) {
 		Msg("route execution")
 
 	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func (s *Server) getMyDelegates(w http.ResponseWriter, r *http.Request) {
+	session, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.HandleError(response.NewUnauthorizedError(), w)
+		return
+	}
+
+	address, exists := s.getUserAddress(session)
+	if !exists {
+		response.HandleError(response.NewNotAcceptableError(), w)
+		return
+	}
+
+	resp, err := s.coreclient.GetAllDelegatesByAddress(r.Context(), address)
+	if err != nil {
+		response.HandleError(response.NewInternalError(), w)
+		return
+	}
+
+	list := make([]delegations.DelegatesList, 0, len(resp.Delegations))
+	for _, info := range resp.Delegations {
+		daoInfo, err := s.daoService.GetDao(r.Context(), info.Dao.ID.String())
+		if err != nil {
+			response.HandleError(response.NewInternalError(), w)
+			return
+		}
+
+		list = append(list, delegations.DelegatesList{
+			Dao:         dao.ConvertDaoToShort(daoInfo),
+			Delegations: convertToDelegatesSummary(info.Delegations),
+		})
+	}
+
+	response.AddTotalCounterHeaders(w, resp.TotalDelegationsCount)
+	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func (s *Server) getMyDelegators(w http.ResponseWriter, r *http.Request) {
+	session, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.HandleError(response.NewUnauthorizedError(), w)
+		return
+	}
+
+	address, exists := s.getUserAddress(session)
+	if !exists {
+		response.HandleError(response.NewNotAcceptableError(), w)
+		return
+	}
+
+	resp, err := s.coreclient.GetAllDelegatorsByAddress(r.Context(), address)
+	if err != nil {
+		response.HandleError(response.NewInternalError(), w)
+		return
+	}
+
+	list := make([]delegations.DelegatorsList, 0, len(resp.Delegations))
+	for _, info := range resp.Delegations {
+		daoInfo, err := s.daoService.GetDao(r.Context(), info.Dao.ID.String())
+		if err != nil {
+			response.HandleError(response.NewInternalError(), w)
+			return
+		}
+
+		list = append(list, delegations.DelegatorsList{
+			Dao:        dao.ConvertDaoToShort(daoInfo),
+			Delegators: convertToDelegatesSummary(info.Delegations),
+		})
+	}
+
+	response.AddTotalCounterHeaders(w, resp.TotalDelegatorsCount)
+	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func convertToDelegatesSummary(details []coredelegation.DelegationDetails) []delegations.DelegationSummary {
+	delegates := make([]delegations.DelegationSummary, 0, len(details))
+
+	// todo: move converting user to separate function
+	for _, info := range details {
+		var ensName *string
+		alias := info.Address
+		if info.EnsName != "" {
+			alias = info.EnsName
+		}
+
+		ds := delegations.DelegationSummary{
+			User: common.User{
+				Address:      common.UserAddress(info.Address),
+				ResolvedName: ensName,
+				Avatars:      common.GenerateProfileAvatars(alias),
+			},
+			PercentOfDelegators: info.PercentOfDelegators,
+		}
+
+		if info.Expiration != nil {
+			ds.Expiration = common.NewTime(*info.Expiration)
+		}
+
+		delegates = append(delegates, ds)
+	}
+
+	return delegates
+}
+
+func (s *Server) getMyDelegationSummary(w http.ResponseWriter, r *http.Request) {
+	session, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.HandleError(response.NewUnauthorizedError(), w)
+		return
+	}
+
+	address, exists := s.getUserAddress(session)
+	if !exists {
+		response.HandleError(response.NewNotAcceptableError(), w)
+		return
+	}
+
+	resp, err := s.coreclient.GetTotalDelegationsByAddress(r.Context(), address)
+	if err != nil {
+		response.HandleError(response.NewInternalError(), w)
+		return
+	}
+
+	response.SendJSON(w, http.StatusOK, &delegations.Summary{
+		TotalDelegatorsCount:  resp.TotalDelegatorsCount,
+		TotalDelegationsCount: resp.TotalDelegationsCount,
+	})
 }

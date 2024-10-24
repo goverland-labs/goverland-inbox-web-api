@@ -718,7 +718,7 @@ func convertToDelegatesSummary(details []coredelegation.DelegationDetails) []del
 				ResolvedName: ensName,
 				Avatars:      common.GenerateProfileAvatars(alias),
 			},
-			PercentOfDelegators: info.PercentOfDelegators,
+			PercentOfDelegated: info.PercentOfDelegators,
 		}
 
 		if info.Expiration != nil {
@@ -729,29 +729,4 @@ func convertToDelegatesSummary(details []coredelegation.DelegationDetails) []del
 	}
 
 	return delegates
-}
-
-func (s *Server) getMyDelegationSummary(w http.ResponseWriter, r *http.Request) {
-	session, exists := appctx.ExtractUserSession(r.Context())
-	if !exists {
-		response.HandleError(response.NewUnauthorizedError(), w)
-		return
-	}
-
-	address, exists := s.getUserAddress(session)
-	if !exists {
-		response.HandleError(response.NewNotAcceptableError(), w)
-		return
-	}
-
-	resp, err := s.coreclient.GetTotalDelegationsByAddress(r.Context(), address)
-	if err != nil {
-		response.HandleError(response.NewInternalError(), w)
-		return
-	}
-
-	response.SendJSON(w, http.StatusOK, &delegations.Summary{
-		TotalDelegatorsCount:  resp.TotalDelegatorsCount,
-		TotalDelegationsCount: resp.TotalDelegationsCount,
-	})
 }

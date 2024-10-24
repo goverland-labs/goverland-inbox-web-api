@@ -128,7 +128,6 @@ func NewServer(
 	handler.HandleFunc("/me/recommended-dao", srv.getRecommendedDao).Methods(http.MethodGet).Name("get_recommended_dao")
 	handler.HandleFunc("/me/delegates", srv.getMyDelegates).Methods(http.MethodGet).Name("get_delegates")
 	handler.HandleFunc("/me/delegators", srv.getMyDelegators).Methods(http.MethodGet).Name("get_delegators")
-	handler.HandleFunc("/me/delegations/summary", srv.getMyDelegationSummary).Methods(http.MethodGet).Name("get_delegations_summary")
 	handler.HandleFunc("/user/{address}", srv.getUser).Methods(http.MethodGet).Name("get_user")
 	handler.HandleFunc("/user/{address}/votes", srv.getPublicUserVotes).Methods(http.MethodGet).Name("get_public_user_votes")
 	handler.HandleFunc("/user/{address}/participated-daos", srv.getParticipatedDaos).Methods(http.MethodGet).Name("get_participated_daos")

@@ -718,7 +718,7 @@ func convertToDelegatesSummary(details []coredelegation.DelegationDetails) []del
 				ResolvedName: ensName,
 				Avatars:      common.GenerateProfileAvatars(alias),
 			},
-			PercentOfDelegated: info.PercentOfDelegators,
+			PercentOfDelegated: float64(info.PercentOfDelegators) / 100, // divide by 100 due to storing logic
 		}
 
 		if info.Expiration != nil {

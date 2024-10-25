@@ -8,7 +8,7 @@ import (
 type DelegationSummary struct {
 	User common.User `json:"user"`
 	// Percentage of delegation
-	PercentOfDelegated int `json:"percent_of_delegated,omitempty"`
+	PercentOfDelegated float64 `json:"percent_of_delegated"`
 	// Expires at date
 	Expiration *common.Time `json:"expiration,omitempty"`
 }

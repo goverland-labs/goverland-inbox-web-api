@@ -710,6 +710,7 @@ func convertToDelegatesSummary(details []coredelegation.DelegationDetails) []del
 		alias := info.Address
 		if info.EnsName != "" {
 			alias = info.EnsName
+			ensName = &alias
 		}
 
 		ds := delegations.DelegationSummary{

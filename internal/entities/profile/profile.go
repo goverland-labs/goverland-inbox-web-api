@@ -32,8 +32,8 @@ type Profile struct {
 	SubscriptionsCount int      `json:"subscriptions_count"`
 	// The number of delegators in out DB
 	DelegatorsCount int `json:"delegators_count"`
-	// The number of delegations in out DB
-	Total int `json:"delegations_count"`
+	// The number of delegates in out DB
+	DelegatesCount int `json:"delegates_count"`
 
 	LastSessions []Session `json:"last_sessions"`
 }

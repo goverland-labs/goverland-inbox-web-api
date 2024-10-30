@@ -22,10 +22,3 @@ type DelegatorsList struct {
 	Dao        dao.ShortDAO        `json:"dao"`
 	Delegators []DelegationSummary `json:"delegators"`
 }
-
-type Summary struct {
-	// The number of total delegators in out DB
-	TotalDelegatorsCount int `json:"total_delegators_count"`
-	// The number of total delegations in out DB
-	TotalDelegationsCount int `json:"total_delegations_count"`
-}

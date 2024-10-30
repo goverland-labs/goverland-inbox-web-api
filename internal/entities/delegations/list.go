@@ -14,8 +14,8 @@ type DelegationSummary struct {
 }
 
 type DelegatesList struct {
-	Dao         dao.ShortDAO        `json:"dao"`
-	Delegations []DelegationSummary `json:"delegations"`
+	Dao       dao.ShortDAO        `json:"dao"`
+	Delegates []DelegationSummary `json:"delegates"`
 }
 
 type DelegatorsList struct {

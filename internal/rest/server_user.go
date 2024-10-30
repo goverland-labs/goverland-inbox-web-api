@@ -655,8 +655,8 @@ func (s *Server) getMyDelegates(w http.ResponseWriter, r *http.Request) {
 		}
 
 		list = append(list, delegations.DelegatesList{
-			Dao:         dao.ConvertDaoToShort(daoInfo),
-			Delegations: convertToDelegatesSummary(info.Delegations),
+			Dao:       dao.ConvertDaoToShort(daoInfo),
+			Delegates: convertToDelegatesSummary(info.Delegations),
 		})
 	}
 

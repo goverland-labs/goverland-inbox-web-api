@@ -22,6 +22,7 @@ import (
 	"github.com/goverland-labs/inbox-web-api/internal/dao"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/delegations"
+	resthelpers "github.com/goverland-labs/inbox-web-api/internal/rest/forms/common"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"
 	"github.com/goverland-labs/inbox-web-api/internal/auth"
@@ -627,27 +628,22 @@ func (s *Server) getRecommendedDao(w http.ResponseWriter, r *http.Request) {
 	response.SendJSON(w, http.StatusOK, &list)
 }
 
-func (s *Server) getMyDelegates(w http.ResponseWriter, r *http.Request) {
-	session, exists := appctx.ExtractUserSession(r.Context())
+func (s *Server) getTopDelegates(w http.ResponseWriter, r *http.Request) {
+	_, exists := appctx.ExtractUserSession(r.Context())
 	if !exists {
 		response.HandleError(response.NewUnauthorizedError(), w)
 		return
 	}
 
-	address, exists := s.getUserAddress(session)
-	if !exists {
-		response.HandleError(response.NewNotAcceptableError(), w)
-		return
-	}
-
-	resp, err := s.coreclient.GetAllDelegatesByAddress(r.Context(), address)
+	address := mux.Vars(r)["address"]
+	resp, err := s.coreclient.GetTopDelegatesByAddress(r.Context(), address)
 	if err != nil {
 		response.HandleError(response.NewInternalError(), w)
 		return
 	}
 
-	list := make([]delegations.DelegatesList, 0, len(resp.Delegations))
-	for _, info := range resp.Delegations {
+	list := make([]delegations.DelegatesList, 0, len(resp.List))
+	for _, info := range resp.List {
 		daoInfo, err := s.daoService.GetDao(r.Context(), info.Dao.ID.String())
 		if err != nil {
 			response.HandleError(response.NewInternalError(), w)
@@ -655,36 +651,64 @@ func (s *Server) getMyDelegates(w http.ResponseWriter, r *http.Request) {
 		}
 
 		list = append(list, delegations.DelegatesList{
-			Dao:       dao.ConvertDaoToShort(daoInfo),
-			Delegates: convertToDelegatesSummary(info.Delegations),
+			Dao:        dao.ConvertDaoToShort(daoInfo),
+			List:       convertToDelegatesSummary(info.List),
+			TotalCount: info.TotalCount,
 		})
 	}
 
-	response.AddTotalCounterHeaders(w, resp.TotalDelegationsCount)
+	response.AddTotalCounterHeaders(w, resp.TotalCount)
 	response.SendJSON(w, http.StatusOK, &list)
 }
 
-func (s *Server) getMyDelegators(w http.ResponseWriter, r *http.Request) {
-	session, exists := appctx.ExtractUserSession(r.Context())
+func (s *Server) getDelegatesList(w http.ResponseWriter, r *http.Request) {
+	_, exists := appctx.ExtractUserSession(r.Context())
 	if !exists {
 		response.HandleError(response.NewUnauthorizedError(), w)
 		return
 	}
 
-	address, exists := s.getUserAddress(session)
-	if !exists {
-		response.HandleError(response.NewNotAcceptableError(), w)
+	address := mux.Vars(r)["address"]
+	daoID := mux.Vars(r)["dao_id"]
+	pagination, errV := resthelpers.NewPagination().ParseAndValidate(r)
+	if errV != nil {
+		response.HandleError(response.NewInternalError(), w)
 		return
 	}
 
-	resp, err := s.coreclient.GetAllDelegatorsByAddress(r.Context(), address)
+	resp, err := s.coreclient.GetDelegatesList(r.Context(), coresdk.GetDelegatesListRequest{
+		Address: address,
+		DaoID:   daoID,
+		Offset:  pagination.Offset,
+		Limit:   pagination.Limit,
+	})
 	if err != nil {
 		response.HandleError(response.NewInternalError(), w)
 		return
 	}
 
-	list := make([]delegations.DelegatorsList, 0, len(resp.Delegations))
-	for _, info := range resp.Delegations {
+	list := convertToDelegatesSummary(resp.List)
+
+	response.AddTotalCounterHeaders(w, resp.TotalCount)
+	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func (s *Server) getTopDelegators(w http.ResponseWriter, r *http.Request) {
+	_, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.HandleError(response.NewUnauthorizedError(), w)
+		return
+	}
+
+	address := mux.Vars(r)["address"]
+	resp, err := s.coreclient.GetTopDelegatorsByAddress(r.Context(), address)
+	if err != nil {
+		response.HandleError(response.NewInternalError(), w)
+		return
+	}
+
+	list := make([]delegations.DelegatorsList, 0, len(resp.List))
+	for _, info := range resp.List {
 		daoInfo, err := s.daoService.GetDao(r.Context(), info.Dao.ID.String())
 		if err != nil {
 			response.HandleError(response.NewInternalError(), w)
@@ -693,11 +717,44 @@ func (s *Server) getMyDelegators(w http.ResponseWriter, r *http.Request) {
 
 		list = append(list, delegations.DelegatorsList{
 			Dao:        dao.ConvertDaoToShort(daoInfo),
-			Delegators: convertToDelegatesSummary(info.Delegations),
+			List:       convertToDelegatesSummary(info.List),
+			TotalCount: info.TotalCount,
 		})
 	}
 
-	response.AddTotalCounterHeaders(w, resp.TotalDelegatorsCount)
+	response.AddTotalCounterHeaders(w, resp.TotalCount)
+	response.SendJSON(w, http.StatusOK, &list)
+}
+
+func (s *Server) getDelegatorsList(w http.ResponseWriter, r *http.Request) {
+	_, exists := appctx.ExtractUserSession(r.Context())
+	if !exists {
+		response.HandleError(response.NewUnauthorizedError(), w)
+		return
+	}
+
+	address := mux.Vars(r)["address"]
+	daoID := mux.Vars(r)["dao_id"]
+	pagination, errV := resthelpers.NewPagination().ParseAndValidate(r)
+	if errV != nil {
+		response.HandleError(response.NewInternalError(), w)
+		return
+	}
+
+	resp, err := s.coreclient.GetDelegatorsList(r.Context(), coresdk.GetDelegatorsListRequest{
+		Address: address,
+		DaoID:   daoID,
+		Offset:  pagination.Offset,
+		Limit:   pagination.Limit,
+	})
+	if err != nil {
+		response.HandleError(response.NewInternalError(), w)
+		return
+	}
+
+	list := convertToDelegatesSummary(resp.List)
+
+	response.AddTotalCounterHeaders(w, resp.TotalCount)
 	response.SendJSON(w, http.StatusOK, &list)
 }
 

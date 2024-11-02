@@ -244,6 +244,6 @@ func (s *Server) enrichDelegationsCnt(session authsrv.Session, p *profile.Profil
 		return
 	}
 
-	p.DelegatesCount = resp.TotalDelegationsCount
+	p.DelegatesCount = resp.TotalDelegatesCount
 	p.DelegatorsCount = resp.TotalDelegatorsCount
 }

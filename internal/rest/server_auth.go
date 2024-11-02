@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -186,6 +187,7 @@ func (s *Server) getMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.enrichProfileInfo(session, &profileInfo)
+	s.enrichDelegationsCnt(session, &profileInfo)
 
 	log.Info().
 		Str("route", mux.CurrentRoute(r).GetName()).
@@ -228,4 +230,20 @@ func (s *Server) enrichProfileInfo(session authsrv.Session, p *profile.Profile) 
 			lastSession.LastActivityAt = common.NewTime(time.Now())
 		}
 	}
+}
+
+func (s *Server) enrichDelegationsCnt(session authsrv.Session, p *profile.Profile) {
+	address, exists := s.getUserAddress(session)
+	if !exists {
+		return
+	}
+
+	resp, err := s.coreclient.GetTotalDelegationsByAddress(context.Background(), address)
+	if err != nil {
+		log.Error().Err(err).Msg("enrichDelegationsCnt")
+		return
+	}
+
+	p.DelegatesCount = resp.TotalDelegatesCount
+	p.DelegatorsCount = resp.TotalDelegatorsCount
 }

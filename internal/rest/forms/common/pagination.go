@@ -17,6 +17,24 @@ type Pagination struct {
 	Limit  int
 }
 
+func NewPagination() *Pagination {
+	return &Pagination{}
+}
+
+func (p *Pagination) ParseAndValidate(r *http.Request) (*Pagination, response.Error) {
+	errors := make(map[string]response.ErrorMessage)
+
+	p.ValidateAndSetPagination(r, errors)
+
+	if len(errors) > 0 {
+		ve := response.NewValidationError(errors)
+
+		return nil, ve
+	}
+
+	return p, nil
+}
+
 func (p *Pagination) ValidateAndSetPagination(r *http.Request, errors map[string]response.ErrorMessage) {
 	p.validateAndSetOffset(r, errors)
 	p.validateAndSetLimit(r, errors)

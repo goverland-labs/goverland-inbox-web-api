@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/inbox-web-api/internal/helpers"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/helpers"
 )
 
 func HandleError(err Error, w http.ResponseWriter) {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/inbox-web-api/pkg/ctxfields"
+	"github.com/goverland-labs/goverland-inbox-web-api/pkg/ctxfields"
 )
 
 func Log(next http.Handler) http.Handler {

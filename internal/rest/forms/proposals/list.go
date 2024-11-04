@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 type ListRequest struct {

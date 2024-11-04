@@ -3,8 +3,8 @@ package rest
 import (
 	"net/http"
 
-	"github.com/goverland-labs/inbox-web-api/internal/entities/stats"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/stats"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 func (s *Server) getStatsTotals(w http.ResponseWriter, r *http.Request) {

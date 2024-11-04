@@ -6,11 +6,11 @@ import (
 
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	internaldao "github.com/goverland-labs/inbox-web-api/internal/entities/dao"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
-	"github.com/goverland-labs/inbox-web-api/internal/helpers"
-	"github.com/goverland-labs/inbox-web-api/internal/ipfs"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
+	internaldao "github.com/goverland-labs/goverland-inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/proposal"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/helpers"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/ipfs"
 )
 
 func ConvertProposalToInternal(pr *coreproposal.Proposal, di *internaldao.DAO) *proposal.Proposal {

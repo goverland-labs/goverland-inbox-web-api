@@ -1,7 +1,7 @@
 package profile
 
 import (
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
 )
 
 const (

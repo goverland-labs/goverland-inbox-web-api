@@ -7,9 +7,9 @@ import (
 	events "github.com/goverland-labs/goverland-platform-events/events/inbox"
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/inbox-web-api/internal/appctx"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/pushes"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/appctx"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/forms/pushes"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 func (s *Server) sendCustomPush(w http.ResponseWriter, r *http.Request) {

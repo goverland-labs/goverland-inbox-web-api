@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/goverland-labs/inbox-web-api/pkg/ctxfields"
+	"github.com/goverland-labs/goverland-inbox-web-api/pkg/ctxfields"
 )
 
 const (

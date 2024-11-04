@@ -12,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/shopspring/decimal"
 
-	"github.com/goverland-labs/inbox-web-api/internal/config"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/config"
 )
 
 type ChainID int

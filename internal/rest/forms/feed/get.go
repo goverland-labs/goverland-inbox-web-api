@@ -7,7 +7,7 @@ import (
 
 	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 const (

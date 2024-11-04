@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/goverland-labs/inbox-web-api/internal/chain"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/chain"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
 )
 
 const (

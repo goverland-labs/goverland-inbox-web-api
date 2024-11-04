@@ -6,9 +6,9 @@ import (
 	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/inbox-web-api/internal/entities/appversions"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/auth"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/appversions"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/forms/auth"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 func (s *Server) appVersions(w http.ResponseWriter, r *http.Request) {

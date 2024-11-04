@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
-	helpers "github.com/goverland-labs/inbox-web-api/internal/rest/forms/common"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	helpers "github.com/goverland-labs/goverland-inbox-web-api/internal/rest/forms/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 type feedRequest struct {

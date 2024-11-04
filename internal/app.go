@@ -15,12 +15,12 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/goverland-labs/inbox-web-api/internal/auth"
-	"github.com/goverland-labs/inbox-web-api/internal/config"
-	"github.com/goverland-labs/inbox-web-api/internal/rest"
-	"github.com/goverland-labs/inbox-web-api/internal/tracking"
-	"github.com/goverland-labs/inbox-web-api/pkg/health"
-	"github.com/goverland-labs/inbox-web-api/pkg/prometheus"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/auth"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/config"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/tracking"
+	"github.com/goverland-labs/goverland-inbox-web-api/pkg/health"
+	"github.com/goverland-labs/goverland-inbox-web-api/pkg/prometheus"
 )
 
 type Application struct {

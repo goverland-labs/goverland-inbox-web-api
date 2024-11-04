@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/inbox-web-api/internal/entities/profile"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/profile"
 )
 
 var EmptySession = Session{}

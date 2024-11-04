@@ -5,10 +5,10 @@ import (
 
 	coredao "github.com/goverland-labs/goverland-core-sdk-go/dao"
 
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
-	"github.com/goverland-labs/inbox-web-api/internal/helpers"
-	"github.com/goverland-labs/inbox-web-api/internal/ipfs"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/helpers"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/ipfs"
 )
 
 const delegationStrategyName = "split-delegation"

@@ -6,11 +6,11 @@ import (
 
 	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 
-	conv "github.com/goverland-labs/inbox-web-api/internal/achievements"
-	"github.com/goverland-labs/inbox-web-api/internal/appctx"
-	models "github.com/goverland-labs/inbox-web-api/internal/entities/achievements"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/achievements"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	conv "github.com/goverland-labs/goverland-inbox-web-api/internal/achievements"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/appctx"
+	models "github.com/goverland-labs/goverland-inbox-web-api/internal/entities/achievements"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/forms/achievements"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 func (s *Server) markAchievementItemAsViewed(w http.ResponseWriter, r *http.Request) {

@@ -17,17 +17,17 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/goverland-labs/inbox-web-api/internal/appctx"
-	"github.com/goverland-labs/inbox-web-api/internal/auth"
-	"github.com/goverland-labs/inbox-web-api/internal/dao"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	internaldao "github.com/goverland-labs/inbox-web-api/internal/entities/dao"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
-	"github.com/goverland-labs/inbox-web-api/internal/helpers"
-	"github.com/goverland-labs/inbox-web-api/internal/ipfs"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/proposals"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/request"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/appctx"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/auth"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
+	internaldao "github.com/goverland-labs/goverland-inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/proposal"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/helpers"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/ipfs"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/forms/proposals"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/request"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 func (s *Server) getProposal(w http.ResponseWriter, r *http.Request) {

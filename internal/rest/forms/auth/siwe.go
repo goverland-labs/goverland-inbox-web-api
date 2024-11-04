@@ -6,8 +6,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/goverland-labs/inbox-web-api/internal/helpers"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/helpers"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 const (

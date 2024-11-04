@@ -1,4 +1,4 @@
-module github.com/goverland-labs/inbox-web-api
+module github.com/goverland-labs/goverland-inbox-web-api
 
 go 1.23
 

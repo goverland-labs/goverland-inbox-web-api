@@ -6,8 +6,8 @@ import (
 
 	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/profile"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/profile"
 )
 
 type SessionRequest struct {

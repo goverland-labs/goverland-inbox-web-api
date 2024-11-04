@@ -11,12 +11,12 @@ import (
 	"github.com/spruceid/siwe-go"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/goverland-labs/inbox-web-api/internal/appctx"
-	authsrv "github.com/goverland-labs/inbox-web-api/internal/auth"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/profile"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/auth"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/appctx"
+	authsrv "github.com/goverland-labs/goverland-inbox-web-api/internal/auth"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/profile"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/forms/auth"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 func (s *Server) guestAuth(w http.ResponseWriter, r *http.Request) {

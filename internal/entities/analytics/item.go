@@ -1,8 +1,8 @@
 package analytics
 
 import (
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/dao"
 )
 
 type MonthlyActiveUsers struct {

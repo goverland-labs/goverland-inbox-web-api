@@ -16,17 +16,17 @@ import (
 	"github.com/goverland-labs/goverland-platform-events/pkg/natsclient"
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/inbox-web-api/internal/auth"
-	"github.com/goverland-labs/inbox-web-api/internal/chain"
-	"github.com/goverland-labs/inbox-web-api/internal/config"
-	internaldao "github.com/goverland-labs/inbox-web-api/internal/dao"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
-	internalproposal "github.com/goverland-labs/inbox-web-api/internal/proposal"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/middlewares"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
-	"github.com/goverland-labs/inbox-web-api/internal/tracking"
-	"github.com/goverland-labs/inbox-web-api/pkg/middleware"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/auth"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/chain"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/config"
+	internaldao "github.com/goverland-labs/goverland-inbox-web-api/internal/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/proposal"
+	internalproposal "github.com/goverland-labs/goverland-inbox-web-api/internal/proposal"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/middlewares"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/tracking"
+	"github.com/goverland-labs/goverland-inbox-web-api/pkg/middleware"
 )
 
 type AuthStorage interface {

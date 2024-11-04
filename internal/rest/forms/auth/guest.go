@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/goverland-labs/inbox-web-api/internal/helpers"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/helpers"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 type guestAuthRequest struct {

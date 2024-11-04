@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/s-larionov/process-manager"
 
-	"github.com/goverland-labs/inbox-web-api/pkg/middleware"
+	"github.com/goverland-labs/goverland-inbox-web-api/pkg/middleware"
 )
 
 const readHeaderTimeout = 30 * time.Second

@@ -8,10 +8,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/goverland-labs/inbox-web-api/internal/appctx"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/settings"
-	settingsform "github.com/goverland-labs/inbox-web-api/internal/rest/forms/settings"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/appctx"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/settings"
+	settingsform "github.com/goverland-labs/goverland-inbox-web-api/internal/rest/forms/settings"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 func (s *Server) storePushToken(w http.ResponseWriter, r *http.Request) {

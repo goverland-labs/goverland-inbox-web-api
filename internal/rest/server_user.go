@@ -11,7 +11,7 @@ import (
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 	"golang.org/x/exp/slices"
 
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
 
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
@@ -20,15 +20,15 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/goverland-labs/inbox-web-api/internal/appctx"
-	"github.com/goverland-labs/inbox-web-api/internal/auth"
-	internaldao "github.com/goverland-labs/inbox-web-api/internal/entities/dao"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
-	internaltools "github.com/goverland-labs/inbox-web-api/internal/entities/tools"
-	"github.com/goverland-labs/inbox-web-api/internal/helpers"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/tools"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/request"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/appctx"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/auth"
+	internaldao "github.com/goverland-labs/goverland-inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/proposal"
+	internaltools "github.com/goverland-labs/goverland-inbox-web-api/internal/entities/tools"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/helpers"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/forms/tools"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/request"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {

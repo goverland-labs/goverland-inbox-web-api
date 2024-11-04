@@ -1,8 +1,8 @@
 package rest
 
 import (
-	"github.com/goverland-labs/inbox-web-api/internal/chain"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/chain"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 var chainResponseErrors = map[error]func(err error) response.Error{

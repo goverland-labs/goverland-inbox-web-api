@@ -21,12 +21,12 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	"github.com/goverland-labs/inbox-web-api/internal/auth"
-	"github.com/goverland-labs/inbox-web-api/internal/chain"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/profile"
-	"github.com/goverland-labs/inbox-web-api/internal/helpers"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/auth"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/chain"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/profile"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/helpers"
 )
 
 var (

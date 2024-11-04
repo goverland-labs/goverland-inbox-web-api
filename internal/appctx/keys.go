@@ -3,7 +3,7 @@ package appctx
 import (
 	"context"
 
-	"github.com/goverland-labs/inbox-web-api/internal/auth"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/auth"
 )
 
 const (

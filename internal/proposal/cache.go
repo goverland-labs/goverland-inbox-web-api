@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/proposal"
 )
 
 const (

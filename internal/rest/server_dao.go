@@ -16,17 +16,17 @@ import (
 	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 
-	"github.com/goverland-labs/inbox-web-api/internal/appctx"
-	"github.com/goverland-labs/inbox-web-api/internal/auth"
-	"github.com/goverland-labs/inbox-web-api/internal/chain"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/feed"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
-	"github.com/goverland-labs/inbox-web-api/internal/helpers"
-	daoform "github.com/goverland-labs/inbox-web-api/internal/rest/forms/dao"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/request"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/appctx"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/auth"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/chain"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/feed"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/proposal"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/helpers"
+	daoform "github.com/goverland-labs/goverland-inbox-web-api/internal/rest/forms/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/request"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 func (s *Server) getDAO(w http.ResponseWriter, r *http.Request) {

@@ -9,15 +9,15 @@ import (
 	"github.com/goverland-labs/goverland-analytics-api-protocol/protobuf/internalapi"
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 
-	"github.com/goverland-labs/inbox-web-api/internal/appctx"
-	"github.com/goverland-labs/inbox-web-api/internal/auth"
-	entity "github.com/goverland-labs/inbox-web-api/internal/entities/analytics"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
-	"github.com/goverland-labs/inbox-web-api/internal/helpers"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/forms/analytics"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/request"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/appctx"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/auth"
+	entity "github.com/goverland-labs/goverland-inbox-web-api/internal/entities/analytics"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/helpers"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/forms/analytics"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/request"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 func (s *Server) getMonthlyActiveUsers(w http.ResponseWriter, r *http.Request) {

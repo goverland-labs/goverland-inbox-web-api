@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/goverland-labs/inbox-web-api/internal/auth"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/auth"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -15,14 +15,14 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/goverland-labs/inbox-web-api/internal/appctx"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/feed"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
-	"github.com/goverland-labs/inbox-web-api/internal/helpers"
-	feedform "github.com/goverland-labs/inbox-web-api/internal/rest/forms/feed"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/request"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/appctx"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/feed"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/proposal"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/helpers"
+	feedform "github.com/goverland-labs/goverland-inbox-web-api/internal/rest/forms/feed"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/request"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 )
 
 func (s *Server) getFeed(w http.ResponseWriter, r *http.Request) {

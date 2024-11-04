@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/dao"
 )
 
 const (

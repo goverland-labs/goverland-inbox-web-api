@@ -9,9 +9,9 @@ import (
 	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 	"google.golang.org/grpc"
 
-	"github.com/goverland-labs/inbox-web-api/internal/auth"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/dao"
-	"github.com/goverland-labs/inbox-web-api/internal/entities/proposal"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/auth"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/dao"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/proposal"
 )
 
 type DataProvider interface {

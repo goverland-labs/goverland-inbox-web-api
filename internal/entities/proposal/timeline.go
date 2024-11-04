@@ -3,7 +3,7 @@ package proposal
 import (
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
 
-	"github.com/goverland-labs/inbox-web-api/internal/entities/common"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/entities/common"
 )
 
 const (

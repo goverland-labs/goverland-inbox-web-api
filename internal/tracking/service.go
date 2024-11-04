@@ -7,7 +7,7 @@ import (
 	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 
-	"github.com/goverland-labs/inbox-web-api/internal/auth"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/auth"
 )
 
 type trackingEvent struct {

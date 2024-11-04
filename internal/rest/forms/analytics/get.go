@@ -3,7 +3,7 @@ package analytics
 import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/goverland-labs/inbox-web-api/internal/rest/response"
+	"github.com/goverland-labs/goverland-inbox-web-api/internal/rest/response"
 	"net/http"
 	"strings"
 )

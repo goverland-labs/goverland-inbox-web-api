@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/goverland-labs/analytics-api/protobuf/internalapi"
+	"github.com/goverland-labs/goverland-analytics-api-protocol/protobuf/internalapi"
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"

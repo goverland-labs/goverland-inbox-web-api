@@ -6,7 +6,7 @@ import (
 
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
-	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 	"google.golang.org/grpc"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"

@@ -6,7 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
-	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"github.com/spruceid/siwe-go"
 	"google.golang.org/protobuf/types/known/timestamppb"

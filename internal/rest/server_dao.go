@@ -12,7 +12,7 @@ import (
 
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	corefeed "github.com/goverland-labs/goverland-core-sdk-go/feed"
-	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 

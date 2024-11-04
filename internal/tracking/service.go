@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 
 	"github.com/goverland-labs/inbox-web-api/internal/auth"

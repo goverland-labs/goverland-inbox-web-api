@@ -1,7 +1,7 @@
 package achievements
 
 import (
-	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 
 	"github.com/goverland-labs/inbox-web-api/internal/entities/achievements"
 	"github.com/goverland-labs/inbox-web-api/internal/entities/common"

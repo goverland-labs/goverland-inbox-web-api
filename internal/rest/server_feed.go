@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	coreproposal "github.com/goverland-labs/goverland-core-sdk-go/proposal"
-	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 

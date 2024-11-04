@@ -13,7 +13,7 @@ import (
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
 	coredao "github.com/goverland-labs/goverland-core-sdk-go/dao"
 	corefeed "github.com/goverland-labs/goverland-core-sdk-go/feed"
-	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/types/known/emptypb"

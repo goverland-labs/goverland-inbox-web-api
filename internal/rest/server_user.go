@@ -15,7 +15,7 @@ import (
 
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
-	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

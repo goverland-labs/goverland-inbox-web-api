@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 
 	conv "github.com/goverland-labs/inbox-web-api/internal/achievements"
 	"github.com/goverland-labs/inbox-web-api/internal/appctx"

@@ -1,3 +1,4 @@
 /.env
 /bin/*
-/inbox-web-api
+/goverland-inbox-web-api
+/goverland-inbox-web-api.*

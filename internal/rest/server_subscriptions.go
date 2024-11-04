@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	coresdk "github.com/goverland-labs/goverland-core-sdk-go"
-	"github.com/goverland-labs/inbox-api/protobuf/inboxapi"
+	"github.com/goverland-labs/goverland-inbox-api-protocol/protobuf/inboxapi"
 	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 

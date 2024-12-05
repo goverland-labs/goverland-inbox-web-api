@@ -213,6 +213,11 @@ func (s *Server) getTopVotersByVp(w http.ResponseWriter, r *http.Request) {
 	enslist, err := s.coreclient.GetEnsNames(r.Context(), coresdk.GetEnsNamesRequest{
 		Addresses: addresses,
 	})
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	ensNames := make(map[string]string)
 	for _, info := range enslist.EnsNames {
 		ensNames[info.Address] = info.Name

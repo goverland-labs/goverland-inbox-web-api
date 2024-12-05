@@ -53,10 +53,8 @@ func (s *Server) getFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	feedList := resp.GetList()
-	daoIds := make([]uuid.UUID, 0, len(feedList))
 	proposalIds := make([]string, 0, len(feedList))
 	for _, info := range feedList {
-		daoIds = append(daoIds, uuid.MustParse(info.DaoId))
 		if info.ProposalId != nil {
 			proposalIds = append(proposalIds, *info.ProposalId)
 		}

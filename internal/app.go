@@ -99,6 +99,7 @@ func (a *Application) initServices() error {
 	return nil
 }
 
+// nolint:staticcheck
 func (a *Application) initRESTWorker() error {
 	strageConn, err := grpc.Dial(a.cfg.Inbox.StorageAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {

@@ -7,6 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Implement routes for getting my delegation details
+
 ## [0.5.0] - 2024-11-04
 
 ### Added

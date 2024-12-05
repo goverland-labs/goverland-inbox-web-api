@@ -26,11 +26,16 @@ type Session struct {
 }
 
 type Profile struct {
-	ID                 string    `json:"id"`
-	Role               Role      `json:"role"`
-	Account            *Account  `json:"account"`
-	SubscriptionsCount int       `json:"subscriptions_count"`
-	LastSessions       []Session `json:"last_sessions"`
+	ID                 string   `json:"id"`
+	Role               Role     `json:"role"`
+	Account            *Account `json:"account"`
+	SubscriptionsCount int      `json:"subscriptions_count"`
+	// The number of delegators in out DB
+	DelegatorsCount int `json:"delegators_count"`
+	// The number of delegates in out DB
+	DelegatesCount int `json:"delegates_count"`
+
+	LastSessions []Session `json:"last_sessions"`
 }
 
 func (p *Profile) GetAddress() *string {

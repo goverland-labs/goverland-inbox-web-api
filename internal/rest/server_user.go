@@ -246,6 +246,10 @@ func (s *Server) getParticipatedDaos(w http.ResponseWriter, r *http.Request) {
 		IDs:   daoIds,
 		Limit: len(daoIds),
 	})
+	if err != nil {
+		response.SendError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	daos := helpers.WrapDAOsIpfsLinks(daolist.Items)
 	session, _ := appctx.ExtractUserSession(r.Context())
@@ -596,9 +600,7 @@ func (s *Server) getRecommendedDao(w http.ResponseWriter, r *http.Request) {
 	}
 
 	daoIDs := make([]string, 0, len(available.DaoUuids))
-	for i := range available.DaoUuids {
-		daoIDs = append(daoIDs, available.DaoUuids[i])
-	}
+	daoIDs = append(daoIDs, available.DaoUuids...)
 
 	daoList, err := s.daoService.GetDaoByIDs(r.Context(), daoIDs...)
 	if err != nil {

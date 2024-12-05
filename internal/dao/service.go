@@ -105,9 +105,7 @@ func (s *Service) GetDaoByIDs(ctx context.Context, ids ...string) (map[string]*d
 	}
 
 	search := make([]string, len(missed))
-	for i := range missed {
-		search[i] = missed[i]
-	}
+	copy(search, missed)
 
 	resp, err := s.dp.GetDaoList(ctx, coresdk.GetDaoListRequest{
 		Limit:  len(search),
